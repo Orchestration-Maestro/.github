@@ -1,0 +1,95 @@
+# AGENTS.md
+
+This is the Orchestration-Maestro organization's `.github` repository: the
+organization's settings as code, its public profile, and the files every
+repository inherits. It is public, like every repository in the organization.
+
+## `org/` is generated
+
+GitHub is the source of truth; `org/` is its export, written by
+`scripts/export-org.py`. Change a setting in this order:
+
+1. Apply it on GitHub with `gh api`. Settings with no API go to the owner (see
+   the gotchas below). Done when reading the same endpoint back returns the new
+   value.
+2. Run `python3 scripts/export-org.py`. Done when it exits 0 with no
+   `unclassified` warning.
+3. Read `git status org/` and `git diff org/`. Done when they show your change
+   and nothing else. Anything else is **drift** someone made on GitHub: stop and
+   report it to the owner.
+4. Give the setting its reason: add or update its row in README's "What each
+   decision is for" table.
+5. Commit the export and the README row together.
+
+`org/` changes only through the export; the weekly `org-drift.yml` check fails
+on any file that disagrees with GitHub.
+
+## GitHub API gotchas
+
+- **Rulesets:** update from the full current state. GET the ruleset, change one
+  field, and PUT `name`, `target`, `enforcement`, `conditions`, `bypass_actors`
+  and `rules` together.
+- **No API, owner only:** `members_can_delete_repositories` and
+  `members_can_change_repo_visibility` (a PATCH returns 200 and keeps the old
+  value), a repository's "Reported content" setting, the organization avatar
+  and each repository's social preview.
+- `members_can_create_repositories=false` also turns
+  `members_can_create_public_repositories` off. That is expected.
+- **Custom properties:** before deleting one, move every ruleset off it; search
+  `org/rulesets/*.json` for its name.
+- **Tokens:** listing organization rulesets with a fine-grained token needs
+  Administration read *and write*. Treat the drift token as an admin credential.
+  Webhooks need the `admin:org_hook` scope; without it the export keeps the
+  previous `org/webhooks.json`.
+- **`unclassified` warning:** GitHub added an organization field. Classify it in
+  `scripts/export-org.py`: GitHub's default in `ORG_DEFAULTS`, or `ORG_IGNORED`
+  for profile, identity and counters.
+
+## Invariants
+
+- **Public:** files carry no secrets, tokens, personal emails or billing data.
+  The export keeps webhook URLs to scheme, host and path.
+- **Workflows**, here and in `workflow-templates/`: actions come only from
+  `actions/*`, `github/*` or `Orchestration-Maestro/*`, pinned to a full commit
+  SHA with the version in a trailing comment; `permissions:` is explicit; input
+  reaches `run:` only through `env:`. The organization rejects any other pin.
+- **Rust CI job id is `rust`.** `rust-ci-required` requires the check
+  `rust / Required Rust CI` from GitHub Actions (app id 15368). A caller job with
+  another id blocks every merge in Rust repositories.
+- **`@0000000000000000000000000000000000000000  # UNPUBLISHED` pins** wait for a
+  reviewed `rust-workflows` commit. Replace them only with that commit's SHA.
+- **One rule set for all repositories:** every ruleset targets `~ALL`, except
+  `rust-ci-required`, which targets `stack=rust`. A repository-specific exception
+  is its own ruleset, decided by the owner.
+- **Commits** are signed with conventional titles; the default branch takes only
+  squash-merged pull requests.
+
+## File placement
+
+GitHub reads issue forms only from `.github/ISSUE_TEMPLATE/` of this repository,
+and every other inherited file (`SECURITY.md`, `CONTRIBUTING.md`,
+`CODE_OF_CONDUCT.md`, `pull_request_template.md`) from the root. A workflow
+template needs a `.properties.json` with the same name. `LICENSE` covers this
+repository only: GitHub never inherits a license.
+
+## Verify before committing
+
+The pinned tools live in `../rust-workflows/.tools/bin` in this workspace.
+
+```bash
+python3 scripts/export-org.py && git status --porcelain org/
+actionlint .github/workflows/*.yml
+zizmor --offline .github/workflows
+gitleaks dir . --redact
+typos .
+```
+
+Done when every command passes, and a second export leaves `org/` unchanged.
+
+## Pointers
+
+- **Brand work** (logo, banner, icons, profile copy): read `assets/README.md` first;
+  it holds the palette, the logo concept and the prompts.
+- **New repository in the organization:** apply README's "New repository
+  checklist".
+- **Drift token setup or renewal:** README's "Weekly drift check".

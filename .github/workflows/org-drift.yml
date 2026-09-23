@@ -1,0 +1,46 @@
+name: Organization drift
+"on":
+  schedule:
+    # Mondays 06:17 UTC, off the hour to avoid the scheduler's peak.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: org-drift
+  cancel-in-progress: false
+jobs:
+  drift:
+    name: Organization settings match org/
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # The token can administer the organization. It lives only in this
+    # environment, restricted to the default branch, and no pull_request
+    # trigger can reach it.
+    environment: org-audit
+    steps:
+      - name: Checkout the reviewed state
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Export the live settings
+        env:
+          GH_TOKEN: ${{ secrets.ORG_SETTINGS_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${GH_TOKEN}" ]]; then
+            echo "::error::ORG_SETTINGS_TOKEN is not set; see README.md"
+            exit 1
+          fi
+          python3 scripts/export-org.py
+      - name: Fail on drift
+        run: |
+          set -euo pipefail
+          changes="$(git status --porcelain -- org/)"
+          if [[ -n "${changes}" ]]; then
+            echo "${changes}"
+            git --no-pager diff -- org/
+            echo "::error::Live settings differ from org/; see README.md"
+            exit 1
+          fi
+          echo "No drift: GitHub matches org/."

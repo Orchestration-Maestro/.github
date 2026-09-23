@@ -1,0 +1,22 @@
+{
+  "artifact-and-log-retention": {
+    "days": 30
+  },
+  "fork-pr-contributor-approval": {
+    "approval_policy": "all_external_contributors"
+  },
+  "permissions": {
+    "allowed_actions": "selected",
+    "sha_pinning_required": true
+  },
+  "selected-actions": {
+    "github_owned_allowed": true,
+    "patterns_allowed": [
+      "Orchestration-Maestro/*"
+    ],
+    "verified_allowed": false
+  },
+  "self-hosted-runners": {
+    "enabled_repositories": "none"
+  }
+}

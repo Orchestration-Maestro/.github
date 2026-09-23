@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a reproducible problem.
+title: '[Bug]: '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Include a minimal reproduction and sanitized diagnostics. Report
+        vulnerabilities or exposed credentials privately, as described in
+        SECURITY.md. Never attach tokens or environment dumps.
+  - type: checkboxes
+    id: preparation
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and the repository's documentation.
+          required: true
+        - label: This report contains no credentials or private data.
+          required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The exact release, tag or commit SHA.
+    validations:
+      required: true
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Did this work before?
+      description: A known-good version turns an investigation into a bisect.
+      options:
+        - Yes, it worked on an earlier version
+        - No, it has never worked for me
+        - Unknown
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: >-
+        Operating system, architecture and exact Rust version when relevant.
+      placeholder: 'Ubuntu 24.04, x86_64, Rust 1.98.1'
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: The exact commands, inputs or steps.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized diagnostics
+      description: The failing step, the error and relevant output.
+      render: text

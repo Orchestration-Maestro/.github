@@ -1,0 +1,13 @@
+[
+  {
+    "allowed_values": [
+      "rust"
+    ],
+    "description": "Language stack. 'rust' repositories must pass rust-workflows CI (check 'rust / Required Rust CI') before merging to the default branch.",
+    "property_name": "stack",
+    "require_explicit_values": false,
+    "required": false,
+    "value_type": "single_select",
+    "values_editable_by": "org_actors"
+  }
+]

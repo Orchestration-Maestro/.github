@@ -1,0 +1,49 @@
+name: Feature request
+description: Propose a concrete improvement.
+title: '[Feature]: '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the need and the smallest useful change. Keep credentials and
+        private details out of the request.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: The current limitation and who it affects.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Observable acceptance criteria.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: >-
+        Existing features that nearly solve it, and why they fall short.
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Would this change existing behaviour?
+      options:
+        - 'No: additive'
+        - 'Yes: changes an existing default, output or interface'
+        - Unsure
+    validations:
+      required: true
+  - type: checkboxes
+    id: preparation
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and requests.
+          required: true
+        - label: The request contains no credentials or private data.
+          required: true

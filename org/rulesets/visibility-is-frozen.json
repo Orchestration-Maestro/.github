@@ -1,0 +1,24 @@
+{
+  "bypass_actors": [],
+  "conditions": {
+    "repository_name": {
+      "exclude": [],
+      "include": [
+        "~ALL"
+      ]
+    }
+  },
+  "enforcement": "active",
+  "name": "visibility-is-frozen",
+  "rules": [
+    {
+      "parameters": {
+        "internal": false,
+        "private": false,
+        "public": true
+      },
+      "type": "repository_visibility"
+    }
+  ],
+  "target": "repository"
+}

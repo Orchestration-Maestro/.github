@@ -1,0 +1,41 @@
+{
+  "bypass_actors": [],
+  "conditions": {
+    "ref_name": {
+      "exclude": [],
+      "include": [
+        "~DEFAULT_BRANCH"
+      ]
+    },
+    "repository_property": {
+      "exclude": [],
+      "include": [
+        {
+          "name": "stack",
+          "property_values": [
+            "rust"
+          ],
+          "source": "custom"
+        }
+      ]
+    }
+  },
+  "enforcement": "active",
+  "name": "rust-ci-required",
+  "rules": [
+    {
+      "parameters": {
+        "do_not_enforce_on_create": true,
+        "required_status_checks": [
+          {
+            "context": "rust / Required Rust CI",
+            "integration_id": 15368
+          }
+        ],
+        "strict_required_status_checks_policy": false
+      },
+      "type": "required_status_checks"
+    }
+  ],
+  "target": "branch"
+}

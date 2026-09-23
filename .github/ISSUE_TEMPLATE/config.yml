@@ -1,0 +1,13 @@
+# Blank issues are off so every report arrives with the fields triage needs;
+# the links cover what a form should not carry.
+blank_issues_enabled: false
+contact_links:
+  - name: Report a vulnerability
+    url: https://github.com/Orchestration-Maestro/.github/blob/main/SECURITY.md
+    about: >-
+      Report privately, never as a public issue. This covers exposed credentials
+      and any security weakness.
+  - name: Read the contributing guide
+    url: https://github.com/Orchestration-Maestro/.github/blob/main/CONTRIBUTING.md
+    about: >-
+      The rules every pull request passes, before proposing a change.

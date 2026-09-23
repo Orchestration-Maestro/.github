@@ -1,0 +1,14 @@
+name: CI
+"on":
+  push:
+    branches: [$default-branch]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  # Keep the job id `rust`: the rust-ci-required ruleset requires the check
+  # "rust / Required Rust CI" before any merge to the default branch.
+  rust:
+    uses: Orchestration-Maestro/rust-workflows/.github/workflows/ci.yml@0000000000000000000000000000000000000000  # UNPUBLISHED: replace with the reviewed rust-workflows commit
+    permissions:
+      contents: read
