@@ -17,7 +17,7 @@ steers by it, with four pillars and one measured KPI each.
 
 | Pillar | KPI in `rust-workflows` | Today | Target |
 | --- | --- | --- | --- |
-| <img src="https://raw.githubusercontent.com/Orchestration-Maestro/.github/main/profile/icons/speed.png" width="20" height="20" alt="" /> **Speed** | `just check` wall time, tools cached | 31 s, read 2026-09-18 | 40 s or less |
+| <img src="https://raw.githubusercontent.com/Orchestration-Maestro/.github/main/profile/icons/speed.png" width="20" height="20" alt="" /> **Speed** | `just check` wall time, tools cached | 54 s, read 2026-09-23 | 40 s or less |
 | <img src="https://raw.githubusercontent.com/Orchestration-Maestro/.github/main/profile/icons/quality.png" width="20" height="20" alt="" /> **Quality** | Line coverage floor | 90%, every run | 90% |
 | <img src="https://raw.githubusercontent.com/Orchestration-Maestro/.github/main/profile/icons/maintainability.png" width="20" height="20" alt="" /> **Maintainability** | Undocumented items in the gate crate | 0, every run | 0 |
 | <img src="https://raw.githubusercontent.com/Orchestration-Maestro/.github/main/profile/icons/security.png" width="20" height="20" alt="" /> **Security** | Silenced lints | 0, every run | 0 |
@@ -27,7 +27,6 @@ These are targets, not a claim that every one is met: see
 
 | Repository | What it is |
 | --- | --- |
-| [maestro-core](https://github.com/Orchestration-Maestro/maestro-core) | The Rust core of Maestro, starting with document ingestion |
 | [rust-workflows](https://github.com/Orchestration-Maestro/rust-workflows) | The shared, security-gated CI every Rust repository calls |
 
 Found a vulnerability? Report it privately: see our

@@ -5,7 +5,7 @@ repository inherits, and every organization setting that differs from GitHub's
 defaults, exported from the live API. A setting absent from `org/` is GitHub's
 default.
 
-This repository will be **public**: the `visibility-is-frozen` ruleset allows
+This repository is **public**: the `visibility-is-frozen` ruleset allows
 no other visibility. Nothing here is secret; the export leaves out the billing
 email, profile fields and the member list.
 
@@ -73,8 +73,14 @@ its own. A repository's own file always wins.
   gate. A repository that needs direct pushes needs its own reviewed ruleset
   exception.
 - **Actions cannot approve pull requests** (`can_approve_pull_request_reviews`
-  stays false). release-please runs on a GitHub App token instead, which also
-  lets its pull request trigger the checks a merge requires.
+  stays false). The organization's GitHub App, `orchestration-maestro-bot`,
+  acts instead: release-please opens release pull requests with its token, and
+  Dependabot patch and minor updates queue their merge with it. Its pull
+  requests and merges trigger the checks and workflows a `GITHUB_TOKEN` one
+  would not. It is installed on every repository with Contents, Issues, Pull
+  requests and Workflows write; its client ID and key are the organization
+  variable `RELEASE_APP_CLIENT_ID` and secret `RELEASE_APP_PRIVATE_KEY`, stored
+  again as Dependabot secrets.
 
 ## New repository checklist
 
@@ -91,7 +97,13 @@ Settings a new repository needs that no organization default covers:
    **All users**, Save. The Code of Conduct sends reports to this button; the
    default admits only prior contributors, so a newcomer could not report.
    There is no API for it.
-3. **Social preview:** Settings, General, Social preview, upload a 1280 x 640
+3. **Dependabot auto-merge:** turn on auto-merge, then copy
+   `rust-workflows`' `.github/workflows/dependabot-auto-merge.yml`; the bot's
+   credentials are already organization-wide.
+   ```bash
+   gh api -X PATCH repos/Orchestration-Maestro/REPO -F allow_auto_merge=true
+   ```
+4. **Social preview:** Settings, General, Social preview, upload a 1280 x 640
    crop of the banner (see `assets/README.md`). Web UI only.
 
 ## Refresh by hand
