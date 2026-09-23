@@ -37,10 +37,11 @@ on any file that disagrees with GitHub.
   `members_can_create_public_repositories` off. That is expected.
 - **Custom properties:** before deleting one, move every ruleset off it; search
   `org/rulesets/*.json` for its name.
-- **Tokens:** listing organization rulesets with a fine-grained token needs
-  Administration read *and write*. Treat the drift token as an admin credential.
-  Webhooks need the `admin:org_hook` scope; without it the export keeps the
-  previous `org/webhooks.json`.
+- **Tokens:** listing organization rulesets needs Administration read *and
+  write*, for an App as for a fine-grained token. The drift check's audit App
+  therefore holds an admin credential; its key stays in the `org-audit`
+  environment. Locally, webhooks need the `admin:org_hook` scope; without it
+  the export keeps the previous `org/webhooks.json`.
 - **`unclassified` warning:** GitHub added an organization field. Classify it in
   `scripts/export-org.py`: GitHub's default in `ORG_DEFAULTS`, or `ORG_IGNORED`
   for profile, identity and counters.
