@@ -1,0 +1,6 @@
+{
+  "name": "OpenSSF Scorecard",
+  "description": "Scores the repository's supply-chain practices weekly and on every push to the default branch, publishes the result for a README badge and shows the findings in code scanning.",
+  "iconName": "octicon shield-check",
+  "categories": ["Security"]
+}
