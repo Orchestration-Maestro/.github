@@ -81,7 +81,7 @@ only object in the frame.
 
 ### Banner
 
-2560 x 1024 artwork for `profile/banner.webp`; a 1280 x 640 crop serves as a
+2560 x 1024 artwork for `profile/banner.jpg`; a 1280 x 640 crop serves as a
 repository's social preview.
 
 ```text
