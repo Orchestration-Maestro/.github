@@ -9,6 +9,16 @@ jobs:
   # Keep the job id `rust`: the rust-ci-required ruleset requires the check
   # "rust / Required Rust CI" before any merge to the default branch.
   rust:
-    uses: Orchestration-Maestro/rust-workflows/.github/workflows/ci.yml@0cc74ca4b1dbcb564e49483340e81513e2de1131  # rust-workflows, reviewed
+    uses: Orchestration-Maestro/rust-workflows/.github/workflows/ci.yml@701b4dca765deb4d4bec2b5cda04051eba219118  # rust-workflows, reviewed
     permissions:
       contents: read
+  # Clippy and secret-scan findings into the Security tab: the only job that
+  # needs a write scope.
+  sarif:
+    needs: rust
+    uses: Orchestration-Maestro/rust-workflows/.github/workflows/upload-sarif.yml@701b4dca765deb4d4bec2b5cda04051eba219118  # rust-workflows, reviewed
+    permissions:
+      contents: read
+      security-events: write  # upload SARIF to code scanning
+    with:
+      artifact-name: ${{ needs.rust.outputs.artifact-name }}
