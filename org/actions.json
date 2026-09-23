@@ -12,7 +12,8 @@
   "selected-actions": {
     "github_owned_allowed": true,
     "patterns_allowed": [
-      "Orchestration-Maestro/*"
+      "Orchestration-Maestro/*",
+      "googleapis/release-please-action@*"
     ],
     "verified_allowed": false
   },
