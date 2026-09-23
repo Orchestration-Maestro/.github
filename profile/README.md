@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="banner.webp" alt="Orchestration Maestro. Never reached. Always pursued." width="100%" />
+  <img src="https://raw.githubusercontent.com/Orchestration-Maestro/.github/main/profile/banner.jpg" alt="Orchestration Maestro. Never reached. Always pursued." width="100%" />
 </p>
 
 # Orchestration Maestro
@@ -17,10 +17,10 @@ steers by it, with four pillars and one measured KPI each.
 
 | | Pillar | KPI in `rust-workflows` | Today | Target |
 | --- | --- | --- | --- | --- |
-| <img src="icons/speed.svg" width="20" height="20" alt="" /> | **Speed** | `just check` wall time, tools cached | 31 s, read 2026-09-18 | 40 s or less |
-| <img src="icons/quality.svg" width="20" height="20" alt="" /> | **Quality** | Line coverage floor | 90%, every run | 90% |
-| <img src="icons/maintainability.svg" width="20" height="20" alt="" /> | **Maintainability** | Undocumented items in the gate crate | 0, every run | 0 |
-| <img src="icons/security.svg" width="20" height="20" alt="" /> | **Security** | Silenced lints | 0, every run | 0 |
+| <img src="https://raw.githubusercontent.com/Orchestration-Maestro/.github/main/profile/icons/speed.png" width="20" height="20" alt="" /> | **Speed** | `just check` wall time, tools cached | 31 s, read 2026-09-18 | 40 s or less |
+| <img src="https://raw.githubusercontent.com/Orchestration-Maestro/.github/main/profile/icons/quality.png" width="20" height="20" alt="" /> | **Quality** | Line coverage floor | 90%, every run | 90% |
+| <img src="https://raw.githubusercontent.com/Orchestration-Maestro/.github/main/profile/icons/maintainability.png" width="20" height="20" alt="" /> | **Maintainability** | Undocumented items in the gate crate | 0, every run | 0 |
+| <img src="https://raw.githubusercontent.com/Orchestration-Maestro/.github/main/profile/icons/security.png" width="20" height="20" alt="" /> | **Security** | Silenced lints | 0, every run | 0 |
 
 These are targets, not a claim that every one is met: see
 [northstar.md](https://github.com/Orchestration-Maestro/rust-workflows/blob/main/docs/standards/northstar.md).
