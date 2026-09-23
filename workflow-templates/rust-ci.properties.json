@@ -1,6 +1,6 @@
 {
   "name": "Rust CI",
-  "description": "The organization's Rust gates through rust-workflows: formatting, Clippy, tests, coverage, advisories, secret scan, MSRV and a reproducible release build.",
+  "description": "The organization's Rust gates through rust-workflows: formatting, Clippy, tests, coverage, advisories, secret scan, MSRV and a reproducible release build, with Clippy and secret-scan findings in code scanning.",
   "iconName": "octicon workflow",
   "categories": ["Rust"],
   "filePatterns": ["Cargo\\.toml$"]
