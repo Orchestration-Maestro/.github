@@ -50,17 +50,20 @@ on any file that disagrees with GitHub.
 - **Public:** files carry no secrets, tokens, personal emails or billing data.
   The export keeps webhook URLs to scheme, host and path.
 - **Workflows**, here and in `workflow-templates/`: actions come only from
-  `actions/*`, `github/*` or `Orchestration-Maestro/*`, pinned to a full commit
-  SHA with the version in a trailing comment; `permissions:` is explicit; input
-  reaches `run:` only through `env:`. The organization rejects any other pin.
+  `actions/*`, `github/*`, `Orchestration-Maestro/*` or, for releases,
+  `googleapis/release-please-action`, pinned to a full commit SHA with the
+  version in a trailing comment; `permissions:` is explicit; input reaches
+  `run:` only through `env:`. The organization rejects any other action or pin.
 - **Rust CI job id is `rust`.** `rust-ci-required` requires the check
   `rust / Required Rust CI` from GitHub Actions (app id 15368). A caller job with
   another id blocks every merge in Rust repositories.
-- **`@0000000000000000000000000000000000000000  # UNPUBLISHED` pins** wait for a
-  reviewed `rust-workflows` commit. Replace them only with that commit's SHA.
+- **The Rust CI template pins `rust-workflows` by full SHA.** Move the pin only
+  to a reviewed `rust-workflows` commit on its default branch whose `ci.yml`
+  calls the gate it ships, through a pull request here.
 - **One rule set for all repositories:** every ruleset targets `~ALL`, except
-  `rust-ci-required`, which targets `stack=rust`. A repository-specific exception
-  is its own ruleset, decided by the owner.
+  `rust-ci-required`, which targets `stack=rust`, and
+  `rust-workflows-ci-required`, which holds `rust-workflows` to its own CI. A
+  repository-specific exception is its own ruleset, decided by the owner.
 - **Commits** are signed with conventional titles; the default branch takes only
   squash-merged pull requests.
 

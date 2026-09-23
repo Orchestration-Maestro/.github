@@ -51,17 +51,18 @@ its own. A repository's own file always wins.
 | `members_can_change_repo_visibility: false` | Only owners change visibility (web UI only) |
 | `deploy_keys_enabled_for_repositories: false` | No repository-scoped SSH keys outside the owner's control |
 | `*_enabled_for_new_repositories` | Legacy switches; `maestrolabs-baseline` supersedes them |
-| Actions `allowed_actions: selected` | Only `actions/*`, `github/*` and `Orchestration-Maestro/*` run |
+| Actions `allowed_actions: selected` | Only `actions/*`, `github/*` and `Orchestration-Maestro/*` run, plus `googleapis/release-please-action` for releases |
 | Actions `sha_pinning_required` | A tag can be moved to new code; a full commit SHA cannot |
 | Actions `self-hosted-runners: none` | On a public repository, any pull request would run code on the runner's machine |
 | Actions `fork-pr-contributor-approval` | Every external contributor's workflow run waits for an owner's approval |
 | Actions `artifact-and-log-retention: 30` | Public logs and artifacts are readable by anyone signed in; keep them shorter |
-| `stack` (`rust`, optional) | Set it on a Rust repository to require its CI before merge |
+| `stack` (`rust`, optional) | Set it on a Rust repository whose CI calls `rust-workflows` as job `rust`, to require that CI before merge |
 | `maestrolabs-baseline` | CodeQL, secret scanning with push protection, Dependabot, private vulnerability reporting |
 | `floor-no-destruction` | No deletion or force-push of any default branch |
 | `floor-release-tags` | `v*` tags cannot be deleted or moved; creation stays open for releases |
 | `default-branch-discipline` | Every repository: pull request, squash only, resolved threads, signed commits, CodeQL results with no high alert |
 | `rust-ci-required` | Rust repositories merge only after `rust / Required Rust CI`, reported by GitHub Actions itself |
+| `rust-workflows-ci-required` | `rust-workflows` merges only after its own `Required repository quality` and `Required consumer tests` |
 | `commits-are-conventional` | Conventional commit titles on every default branch |
 | `visibility-is-frozen` | Public runners are unmetered; a private repository would start billing |
 
@@ -72,13 +73,16 @@ its own. A repository's own file always wins.
   gate. A repository that needs direct pushes needs its own reviewed ruleset
   exception.
 - **Actions cannot approve pull requests** (`can_approve_pull_request_reviews`
-  stays false). Turn it on only to run release-please with `GITHUB_TOKEN`.
+  stays false). release-please runs on a GitHub App token instead, which also
+  lets its pull request trigger the checks a merge requires.
 
 ## New repository checklist
 
 Settings a new repository needs that no organization default covers:
 
-1. **Rust repositories:** set `stack=rust`, so `rust-ci-required` applies.
+1. **Rust repositories** that call `rust-workflows` as job `rust`, as the Rust CI
+   template does: set `stack=rust`, so `rust-ci-required` applies.
+   `rust-workflows` itself has its own ruleset and no `stack`.
    ```bash
    gh api -X PATCH repos/Orchestration-Maestro/REPO/properties/values \
      --input - <<< '{"properties":[{"property_name":"stack","value":"rust"}]}'
