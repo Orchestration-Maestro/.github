@@ -14,7 +14,8 @@ jobs:
     name: Organization settings match org/
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    # The token can administer the organization. It lives only in this
+    # The audit App can administer the organization: GitHub lets it read
+    # rulesets only with Administration write. Its key lives only in this
     # environment, restricted to the default branch, and no pull_request
     # trigger can reach it.
     environment: org-audit
@@ -23,15 +24,25 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           persist-credentials: false
+      # The audit App's organization token, not a personal one: it expires
+      # within the hour and nobody has to renew it.
+      - name: Mint the audit token
+        id: token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
+        with:
+          client-id: ${{ vars.ORG_AUDIT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.ORG_AUDIT_APP_PRIVATE_KEY }}
+          # The App is installed with no repository: the token reaches the
+          # organization's settings and nothing else.
+          owner: ${{ github.repository_owner }}  # zizmor: ignore[github-app]
+          permission-organization-administration: write
+          permission-organization-custom-properties: read
+          permission-organization-hooks: read
       - name: Export the live settings
         env:
-          GH_TOKEN: ${{ secrets.ORG_SETTINGS_TOKEN }}
+          GH_TOKEN: ${{ steps.token.outputs.token }}
         run: |
           set -euo pipefail
-          if [[ -z "${GH_TOKEN}" ]]; then
-            echo "::error::ORG_SETTINGS_TOKEN is not set; see README.md"
-            exit 1
-          fi
           python3 scripts/export-org.py
       - name: Fail on drift
         run: |

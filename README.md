@@ -18,10 +18,11 @@ email, profile fields and the member list.
 | `org/custom-properties.json` | The `stack` property the Rust CI ruleset selects on |
 | `org/security-configurations.json` | `maestrolabs-baseline`, enforced and the default for every new repository |
 | `org/rulesets/*.json` | Organization rulesets, in the shape `PUT orgs/{org}/rulesets/{id}` accepts |
-| `org/webhooks.json` | Organization webhooks without secrets or query strings, once a token can read them |
+| `org/webhooks.json` | Organization webhooks without secrets or query strings |
 | `scripts/export-org.py` | Regenerates `org/` from the live API |
 | `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/` |
 | `.github/workflows/scorecard.yml` | This repository's weekly OpenSSF Scorecard |
+| `.github/dependabot.yml`, `.github/workflows/dependabot-auto-merge.yml` | Weekly action updates for this repository's workflows, patch and minor merged by the bot |
 | `profile/` | The organization page on GitHub, with its banner and pillar icons |
 | `workflow-templates/rust-ci.*` | The "Rust CI" template offered under Actions, New workflow |
 | `workflow-templates/scorecard.*` | The "OpenSSF Scorecard" template, the same workflow for any repository |
@@ -139,29 +140,24 @@ fails when they differ from `org/`. On a failure, read the diff in the run log:
 if the change was intended, export and commit it here; if not, revert it on
 GitHub.
 
-It needs a token, and that token is powerful: GitHub lets a fine-grained token
-list organization rulesets only with **Administration: read and write**, although
-the script only reads. The workflow therefore takes it only from the `org-audit`
-environment, which only the default branch can use, and never runs on pull
-requests. One-time setup, after this repository exists on GitHub:
+It reads the organization as **Orchestration Maestro Audit**, a GitHub App that
+exists only for this check. GitHub lets an App list organization rulesets only
+with **Administration: read and write**, although the script only reads, so its
+key is treated as an admin credential: it lives only in the `org-audit`
+environment, which only `main` can use, and no pull request can reach it. The
+workflow mints a token that expires within the hour, so there is nothing to
+renew.
 
-1. Create a fine-grained personal access token: resource owner
-   Orchestration-Maestro, no repository access, organization permissions
-   Administration (read and write), Custom properties (read) and Webhooks (read),
-   expiring in 90 days. Approve it under Organization settings, Personal access
-   tokens, if the organization asks for approval.
-2. Create the environment and restrict it to `main`:
-   ```bash
-   gh api -X PUT repos/Orchestration-Maestro/.github/environments/org-audit \
-     -F 'deployment_branch_policy[protected_branches]=false' \
-     -F 'deployment_branch_policy[custom_branch_policies]=true'
-   gh api -X POST repos/Orchestration-Maestro/.github/environments/org-audit/deployment-branch-policies \
-     -f name=main -f type=branch
-   ```
-3. Store the token in it: `gh secret set ORG_SETTINGS_TOKEN --env org-audit --repo Orchestration-Maestro/.github`
-4. Run it once: `gh workflow run org-drift.yml --repo Orchestration-Maestro/.github`
+| App permission (organization) | For |
+| --- | --- |
+| Administration: read and write | Settings, Actions policy, security configurations, rulesets |
+| Custom properties: read | The `stack` property |
+| Webhooks: read | `org/webhooks.json` |
 
-Renew the token before it expires; an expired token fails the check loudly.
+The environment holds the App's client ID as the variable
+`ORG_AUDIT_APP_CLIENT_ID` and a private key as the secret
+`ORG_AUDIT_APP_PRIVATE_KEY`. To rotate the key, generate a new one on the App's
+settings page, replace the secret, then delete the old key there.
 
 ## Not covered
 
