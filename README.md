@@ -21,8 +21,10 @@ email, profile fields and the member list.
 | `org/webhooks.json` | Organization webhooks without secrets or query strings, once a token can read them |
 | `scripts/export-org.py` | Regenerates `org/` from the live API |
 | `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/` |
+| `.github/workflows/scorecard.yml` | This repository's weekly OpenSSF Scorecard |
 | `profile/` | The organization page on GitHub, with its banner and pillar icons |
 | `workflow-templates/rust-ci.*` | The "Rust CI" template offered under Actions, New workflow |
+| `workflow-templates/scorecard.*` | The "OpenSSF Scorecard" template, the same workflow for any repository |
 | `assets/` | The mark, the avatar, and the palette, type and prompts behind them |
 | `AGENTS.md` | Instructions for coding agents: change order, API gotchas, invariants |
 | `LICENSE` | MIT, for this repository only: GitHub never inherits a license |
@@ -51,7 +53,7 @@ its own. A repository's own file always wins.
 | `members_can_change_repo_visibility: false` | Only owners change visibility (web UI only) |
 | `deploy_keys_enabled_for_repositories: false` | No repository-scoped SSH keys outside the owner's control |
 | `*_enabled_for_new_repositories` | Legacy switches; `maestrolabs-baseline` supersedes them |
-| Actions `allowed_actions: selected` | Only `actions/*`, `github/*` and `Orchestration-Maestro/*` run, plus `googleapis/release-please-action` for releases |
+| Actions `allowed_actions: selected` | Only `actions/*`, `github/*` and `Orchestration-Maestro/*` run, plus `googleapis/release-please-action` for releases, `codecov/codecov-action` for coverage and `ossf/scorecard-action` for the security score |
 | Actions `sha_pinning_required` | A tag can be moved to new code; a full commit SHA cannot |
 | Actions `self-hosted-runners: none` | On a public repository, any pull request would run code on the runner's machine |
 | Actions `fork-pr-contributor-approval` | Every external contributor's workflow run waits for an owner's approval |
@@ -81,6 +83,14 @@ its own. A repository's own file always wins.
   requests and Workflows write; its client ID and key are the organization
   variable `RELEASE_APP_CLIENT_ID` and secret `RELEASE_APP_PRIVATE_KEY`, stored
   again as Dependabot secrets.
+- **Coverage in Codecov, without a stored token.** The Codecov GitHub App is
+  installed on every repository, and `rust-workflows`' `upload-coverage.yml`
+  logs in through OIDC, so no Codecov token exists to leak or rotate. Codecov
+  reports; the coverage floor in `rust-workflows` is what fails a run.
+- **An OpenSSF Scorecard for every repository.** Each repository runs its own
+  `scorecard.yml`, because the Scorecard API accepts a published result only
+  from a workflow in the scored repository. It publishes the score for a README
+  badge and shows the findings in code scanning.
 
 ## New repository checklist
 
@@ -103,7 +113,10 @@ Settings a new repository needs that no organization default covers:
    ```bash
    gh api -X PATCH repos/Orchestration-Maestro/REPO -F allow_auto_merge=true
    ```
-4. **Social preview:** Settings, General, Social preview, upload a 1280 x 640
+4. **OpenSSF Scorecard:** add the OpenSSF Scorecard workflow from this
+   organization's templates (Actions, New workflow), then the badge
+   `https://api.scorecard.dev/projects/github.com/Orchestration-Maestro/REPO/badge`.
+5. **Social preview:** Settings, General, Social preview, upload a 1280 x 640
    crop of the banner (see `assets/README.md`). Web UI only.
 
 ## Refresh by hand

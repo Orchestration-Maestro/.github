@@ -50,8 +50,9 @@ on any file that disagrees with GitHub.
 - **Public:** files carry no secrets, tokens, personal emails or billing data.
   The export keeps webhook URLs to scheme, host and path.
 - **Workflows**, here and in `workflow-templates/`: actions come only from
-  `actions/*`, `github/*`, `Orchestration-Maestro/*` or, for releases,
-  `googleapis/release-please-action`, pinned to a full commit SHA with the
+  `actions/*`, `github/*`, `Orchestration-Maestro/*`,
+  `googleapis/release-please-action` for releases, `codecov/codecov-action` or
+  `ossf/scorecard-action`, pinned to a full commit SHA with the
   version in a trailing comment; `permissions:` is explicit; input reaches
   `run:` only through `env:`. The organization rejects any other action or pin.
 - **Rust CI job id is `rust`.** `rust-ci-required` requires the check

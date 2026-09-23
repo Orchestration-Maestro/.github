@@ -13,7 +13,9 @@
     "github_owned_allowed": true,
     "patterns_allowed": [
       "Orchestration-Maestro/*",
-      "googleapis/release-please-action@*"
+      "googleapis/release-please-action@*",
+      "codecov/codecov-action@*",
+      "ossf/scorecard-action@*"
     ],
     "verified_allowed": false
   },
