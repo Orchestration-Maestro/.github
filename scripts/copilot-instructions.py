@@ -70,7 +70,8 @@ BY_DIRECTORY = {
     "bin": "Binaries, one file per executable",
     "expected": "What the tool must write for the example input",
     "plans": "Implementation plans",
-    "profile/icons": "The four pillar icons on the organization page",
+    "profile/foundations": "The foundation cards on the organization page",
+    "profile/pillars": "The four pillar icons on the organization page",
     "crates": "The workspace's crates",
     "docs": "Documentation",
     "docs/adr": "Architecture decision records",
@@ -268,7 +269,32 @@ def readme_rows(root, paths):
             named = (base / match.group(1).strip()).as_posix().removeprefix("./")
             rows.setdefault(named + ("/" if match.group(1).strip().endswith("/") else ""),
                             sentence(match.group(2)))
+    rows.update({path: alt for path, alt in image_alts(root, paths).items() if path not in rows})
     return rows
+
+
+def image_alts(root, paths):
+    """Each image's alternative text, from the Markdown that shows it: `![alt](src)`,
+    or an `<img>` tag whose `src` is relative or a raw URL of this repository."""
+    found = {}
+    for page in (p for p in paths if p.endswith(".md") and (root / p).is_file()):
+        text = (root / page).read_text(encoding="utf-8", errors="ignore")
+        pairs = [(m.group(2), m.group(1)) for m in re.finditer(r"!\[([^\]]+)\]\(([^)\s]+)", text)]
+        for tag in re.findall(r"<img\b[^>]*>", text):
+            source = re.search(r'\bsrc="([^"]+)"', tag)
+            alt = re.search(r'\balt="([^"]+)"', tag)
+            if source and alt:
+                pairs.append((source.group(1), alt.group(1)))
+        for source, alt in pairs:
+            if "://" in source:
+                if "/main/" not in source:
+                    continue
+                path = source.split("/main/", 1)[1]
+            else:
+                path = (Path(page).parent / source).as_posix().removeprefix("./")
+            if path in paths:
+                found.setdefault(path, sentence(alt))
+    return found
 
 
 def kept(guide):
