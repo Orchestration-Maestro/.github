@@ -105,7 +105,53 @@ what enforces every rule there, or why it does not apply.
 
 </details>
 
-Read them in full: [engineering rules](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/engineering.md) · [security rules](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/security.md) · [Northstar](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/northstar.md)
+<details>
+<summary><strong>Thirty-four gate rules</strong>: what the shared CI refuses on every pull request, most of them already at commit</summary>
+
+| Rule | In one line |
+| --- | --- |
+| **No import cycle**<br>`ARC-001` | No import cycle between the files of one crate |
+| **Doors only declare**<br>`ARC-002` | A `mod.rs` or library root holds only `mod` and `use` declarations |
+| **Enter through the door**<br>`ARC-003` | No path from outside walks past a name its door re-exports |
+| **Declared layers**<br>`ARC-004` | No import against the layers a target declares |
+| **No one-caller seam**<br>`ARC-005` | A door offers nothing that a single outside module alone uses |
+| **Thin binary roots**<br>`ARC-006` | A binary root holds declarations and a `fn main` of 25 lines at most |
+| **Plain module tree**<br>`ARC-007` | No `#[path]` attribute and no `include!` of Rust source |
+| **Small functions**<br>`SIZE-001` | At most 100 lines, complexity 15, five arguments and four levels of nesting |
+| **Small files**<br>`SIZE-002` | At most 500 lines of code; past 300 it is reported |
+| **Short lines**<br>`SIZE-003` | At most 100 columns, strings and comments included |
+| **Package names**<br>`NAME-001` | Lowercase kebab-case; a publishable crate starts with `maestro-` |
+| **Test names**<br>`NAME-002` | A test says what it proves in four words or more, with no `test_` prefix |
+| **Every file says why**<br>`DOC-001` | Every Rust file opens with a `//!` comment |
+| **The organization's lints**<br>`LNT-001` | Every crate denies the organization's lint list; `clippy.toml` is no looser |
+| **Libraries do not print**<br>`LIB-001` | No print macro in a library |
+| **Typed library errors**<br>`LIB-002` | A library depends on no `anyhow`, `eyre` or `color-eyre` |
+| **No sleeping tests**<br>`TST-001` | A test waits on a fake clock or a synchronisation primitive, never on `sleep` |
+| **One integration-test crate**<br>`TST-003` | Integration tests build as one crate |
+| **No retried tests**<br>`TST-004` | Nothing is retried: a flaky test fails |
+| **Inherited workspace settings**<br>`WSP-001` | Members inherit lints, edition, MSRV, licence and dependencies |
+| **Current editions**<br>`WSP-002` | Edition 2024, resolver 3 and a committed `Cargo.lock` |
+| **Rule of three**<br>`DUP-001` | Three functions of one shape fail; extract what they share |
+| **Linked markers**<br>`HYG-001` | A `TODO` or `FIXME` names its issue |
+| **No pending snapshot**<br>`HYG-002` | No `*.snap.new` or `*.pending-snap` committed |
+| **No large file**<br>`HYG-003` | No file over 500 KB |
+| **Sound files**<br>`HYG-004` | Shebangs match the executable bit; no case clash, no broken symlink |
+| **Required files**<br>`HYG-005` | A `README.md` and a `LICENSE`, and a `CHANGELOG.md` beside release-please |
+| **Coverage floor**<br>`COV-001` | At least 90 % of lines covered |
+| **Covered changes**<br>`COV-002` | A pull request's new lines covered: 95 % for `feat` and `fix`, 90 % otherwise |
+| **Features come with tests**<br>`PRL-001` | A `feat` or `fix` that changes product code touches a test |
+| **Reviewable size**<br>`PRL-002` | A pull request past 400 changed lines is reported |
+| **One version, reviewed licences**<br>`DEP-001` | One version per crate, crates.io only, no yanked or unmaintained crate |
+| **Audited dependencies**<br>`VET-001` | Every dependency has a cargo-vet audit, from six imported audit sets |
+| **Performance budget**<br>`PRF-001` | A declared benchmark rises by 5 % of its instructions at most |
+
+Only ARC-005, DUP-001, HYG-003, TST-001, DEP-001 and PRF-001 take an exception,
+recorded with its reason in the repository's `maestro-quality.toml`; an
+exception that stops being true fails the check.
+
+</details>
+
+Read them in full: [engineering rules](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/engineering.md) · [security rules](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/security.md) · [Northstar](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/northstar.md) · [gate rules](https://github.com/Orchestration-Maestro/rust-workflows/blob/main/docs/ci.md)
 
 ### Aligned with
 
