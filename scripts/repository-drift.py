@@ -45,9 +45,14 @@ OWN_FILES = (
     "AGENTS.md",
     "CONTEXT.md",
     ".github/CODEOWNERS",
+    ".github/copilot-instructions.md",
     ".github/workflows/scorecard.yml",
     ".github/workflows/dependabot-auto-merge.yml",
 )
+# Writes and checks a repository's Copilot guide. rust-workflows, whose guide
+# is the model, keeps its own under its own inventory test.
+GUIDE_SCRIPT = Path(__file__).with_name("copilot-instructions.py")
+GUIDE = ".github/copilot-instructions.md"
 # A file a repository needs only beside another: tools pinned by mise move
 # through the weekly tool updates.
 NEEDED_WITH = {".github/workflows/tool-updates.yml": "mise.toml"}
@@ -89,6 +94,17 @@ def problems_of(repo, stack, gate_bin, workspace):
         )
         if check.returncode != 0:
             problems.append(f"Its default branch drifts: {check.stderr.strip()}")
+        if (checkout / GUIDE).is_file():
+            guide = subprocess.run(
+                [sys.executable, str(GUIDE_SCRIPT), "--check", "--root", str(checkout)],
+                capture_output=True, text=True,
+            )
+            if guide.returncode != 0:
+                problems.append(
+                    f"Its `{GUIDE}` is stale: run "
+                    f"`python3 ../.github/scripts/copilot-instructions.py` at its root "
+                    f"and commit the guide."
+                )
     return problems
 
 
