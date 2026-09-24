@@ -61,9 +61,9 @@ on any file that disagrees with GitHub.
   another id blocks every merge in Rust repositories.
 - **The CI templates are what `rust-gate sync` renders.** Each pins the full SHA
   of a `rust-workflows` release tag's commit, with the tag as the trailing
-  comment (`@<sha>  # v2.0.0`); `quality-sync.yml` moves every repository's pin
-  after a release, and Dependabot leaves it alone. Move a template only to a
-  published release, through a pull request here.
+  comment (`@<sha>  # v2.0.0`); `quality-sync.yml` moves every repository's
+  pins, these templates included, as soon as a release is created, and
+  Dependabot leaves them alone. A template moves only to a published release.
 - **One rule set for all repositories:** every ruleset targets `~ALL`, except
   `rust-ci-required`, which targets `stack=rust`, `hygiene-required`, which
   targets `stack=other`, and `rust-workflows-ci-required`, which holds
