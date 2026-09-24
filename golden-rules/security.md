@@ -120,3 +120,27 @@ unsupported, not compliant.
 | SEC-009 | Review: bounded continuation after a block | The authorized read-only scope and an explicit partial-result report |
 | SEC-010 | Gate: private reporting enabled; review for the fix path | The published channel, the advisory, and the fix merged through the normal gates |
 | SEC-011 | Gate: signing, checksums and SBOM in the release workflow | Signatures or attestations, checksums and an SBOM on each release, and a verification that passes |
+
+## Aligned with
+
+These rules follow the standards below, in the versions reviewed on
+2026-09-24; a new version of any of them triggers a review of these rules. This
+is alignment, not certification: no assessment, score or level is claimed. The
+[engineering rules](engineering.md#aligned-with) map the mandates and
+principles.
+
+| Standard | Version | Control → rule |
+| --- | --- | --- |
+| [OWASP Top 10](https://owasp.org/Top10/2025/) | 2025 | A01 → SEC-003, SEC-004; A03 → SEC-011; A05 → SEC-002, SEC-003; A08 → SEC-011; A09 → SEC-008; A10 → SEC-009 |
+| [OWASP Top 10 for Agentic Applications](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) | 2026 | ASI01 → SEC-002; ASI02 → SEC-003, SEC-005; ASI03 → SEC-004; ASI05 → SEC-006; ASI06 → SEC-002; ASI08 → SEC-007; ASI09 → SEC-005; ASI10 → SEC-007 |
+| [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/) | 2025 | LLM01 → SEC-002; LLM02 → SEC-001; LLM04 → SEC-002; LLM05 → SEC-002, SEC-006; LLM06 → SEC-004, SEC-005; LLM08 → SEC-002 |
+| [OpenSSF OSPS Baseline](https://baseline.openssf.org/) | 2026-08-28 | OSPS-BR-01.01 → SEC-003; OSPS-BR-01.03 → SEC-006; OSPS-BR-06.01 → SEC-011; OSPS-QA-02.02 → SEC-011; OSPS-VM-03.01 → SEC-010 |
+| [NIST SSDF, SP 800-218](https://csrc.nist.gov/pubs/sp/800/218/final) | 1.1 | PS.2, PS.3 → SEC-011; RV.1, RV.2 → SEC-010 |
+| [SLSA](https://slsa.dev/spec/v1.2/) | 1.2 | Build Track → SEC-011 |
+| [OpenSSF Scorecard](https://scorecard.dev/) | Current checks | Dangerous-Workflow → SEC-006; SBOM, Signed-Releases → SEC-011; Security-Policy → SEC-010 |
+
+**Not covered by a golden rule yet:** OWASP A04 (cryptographic failures) and
+A06 (insecure design), ASI07 (insecure inter-agent communication), and LLM07
+(system prompt leakage), LLM09 (misinformation) and LLM10 (unbounded
+consumption). Each repository where one applies binds it in its own rule map
+until a golden rule does.
