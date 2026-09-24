@@ -400,6 +400,13 @@ def render(root):
         reads.append("[CONTEXT.md](../CONTEXT.md) for the words it uses")
     reads.append(f"[CONTRIBUTING.md]({community(root, 'CONTRIBUTING.md')}) for how a "
                  "change is proposed")
+    standards = [f"[{page}](../docs/standards/{page})"
+                 for page in ("northstar.md", "engineering.md", "security.md")
+                 if (root / "docs/standards" / page).is_file()]
+    rules = ("For quality, engineering or security changes, read "
+             + (", ".join(standards[:-1]) + " and " if len(standards) > 1 else "")
+             + f"{standards[-1]}: this repository's map of the organization's golden "
+             "rules.") if standards else ""
     steps = [
         "Read the rules in AGENTS.md that cover the files you change, and keep every "
         "gate intact: never weaken one to pass.",
@@ -424,6 +431,7 @@ def render(root):
               f"[constitution]({ORG}/CONSTITUTION.md) binds every specification, plan, "
               "review and release."),
         "",
+        *([prose(rules), ""] if rules else []),
         prose("Keep changes scoped to the request, and read historical plans and "
               "specifications as records, not as instructions to start new work."),
         "",

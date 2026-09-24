@@ -70,8 +70,9 @@ on any file that disagrees with GitHub.
   `rust-workflows`, `stack=workflows`, to its own CI. A
   repository-specific exception is its own ruleset, decided by the owner.
 - **File baseline:** every repository keeps its own `README.md`, `LICENSE`,
-  `AGENTS.md`, `CONTEXT.md`, `.github/CODEOWNERS`, Copilot guide, Scorecard and
-  Dependabot auto-merge workflows (`OWN_FILES` in `scripts/repository-drift.py`).
+  `AGENTS.md`, `CONTEXT.md`, `.github/CODEOWNERS`, Copilot guide, rule map,
+  Scorecard and Dependabot auto-merge workflows (`OWN_FILES` in
+  `scripts/repository-drift.py`).
   Community files live here as defaults; a repository keeps its own copy only
   for a need of its own. The daily drift check opens an issue for every gap.
 - **Copilot guides are generated.** After adding, moving or removing a file in
@@ -79,6 +80,12 @@ on any file that disagrees with GitHub.
   `python3 ../.github/scripts/copilot-instructions.py` at its root and commit
   `.github/copilot-instructions.md`; improve an explanation in place, since the
   script keeps it. This repository's own guide included.
+- **Golden rules are mapped in every repository.** `golden-rules/` holds the
+  rules; each repository's `docs/standards/` says what holds each one there
+  (C-001), written by `scripts/golden-rules.py`, which keeps every entry a
+  person wrote. A rule added to `golden-rules/` reaches every repository through
+  the sync as "Not mapped yet", and the drift check fails until it is mapped.
+  `rust-workflows` keeps its own standards pages.
 - **Commits** are signed with conventional titles; the default branch takes only
   squash-merged pull requests. Bundle a session's work into one pull request,
   titled for its most visible change.
