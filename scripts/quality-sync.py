@@ -2,7 +2,8 @@
 """Bring every organization repository onto the latest rust-workflows release.
 
 For each repository whose `stack` is `rust` or `other`, clone it, run
-`rust-gate sync` at the release, and when a managed file changed, open or
+`rust-gate sync` at the release, write its rule map from the golden rules and
+its Copilot guide from its files, and when a managed file changed, open or
 update the pull request from `maestro/sync`: one commit through GitHub's
 createCommitOnBranch, which GitHub signs. A minor or patch release merges
 itself once green; a major one waits for a person. `--dry-run` reports what
@@ -31,6 +32,8 @@ from org_quality import (
 )
 
 BRANCH = "maestro/sync"
+# The organization's own writers, beside this script.
+SCRIPTS = Path(__file__).resolve().parent
 
 COMMIT = """
 mutation ($input: CreateCommitOnBranchInput!) {
@@ -109,6 +112,11 @@ def sync_one(repo, pin, version, gate_bin, workspace, dry_run):
     checkout = clone(repo, Path(workspace) / repo)
     before = pinned_version(checkout)
     run(["rust-gate", "sync"], cwd=checkout, env=with_gate(gate_bin, RUST_WORKFLOWS_PIN=pin))
+    # The rule map follows the golden rules; the guide lists every file, the new
+    # ones included once git knows of them.
+    run([sys.executable, str(SCRIPTS / "golden-rules.py"), "--root", str(checkout)])
+    run(["git", "add", "--intent-to-add", "."], cwd=checkout)
+    run([sys.executable, str(SCRIPTS / "copilot-instructions.py"), "--root", str(checkout)])
     files = changed_files(checkout)
     major = before is not None and before.split(".")[0] != version.split(".")[0]
     if not files:

@@ -15,6 +15,12 @@ organization's
 [constitution](https://github.com/Orchestration-Maestro/.github/blob/main/CONSTITUTION.md)
 binds every specification, plan, review and release.
 
+For quality, engineering or security changes, read
+[northstar.md](../docs/standards/northstar.md),
+[engineering.md](../docs/standards/engineering.md) and
+[security.md](../docs/standards/security.md): this repository's map of the
+organization's golden rules.
+
 Keep changes scoped to the request, and read historical plans and specifications
 as records, not as instructions to start new work.
 
@@ -45,6 +51,11 @@ already here, so improve an explanation in place.
 │   ├── avatar.jpg                              # Organization picture, uploaded in Organization settings, Profile (web UI only)
 │   ├── maestro-mark-dark.svg                   # The mark on dark with the glowing star; reference image for renders
 │   └── maestro-mark-flat.svg                   # Master mark, one color (#B7410E); derive every other version from it
+├── docs/                                       # Documentation
+│   └── standards/                              # Standards
+│       ├── engineering.md                      # Engineering rules in .github
+│       ├── northstar.md                        # Northstar for .github
+│       └── security.md                         # Security rules in .github
 ├── golden-rules/                               # The golden rules every repository follows: engineering, security and the Northstar, shown on the organization page
 │   ├── engineering.md                          # Engineering rules
 │   ├── northstar.md                            # Speed, quality, maintainability and security are not a trade-off
@@ -81,6 +92,7 @@ already here, so improve an explanation in place.
 ├── scripts/                                    # Maintenance scripts
 │   ├── copilot-instructions.py                 # Writes and checks each repository's .github/copilot-instructions.md, the Copilot guide modelled on rust-workflows'
 │   ├── export-org.py                           # Regenerates org/ from the live API
+│   ├── golden-rules.py                         # Writes and checks each repository's rule map, docs/standards/{northstar,engineering,security}.md: the golden rules adapted to it
 │   ├── org_quality.py                          # What the organization's quality scripts share
 │   ├── quality-sync.py                         # Bring every organization repository onto the latest rust-workflows release
 │   └── repository-drift.py                     # Hold every organization repository to the standard, one issue each
