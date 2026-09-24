@@ -59,13 +59,15 @@ on any file that disagrees with GitHub.
 - **Rust CI job id is `rust`.** `rust-ci-required` requires the check
   `rust / Required Rust CI` from GitHub Actions (app id 15368). A caller job with
   another id blocks every merge in Rust repositories.
-- **The Rust CI template pins a `rust-workflows` release.** Both jobs pin the
-  full SHA of a release tag's commit, with the tag as the trailing comment
-  (`@<sha>  # v1.0.1`), so Dependabot in a consumer proposes the next release.
-  Move the pin only to a published release, through a pull request here.
+- **The CI templates are what `rust-gate sync` renders.** Each pins the full SHA
+  of a `rust-workflows` release tag's commit, with the tag as the trailing
+  comment (`@<sha>  # v2.0.0`); `quality-sync.yml` moves every repository's pin
+  after a release, and Dependabot leaves it alone. Move a template only to a
+  published release, through a pull request here.
 - **One rule set for all repositories:** every ruleset targets `~ALL`, except
-  `rust-ci-required`, which targets `stack=rust`, and
-  `rust-workflows-ci-required`, which holds `rust-workflows` to its own CI. A
+  `rust-ci-required`, which targets `stack=rust`, `hygiene-required`, which
+  targets `stack=other`, and `rust-workflows-ci-required`, which holds
+  `rust-workflows`, `stack=workflows`, to its own CI. A
   repository-specific exception is its own ruleset, decided by the owner.
 - **Commits** are signed with conventional titles; the default branch takes only
   squash-merged pull requests. Bundle a session's work into one pull request,

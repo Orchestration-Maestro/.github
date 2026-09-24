@@ -1,12 +1,15 @@
 [
   {
     "allowed_values": [
-      "rust"
+      "other",
+      "rust",
+      "workflows"
     ],
-    "description": "Language stack. 'rust' repositories must pass rust-workflows CI (check 'rust / Required Rust CI') before merging to the default branch.",
+    "default_value": "other",
+    "description": "Which checks guard the default branch: 'rust' requires 'rust / Required Rust CI', 'other' requires 'hygiene / Required hygiene', 'workflows' is rust-workflows, held to its own CI by its own ruleset.",
     "property_name": "stack",
     "require_explicit_values": false,
-    "required": false,
+    "required": true,
     "value_type": "single_select",
     "values_editable_by": "org_actors"
   }

@@ -5,8 +5,7 @@ contact_links:
   - name: Report a vulnerability
     url: https://github.com/Orchestration-Maestro/.github/blob/main/SECURITY.md
     about: >-
-      Report privately, never as a public issue. This covers exposed credentials
-      and any security weakness.
+      Report privately, never as a public issue. This covers exposed credentials and any security weakness.
   - name: Read the contributing guide
     url: https://github.com/Orchestration-Maestro/.github/blob/main/CONTRIBUTING.md
     about: >-

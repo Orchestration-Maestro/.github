@@ -1,0 +1,44 @@
+name: Quality sync
+"on":
+  schedule:
+    # Every day, 05:43 UTC, off the hour: a rust-workflows release reaches every
+    # repository within a day, and a run with nothing to sync changes nothing.
+    - cron: "43 5 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quality-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    name: Every repository on the latest rust-workflows release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout the sync script
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: false
+      # The organization bot's token: the sync pull request writes
+      # .github/workflows/ci.yml in every repository, and GitHub signs the
+      # commit createCommitOnBranch makes with it.
+      - name: Mint the bot token
+        id: token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          # Every repository of the organization is synced.
+          owner: ${{ github.repository_owner }}  # zizmor: ignore[github-app]
+          permission-contents: write
+          permission-pull-requests: write
+          permission-workflows: write
+      - name: Sync every repository
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/quality-sync.py
