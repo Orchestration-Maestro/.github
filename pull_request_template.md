@@ -2,6 +2,9 @@
 
 <!-- What this pull request changes and why. Link the issue it closes. -->
 
+- North Star axis this change moves (Speed, Quality, Security or
+  Maintainability), and what it costs the others:
+
 ## Title
 
 The squash merge uses this pull request's title as the commit message, and

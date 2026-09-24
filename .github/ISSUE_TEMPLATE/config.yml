@@ -6,6 +6,10 @@ contact_links:
     url: https://github.com/Orchestration-Maestro/.github/blob/main/SECURITY.md
     about: >-
       Report privately, never as a public issue. This covers exposed credentials and any security weakness.
+  - name: Ask a question or get help
+    url: https://github.com/Orchestration-Maestro/.github/blob/main/SUPPORT.md
+    about: >-
+      Where each kind of question goes, and what to include.
   - name: Read the contributing guide
     url: https://github.com/Orchestration-Maestro/.github/blob/main/CONTRIBUTING.md
     about: >-
