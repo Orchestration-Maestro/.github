@@ -6,8 +6,8 @@
 | `maestro-mark-dark.svg` | The mark on dark with the glowing star; reference image for renders |
 | `avatar.jpg` | Organization picture, uploaded in Organization settings, Profile (web UI only) |
 
-The banner and the pillar icons live in [`../profile/`](../profile/), next to the
-page that shows them.
+The banner and the cards live in [`../profile/`](../profile/), next to the page
+that shows them.
 
 ## Mark
 
@@ -50,8 +50,23 @@ Foundation logo: no letter R, no gear teeth.
 
 ## Icons
 
-Drawn in code: a 32 px Forge Black tile (radius 7) holding a 24 px grid, 2 px
-`#C8743A` stroke with round caps and joins, and exactly one Molten Ember dot.
+Drawn in code on a 24 px grid: a `#C8743A` stroke with round caps and joins,
+and exactly one Molten Ember dot. The pillars are a gauge (speed), a medal
+(quality), a wrench (maintainability) and a keyhole shield (security).
+
+## Cards
+
+Drawn in HTML and captured with headless Chromium at 1.5x, then quantized to
+256 colors with libimagequant. Every card is Forge Black (radius 22) with a
+1.5 px Rust Copper border, a label in spaced Barlow Condensed steel over a
+copper rule, a title in Barlow Condensed bold capitals shading from Bone to
+copper, and text in Bone.
+
+| File | Card |
+| --- | --- |
+| `profile/northstar.png` | 1440 x 480: the Northstar statement, and the mark's ring and ticks around the glowing four-point north star |
+| `profile/pillars/*.png` | 360 x 390: one per pillar, its icon and what it protects |
+| `profile/foundations/fnd-00N.png` | 720 x 400: one per foundation of the [engineering rules](../golden-rules/engineering.md), its number in JetBrains Mono Burnished Brass and its icon |
 
 ## Regenerating artwork
 

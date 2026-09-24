@@ -2,3 +2,4 @@
 # The words this repository means, from [typos] words in maestro-quality.toml.
 
 [default.extend-words]
+FND = "FND"

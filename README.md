@@ -26,7 +26,8 @@ email, profile fields and the member list.
 | `.github/workflows/ci.yml` and the other files `rust-gate sync` writes | This repository's own hygiene CI and managed files, as every repository holds them |
 | `.github/workflows/scorecard.yml` | This repository's weekly OpenSSF Scorecard |
 | `.github/dependabot.yml`, `.github/workflows/dependabot-auto-merge.yml` | Weekly action updates for this repository's workflows, patch and minor merged by the bot |
-| `profile/` | The organization page on GitHub, with its banner and pillar icons |
+| `profile/` | The organization page on GitHub, with its banner, the Northstar panel and the pillar and foundation cards |
+| `golden-rules/` | The golden rules every repository follows: engineering, security and the Northstar, shown on the organization page |
 | `workflow-templates/rust-ci.*` | The "Rust CI" template offered under Actions, New workflow |
 | `workflow-templates/hygiene-ci.*` | The "Hygiene CI" template, for a repository without Rust |
 | `workflow-templates/scorecard.*` | The "OpenSSF Scorecard" template, the same workflow for any repository |
