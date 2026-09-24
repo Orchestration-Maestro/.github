@@ -1,7 +1,7 @@
 # Engineering rules
 
 The engineering rules every repository in the organization follows: four
-foundations, eighteen named principles, eleven hard mandates and four rules for
+foundations, eighteen named principles, fourteen hard mandates and four rules for
 adopting them. Security has its own [security rules](security.md); the
 [Northstar](northstar.md) says what all of them steer toward.
 
@@ -86,7 +86,7 @@ word long. Principles marked **non-negotiable** accept no
 | P-017 | Premature optimisation | Measure before optimising. |
 | P-018 | Broken windows | Fix small neglect before it becomes permission for more. **Non-negotiable.** |
 
-## Eleven hard mandates
+## Fourteen hard mandates
 
 Every mandate except ENF-008 and ENF-009 is **non-negotiable**.
 
@@ -145,9 +145,11 @@ Every mandate except ENF-008 and ENF-009 is **non-negotiable**.
 ### ENF-007 — Pull requests only
 
 - **Requirement:** Every change to the default branch arrives through a pull
-  request, maintainers included. The platform refuses direct pushes.
+  request, maintainers included, as a signed commit. The platform refuses a
+  direct push, a force-push and the deletion of the default branch.
 - **Applies to:** every repository.
-- **Evidence:** the branch ruleset and a refused direct push.
+- **Evidence:** the branch rulesets, and a refused direct push, force-push and
+  unsigned commit.
 
 ### ENF-008 — Tiered checks
 
@@ -160,10 +162,11 @@ Every mandate except ENF-008 and ENF-009 is **non-negotiable**.
 
 ### ENF-009 — Allowlists that cannot rot
 
-- **Requirement:** Every allowlist entry for accepted duplication or retired
-  vocabulary records its reason, and a check fails when the entry is no longer
-  true.
-- **Applies to:** every such allowlist.
+- **Requirement:** Every allowlist entry, suppressed finding and excused lint
+  records its reason and its scope, and a check fails when the entry is no
+  longer true. A suppression never hides a tool error or a missing report.
+- **Applies to:** accepted duplication, retired vocabulary, and every security
+  or quality finding a repository suppresses.
 - **Evidence:** the entries, their reasons, and the check's output.
 
 ### ENF-010 — Configuration is the authority
@@ -182,6 +185,33 @@ Every mandate except ENF-008 and ENF-009 is **non-negotiable**.
 - **Applies to:** every instruction a person or an agent consumes.
 - **Evidence:** permission configuration that holds whatever the instructions
   say.
+
+### ENF-012 — Pinned inputs
+
+- **Requirement:** Every dependency resolves from a committed lockfile, every
+  external CI action or reusable workflow is pinned to a full commit SHA, and
+  every downloaded tool is checked against a pinned checksum. A mutable tag or
+  an unverified download is refused.
+- **Applies to:** build, test, release and CI inputs, the tools and models
+  agents load included.
+- **Evidence:** the lockfiles, the pinning policy, and a refused unpinned
+  reference.
+
+### ENF-013 — No secret in history
+
+- **Requirement:** A secret never enters version control, history, examples and
+  fixtures included. Every push is scanned and the platform blocks one that
+  carries a secret. A leaked secret is revoked and rotated, not merely deleted.
+- **Applies to:** every repository.
+- **Evidence:** the push protection and scanning configuration, and the
+  rotation record of any leak.
+
+### ENF-014 — Multi-factor authentication
+
+- **Requirement:** Every member and outside collaborator signs in with a second
+  factor; the organization refuses access to any account without one.
+- **Applies to:** every account with access to the organization.
+- **Evidence:** the organization's enforced two-factor requirement.
 
 ## Adopting the rules
 
