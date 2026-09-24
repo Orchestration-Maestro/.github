@@ -1,0 +1,5 @@
+# This repository's quality settings; `rust-gate sync` reads them.
+
+[typos]
+# FND is the engineering rules' foundation prefix (FND-001 to FND-004).
+words = ["FND"]
