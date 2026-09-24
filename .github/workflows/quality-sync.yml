@@ -1,8 +1,12 @@
 name: Quality sync
 "on":
+  # rust-workflows' release workflow sends this event as it creates a Release:
+  # the release reaches every repository at once.
+  repository_dispatch:
+    types: [rust-workflows-release]
   schedule:
-    # Every day, 05:43 UTC, off the hour: a rust-workflows release reaches every
-    # repository within a day, and a run with nothing to sync changes nothing.
+    # Every day, 05:43 UTC, off the hour: the net for a missed event, and a run
+    # with nothing to sync changes nothing.
     - cron: "43 5 * * *"
   workflow_dispatch:
 permissions:

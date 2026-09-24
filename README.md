@@ -21,7 +21,7 @@ email, profile fields and the member list.
 | `org/webhooks.json` | Organization webhooks without secrets or query strings |
 | `scripts/export-org.py` | Regenerates `org/` from the live API |
 | `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and that every repository holds the organization's standard |
-| `.github/workflows/quality-sync.yml` | Daily sync pull request in every repository after a `rust-workflows` release |
+| `.github/workflows/quality-sync.yml` | Sync pull request in every repository as soon as `rust-workflows` releases |
 | `scripts/quality-sync.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The sync, the per-repository drift check, and what they share |
 | `.github/workflows/ci.yml` and the other files `rust-gate sync` writes | This repository's own hygiene CI and managed files, as every repository holds them |
 | `.github/workflows/scorecard.yml` | This repository's weekly OpenSSF Scorecard |
@@ -146,9 +146,11 @@ the previous `org/webhooks.json`.
 
 ## Quality sync
 
-`quality-sync.yml` runs every day and on demand. It builds `rust-gate` at the
-latest `rust-workflows` release and, in every repository whose `stack` is `rust`
-or `other`, runs `rust-gate sync`. When a managed file changes, it opens or
+`quality-sync.yml` runs as soon as `rust-workflows` creates a Release, whose
+workflow sends it the event `rust-workflows-release`, and again every day and on
+demand. It builds `rust-gate` at the latest `rust-workflows` release and, in
+every repository whose `stack` is `rust` or `other`, runs `rust-gate sync`,
+which moves every call to `rust-workflows` to that release. When a managed file changes, it opens or
 updates one pull request from `maestro/sync`, a single commit GitHub signs. A
 minor or patch release merges itself once green; a major one waits for a person.
 A repository whose first sync needs a person, a manifest with lint tables of its
