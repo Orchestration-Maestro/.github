@@ -54,19 +54,18 @@ def latest_release():
 
 
 def repositories():
-    """Every repository that is not archived, with its `stack` or None."""
-    values = gh_json("api", "--paginate", f"orgs/{ORG}/properties/values")
-    stacks = {
-        entry["repository_name"]: next(
-            (p["value"] for p in entry["properties"] if p["property_name"] == "stack"),
-            None,
-        )
-        for entry in values
-    }
-    listed = gh_json(
-        "repo", "list", ORG, "--no-archived", "--limit", "500", "--json", "name"
+    """Every repository that is not archived, with its `stack` or None.
+
+    The repository list carries each repository's custom properties, which the
+    organization bot reads through the Metadata permission every installation
+    holds; the organization's property endpoint wants one the bot lacks."""
+    pages = gh_json("api", "--paginate", "--slurp", f"orgs/{ORG}/repos?per_page=100")
+    return sorted(
+        (repo["name"], (repo.get("custom_properties") or {}).get("stack"))
+        for page in pages
+        for repo in page
+        if not repo["archived"]
     )
-    return sorted((repo["name"], stacks.get(repo["name"])) for repo in listed)
 
 
 def install_gate(tag, directory):
