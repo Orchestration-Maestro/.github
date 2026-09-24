@@ -254,3 +254,25 @@ Every mandate except ENF-008 and ENF-009 is **non-negotiable**.
   does.
 - A rule marked **non-negotiable** accepts no exception.
 - A lasting change is a pull request to these rules, never a local weakening.
+
+## Aligned with
+
+These rules follow the standards below, in the versions reviewed on
+2026-09-24; a new version of any of them triggers a review of these rules. This
+is alignment, not certification: no assessment, score or level is claimed. The
+[security rules](security.md#aligned-with) map the rest, and list what no rule
+covers yet.
+
+| Standard | Version | Control → rule |
+| --- | --- | --- |
+| [OWASP Top 10](https://owasp.org/Top10/2025/) | 2025 | A01 → P-014; A02 → ENF-010; A03 → ENF-012; A05 → P-013; A07 → ENF-014; A08 → ENF-007; A10 → P-011 |
+| [OWASP Top 10 for Agentic Applications](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) | 2026 | ASI01 → ENF-011; ASI03 → P-014; ASI04 → ENF-012 |
+| [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/) | 2025 | LLM01 → ENF-011; LLM03 → ENF-012; LLM06 → P-014 |
+| [OpenSSF OSPS Baseline](https://baseline.openssf.org/) | 2026-08-28 | OSPS-AC-01.01 → ENF-014; OSPS-AC-03.01 and AC-03.02 → ENF-007; OSPS-AC-04.01 and AC-04.02 → P-014; OSPS-BR-05.01 → ENF-012; OSPS-BR-07.01 → ENF-013; OSPS-QA-03.01 → ENF-006; OSPS-VM-05.03 and VM-06.02 → ENF-009 |
+| [NIST SSDF, SP 800-218](https://csrc.nist.gov/pubs/sp/800/218/final) | 1.1 | PS.1 → ENF-007, ENF-013, ENF-014 |
+| [SLSA](https://slsa.dev/spec/v1.2/) | 1.2 | Source Track → ENF-007 |
+| [OpenSSF Scorecard](https://scorecard.dev/) | Current checks | Branch-Protection → ENF-007; Pinned-Dependencies → ENF-012; Token-Permissions → P-014 |
+| [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) | 1.0.0 | The whole specification → ENF-004 |
+
+ENF-001, ENF-002, ENF-003, ENF-005 and ENF-008 are the organization's own
+engineering practice: no external standard owns them.

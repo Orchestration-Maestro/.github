@@ -107,6 +107,27 @@ what enforces every rule there, or why it does not apply.
 
 Read them in full: [engineering rules](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/engineering.md) · [security rules](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/security.md) · [Northstar](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/northstar.md)
 
+### Aligned with
+
+Our golden rules follow these standards, in the versions reviewed on
+2026-09-24. Alignment, not certification: no score or level is claimed. See
+which rule meets which control in the
+[engineering](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/engineering.md#aligned-with)
+and
+[security](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/security.md#aligned-with)
+rules.
+
+| Standard | Version | What it covers |
+| --- | --- | --- |
+| [OWASP Top 10](https://owasp.org/Top10/2025/) | 2025 | The most critical web application security risks |
+| [OWASP Top 10 for Agentic Applications](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) | 2026 | Autonomous agents: goal hijack, tool misuse, memory poisoning, rogue agents |
+| [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/) | 2025 | Applications built on large language models |
+| [OpenSSF OSPS Baseline](https://baseline.openssf.org/) | 2026-08-28 | The minimum security controls of an open source project |
+| [NIST SSDF, SP 800-218](https://csrc.nist.gov/pubs/sp/800/218/final) | 1.1 | Secure software development practices |
+| [SLSA](https://slsa.dev/spec/v1.2/) | 1.2 | The integrity of source and builds |
+| [OpenSSF Scorecard](https://scorecard.dev/) | Current checks | Security health checks, run every week on every repository |
+| [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) | 1.0.0 | Commit titles that people and release tools both read |
+
 ## Repositories
 
 | Repository | What it is |
