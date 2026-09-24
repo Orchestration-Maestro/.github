@@ -356,6 +356,24 @@ def community(root, name):
     return f"{ORG}/{name}"
 
 
+def readme_title(root):
+    """The README's Markdown title, never a `#` line inside a code block."""
+    readme = root / "README.md"
+    if not readme.is_file():
+        return ""
+    text = re.sub(r"^```.*?^```", "", readme.read_text(encoding="utf-8"), flags=re.M | re.S)
+    title = re.search(r"^#\s+(.+)$", text, re.M)
+    return title.group(1).strip() if title else ""
+
+
+def repository_name(root):
+    """The name of the repository `root` was cloned from, else its folder's: a README
+    that opens with an HTML title names none in Markdown."""
+    url = subprocess.run(["git", "-C", str(root), "remote", "get-url", "origin"],
+                         capture_output=True, text=True, check=False).stdout.strip()
+    return re.sub(r"\.git$", "", re.split(r"[/:]", url.rstrip("/"))[-1]) or root.resolve().name
+
+
 def purpose(root):
     """What the repository is: its README's first prose paragraph, whole."""
     readme = root / "README.md"
@@ -391,10 +409,7 @@ def render(root):
     guide = root / GUIDE
     previous = kept(guide.read_text(encoding="utf-8")) if guide.is_file() else {}
     paths = tracked(root)
-    readme = root / "README.md"
-    title = re.search(r"^#\s+(.+)$", readme.read_text(encoding="utf-8"), re.M) \
-        if readme.is_file() else None
-    name = title.group(1).strip() if title else root.resolve().name
+    name = readme_title(root) or repository_name(root)
     reads = ["[AGENTS.md](../AGENTS.md) for the rules that bind every change"]
     if (root / "CONTEXT.md").is_file():
         reads.append("[CONTEXT.md](../CONTEXT.md) for the words it uses")
