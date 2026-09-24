@@ -20,7 +20,7 @@ email, profile fields and the member list.
 | `org/rulesets/*.json` | Organization rulesets, in the shape `PUT orgs/{org}/rulesets/{id}` accepts |
 | `org/webhooks.json` | Organization webhooks without secrets or query strings |
 | `scripts/export-org.py` | Regenerates `org/` from the live API |
-| `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and that every repository holds the organization's standard |
+| `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and a daily one that every repository holds the standard and the file baseline |
 | `.github/workflows/quality-sync.yml` | Sync pull request in every repository as soon as `rust-workflows` releases |
 | `scripts/quality-sync.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The sync, the per-repository drift check, and what they share |
 | `.github/workflows/ci.yml` and the other files `rust-gate sync` writes | This repository's own hygiene CI and managed files, as every repository holds them |
@@ -33,6 +33,8 @@ email, profile fields and the member list.
 | `assets/` | The mark, the avatar, and the palette, type and prompts behind them |
 | `CONSTITUTION.md` | The rules every specification, plan, review and release in the organization satisfies; Spec Kit's constitution |
 | `AGENTS.md` | Instructions for coding agents: change order, API gotchas, invariants |
+| `CONTEXT.md` | The words this repository uses: stack, standard, file baseline, default, drift |
+| `.github/CODEOWNERS` | Every change here goes to the maintainer for review |
 | `LICENSE` | MIT, for this repository only: GitHub never inherits a license |
 
 ### Defaults every repository inherits
@@ -45,6 +47,7 @@ its own. A repository's own file always wins.
 | `SECURITY.md` | Security policy, pointing reporters at private vulnerability reporting |
 | `CONTRIBUTING.md` | Contribution guide, with the rules every pull request passes |
 | `CODE_OF_CONDUCT.md` | Contributor Covenant 2.1 |
+| `SUPPORT.md` | Where each kind of question goes, and what to include |
 | `pull_request_template.md` | Pull request description template |
 | `.github/ISSUE_TEMPLATE/` | Bug and feature forms; blank issues are off |
 
@@ -114,11 +117,14 @@ Settings a new repository needs that no organization default covers:
    RUST_WORKFLOWS_PIN="<release commit> v<version>" rust-gate init
    ```
 
-2. **Reported content:** Settings, Moderation options, Reported content, select
+2. **Files of its own:** `README.md`, `LICENSE`, `AGENTS.md`, `CONTEXT.md` and
+   `.github/CODEOWNERS`, the file baseline GitHub never inherits. The drift
+   check opens an issue for any that is missing.
+3. **Reported content:** Settings, Moderation options, Reported content, select
    **All users**, Save. The Code of Conduct sends reports to this button; the
    default admits only prior contributors, so a newcomer could not report.
    There is no API for it.
-3. **Dependabot auto-merge:** turn on auto-merge, then copy
+4. **Dependabot auto-merge:** turn on auto-merge, then copy
    `rust-workflows`' `.github/workflows/dependabot-auto-merge.yml`; the bot's
    credentials are already organization-wide.
 
@@ -126,10 +132,10 @@ Settings a new repository needs that no organization default covers:
    gh api -X PATCH repos/Orchestration-Maestro/REPO -F allow_auto_merge=true
    ```
 
-4. **OpenSSF Scorecard:** add the OpenSSF Scorecard workflow from this
+5. **OpenSSF Scorecard:** add the OpenSSF Scorecard workflow from this
    organization's templates (Actions, New workflow), then the badge
    `https://api.scorecard.dev/projects/github.com/Orchestration-Maestro/REPO/badge`.
-5. **Social preview:** Settings, General, Social preview, upload a 1280 x 640
+6. **Social preview:** Settings, General, Social preview, upload a 1280 x 640
    crop of the banner (see `assets/README.md`). Web UI only.
 
 ## Refresh by hand
@@ -159,10 +165,10 @@ own for instance, is named in the run's log and failed. It runs as the
 organization bot, whose token already writes contents, pull requests and
 workflows in every repository.
 
-## Weekly drift check
+## Drift checks
 
-`org-drift.yml` runs every Monday and on demand. It exports the live settings and
-fails when they differ from `org/`. On a failure, read the diff in the run log:
+`org-drift.yml` checks the settings every Monday and on demand. It exports the
+live settings and fails when they differ from `org/`. On a failure, read the diff in the run log:
 if the change was intended, export and commit it here; if not, revert it on
 GitHub.
 
@@ -181,11 +187,22 @@ renew.
 | Webhooks: read | `org/webhooks.json` |
 
 A second job, **Every repository on the standard**, reads every repository as
-the organization bot. A repository drifts when it has no `stack`, when its sync
-pull request has waited more than 14 days, or when `rust-gate sync --check` at
-the latest release finds a managed file that differs on its default branch. Each
-drifting repository has one open issue here, `Drift: <name>`, updated on every
-run and closed once it is back on the standard.
+the organization bot every day, on every push to `main` and on demand. A
+repository drifts when it has no `stack`, when its sync pull request has waited
+more than 14 days, when `rust-gate sync --check` at the latest release finds a
+managed file that differs on its default branch, or when it strays from the
+file baseline in `scripts/repository-drift.py`:
+
+- it misses a file every repository keeps of its own: `README.md`, `LICENSE`,
+  `AGENTS.md`, `CONTEXT.md`, `.github/CODEOWNERS`, and the Scorecard and
+  Dependabot auto-merge workflows;
+- it pins tools in `mise.toml` without the weekly `tool-updates.yml`;
+- it keeps a copy identical to one of the defaults above, which a repository
+  keeps only for a need of its own;
+- its issue forms apply a label it lacks, which GitHub skips.
+
+Each drifting repository has one open issue here, `Drift: <name>`, updated on
+every run and closed once it is back on the standard.
 
 The environment holds the App's client ID as the variable
 `ORG_AUDIT_APP_CLIENT_ID` and a private key as the secret

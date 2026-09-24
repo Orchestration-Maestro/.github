@@ -1,7 +1,8 @@
 name: Bug report
 description: Report a reproducible problem.
 title: '[Bug]: '
-labels: ['bug']
+# needs-triage: every new issue waits in one queue until a maintainer sorts it.
+labels: ['bug', 'needs-triage']
 body:
   - type: markdown
     attributes:

@@ -69,6 +69,11 @@ on any file that disagrees with GitHub.
   targets `stack=other`, and `rust-workflows-ci-required`, which holds
   `rust-workflows`, `stack=workflows`, to its own CI. A
   repository-specific exception is its own ruleset, decided by the owner.
+- **File baseline:** every repository keeps its own `README.md`, `LICENSE`,
+  `AGENTS.md`, `CONTEXT.md`, `.github/CODEOWNERS`, Scorecard and Dependabot
+  auto-merge workflows (`OWN_FILES` in `scripts/repository-drift.py`). Community
+  files live here as defaults; a repository keeps its own copy only for a need
+  of its own. The daily drift check opens an issue for every gap.
 - **Commits** are signed with conventional titles; the default branch takes only
   squash-merged pull requests. Bundle a session's work into one pull request,
   titled for its most visible change.
@@ -77,7 +82,7 @@ on any file that disagrees with GitHub.
 
 GitHub reads issue forms only from `.github/ISSUE_TEMPLATE/` of this repository,
 and every other inherited file (`SECURITY.md`, `CONTRIBUTING.md`,
-`CODE_OF_CONDUCT.md`, `pull_request_template.md`) from the root. A workflow
+`CODE_OF_CONDUCT.md`, `SUPPORT.md`, `pull_request_template.md`) from the root. A workflow
 template needs a `.properties.json` with the same name. `LICENSE` covers this
 repository only: GitHub never inherits a license.
 
@@ -101,4 +106,4 @@ Done when every command passes, and a second export leaves `org/` unchanged.
   it holds the palette, the logo concept and the prompts.
 - **New repository in the organization:** apply README's "New repository
   checklist".
-- **Drift token setup or renewal:** README's "Weekly drift check".
+- **Drift token setup or renewal:** README's "Drift checks".
