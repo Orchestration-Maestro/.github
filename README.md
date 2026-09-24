@@ -23,6 +23,7 @@ email, profile fields and the member list.
 | `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and a daily one that every repository holds the standard and the file baseline |
 | `.github/workflows/quality-sync.yml` | Sync pull request in every repository as soon as `rust-workflows` releases |
 | `scripts/quality-sync.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The sync, the per-repository drift check, and what they share |
+| `scripts/copilot-instructions.py` | Writes and checks each repository's `.github/copilot-instructions.md`, the Copilot guide modelled on `rust-workflows`' |
 | `.github/workflows/ci.yml` and the other files `rust-gate sync` writes | This repository's own hygiene CI and managed files, as every repository holds them |
 | `.github/workflows/scorecard.yml` | This repository's weekly OpenSSF Scorecard |
 | `.github/dependabot.yml`, `.github/workflows/dependabot-auto-merge.yml` | Weekly action updates for this repository's workflows, patch and minor merged by the bot |
@@ -117,9 +118,12 @@ Settings a new repository needs that no organization default covers:
    RUST_WORKFLOWS_PIN="<release commit> v<version>" rust-gate init
    ```
 
-2. **Files of its own:** `README.md`, `LICENSE`, `AGENTS.md`, `CONTEXT.md` and
-   `.github/CODEOWNERS`, the file baseline GitHub never inherits. The drift
-   check opens an issue for any that is missing.
+2. **Files of its own:** `README.md`, `LICENSE`, `AGENTS.md`, `CONTEXT.md`,
+   `.github/CODEOWNERS` and the Copilot guide, the file baseline GitHub never
+   inherits. Write the guide from the new repository's root with
+   `python3 ../.github/scripts/copilot-instructions.py`, then improve any
+   explanation in place: the script keeps them. The drift check opens an issue
+   for any file that is missing.
 3. **Reported content:** Settings, Moderation options, Reported content, select
    **All users**, Save. The Code of Conduct sends reports to this button; the
    default admits only prior contributors, so a newcomer could not report.
@@ -199,7 +203,10 @@ file baseline in `scripts/repository-drift.py`:
 - it pins tools in `mise.toml` without the weekly `tool-updates.yml`;
 - it keeps a copy identical to one of the defaults above, which a repository
   keeps only for a need of its own;
-- its issue forms apply a label it lacks, which GitHub skips.
+- its issue forms apply a label it lacks, which GitHub skips;
+- its Copilot guide is stale: `scripts/copilot-instructions.py --check` finds a
+  file added or removed since the guide was written. `rust-workflows` keeps
+  its own guide, the model, under its own inventory test.
 
 Each drifting repository has one open issue here, `Drift: <name>`, updated on
 every run and closed once it is back on the standard.

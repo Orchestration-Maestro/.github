@@ -70,10 +70,15 @@ on any file that disagrees with GitHub.
   `rust-workflows`, `stack=workflows`, to its own CI. A
   repository-specific exception is its own ruleset, decided by the owner.
 - **File baseline:** every repository keeps its own `README.md`, `LICENSE`,
-  `AGENTS.md`, `CONTEXT.md`, `.github/CODEOWNERS`, Scorecard and Dependabot
-  auto-merge workflows (`OWN_FILES` in `scripts/repository-drift.py`). Community
-  files live here as defaults; a repository keeps its own copy only for a need
-  of its own. The daily drift check opens an issue for every gap.
+  `AGENTS.md`, `CONTEXT.md`, `.github/CODEOWNERS`, Copilot guide, Scorecard and
+  Dependabot auto-merge workflows (`OWN_FILES` in `scripts/repository-drift.py`).
+  Community files live here as defaults; a repository keeps its own copy only
+  for a need of its own. The daily drift check opens an issue for every gap.
+- **Copilot guides are generated.** After adding, moving or removing a file in
+  any repository but `rust-workflows`, run
+  `python3 ../.github/scripts/copilot-instructions.py` at its root and commit
+  `.github/copilot-instructions.md`; improve an explanation in place, since the
+  script keeps it. This repository's own guide included.
 - **Commits** are signed with conventional titles; the default branch takes only
   squash-merged pull requests. Bundle a session's work into one pull request,
   titled for its most visible change.
