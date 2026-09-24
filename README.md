@@ -31,6 +31,7 @@ email, profile fields and the member list.
 | `workflow-templates/hygiene-ci.*` | The "Hygiene CI" template, for a repository without Rust |
 | `workflow-templates/scorecard.*` | The "OpenSSF Scorecard" template, the same workflow for any repository |
 | `assets/` | The mark, the avatar, and the palette, type and prompts behind them |
+| `CONSTITUTION.md` | The rules every specification, plan, review and release in the organization satisfies; Spec Kit's constitution |
 | `AGENTS.md` | Instructions for coding agents: change order, API gotchas, invariants |
 | `LICENSE` | MIT, for this repository only: GitHub never inherits a license |
 
