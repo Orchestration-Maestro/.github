@@ -15,16 +15,20 @@ email, profile fields and the member list.
 | --- | --- |
 | `org/settings.json` | Organization fields that differ from the defaults table in the script |
 | `org/actions.json` | Actions policy: allowed actions, SHA pinning, and anything else non-default |
-| `org/custom-properties.json` | The `stack` property the Rust CI ruleset selects on |
+| `org/custom-properties.json` | The `stack` property the Rust and hygiene rulesets select on |
 | `org/security-configurations.json` | `maestrolabs-baseline`, enforced and the default for every new repository |
 | `org/rulesets/*.json` | Organization rulesets, in the shape `PUT orgs/{org}/rulesets/{id}` accepts |
 | `org/webhooks.json` | Organization webhooks without secrets or query strings |
 | `scripts/export-org.py` | Regenerates `org/` from the live API |
-| `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/` |
+| `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and that every repository holds the organization's standard |
+| `.github/workflows/quality-sync.yml` | Daily sync pull request in every repository after a `rust-workflows` release |
+| `scripts/quality-sync.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The sync, the per-repository drift check, and what they share |
+| `.github/workflows/ci.yml` and the other files `rust-gate sync` writes | This repository's own hygiene CI and managed files, as every repository holds them |
 | `.github/workflows/scorecard.yml` | This repository's weekly OpenSSF Scorecard |
 | `.github/dependabot.yml`, `.github/workflows/dependabot-auto-merge.yml` | Weekly action updates for this repository's workflows, patch and minor merged by the bot |
 | `profile/` | The organization page on GitHub, with its banner and pillar icons |
 | `workflow-templates/rust-ci.*` | The "Rust CI" template offered under Actions, New workflow |
+| `workflow-templates/hygiene-ci.*` | The "Hygiene CI" template, for a repository without Rust |
 | `workflow-templates/scorecard.*` | The "OpenSSF Scorecard" template, the same workflow for any repository |
 | `assets/` | The mark, the avatar, and the palette, type and prompts behind them |
 | `AGENTS.md` | Instructions for coding agents: change order, API gotchas, invariants |
@@ -59,7 +63,8 @@ its own. A repository's own file always wins.
 | Actions `self-hosted-runners: none` | On a public repository, any pull request would run code on the runner's machine |
 | Actions `fork-pr-contributor-approval` | Every external contributor's workflow run waits for an owner's approval |
 | Actions `artifact-and-log-retention: 30` | Public logs and artifacts are readable by anyone signed in; keep them shorter |
-| `stack` (`rust`, optional) | Set it on a Rust repository whose CI calls `rust-workflows` as job `rust`, to require that CI before merge |
+| `stack` (`rust`, `other` or `workflows`, required) | Every repository says which checks guard its default branch: `rust` requires `rust / Required Rust CI`, `other` requires `hygiene / Required hygiene`, and `workflows` is `rust-workflows`, held to its own CI by its own ruleset; `quality-sync.yml` syncs `rust` and `other` |
+| `hygiene-required` | A repository without Rust passes the organization's hygiene checks before merge, as a Rust one passes its CI |
 | `maestrolabs-baseline` | CodeQL, secret scanning with push protection, Dependabot, private vulnerability reporting |
 | `floor-no-destruction` | No deletion or force-push of any default branch |
 | `floor-release-tags` | `v*` tags cannot be deleted or moved; creation stays open for releases |
@@ -97,13 +102,17 @@ its own. A repository's own file always wins.
 
 Settings a new repository needs that no organization default covers:
 
-1. **Rust repositories** that call `rust-workflows` as job `rust`, as the Rust CI
-   template does: set `stack=rust`, so `rust-ci-required` applies.
-   `rust-workflows` itself has its own ruleset and no `stack`.
+1. **Stack and managed files:** set `stack` to `rust` or `other`, then run
+   `rust-gate init` at the latest `rust-workflows` release in the new
+   repository and commit what it writes: the CI caller, the hooks and every
+   managed file. From then on `quality-sync.yml` keeps them current.
+
    ```bash
    gh api -X PATCH repos/Orchestration-Maestro/REPO/properties/values \
      --input - <<< '{"properties":[{"property_name":"stack","value":"rust"}]}'
+   RUST_WORKFLOWS_PIN="<release commit> v<version>" rust-gate init
    ```
+
 2. **Reported content:** Settings, Moderation options, Reported content, select
    **All users**, Save. The Code of Conduct sends reports to this button; the
    default admits only prior contributors, so a newcomer could not report.
@@ -111,9 +120,11 @@ Settings a new repository needs that no organization default covers:
 3. **Dependabot auto-merge:** turn on auto-merge, then copy
    `rust-workflows`' `.github/workflows/dependabot-auto-merge.yml`; the bot's
    credentials are already organization-wide.
+
    ```bash
    gh api -X PATCH repos/Orchestration-Maestro/REPO -F allow_auto_merge=true
    ```
+
 4. **OpenSSF Scorecard:** add the OpenSSF Scorecard workflow from this
    organization's templates (Actions, New workflow), then the badge
    `https://api.scorecard.dev/projects/github.com/Orchestration-Maestro/REPO/badge`.
@@ -132,6 +143,18 @@ The script needs only Python 3 and `gh`. It warns when GitHub reports an
 organization field its defaults table does not classify, so a new setting is
 reviewed instead of silently dropped. Without webhook access it warns and keeps
 the previous `org/webhooks.json`.
+
+## Quality sync
+
+`quality-sync.yml` runs every day and on demand. It builds `rust-gate` at the
+latest `rust-workflows` release and, in every repository whose `stack` is `rust`
+or `other`, runs `rust-gate sync`. When a managed file changes, it opens or
+updates one pull request from `maestro/sync`, a single commit GitHub signs. A
+minor or patch release merges itself once green; a major one waits for a person.
+A repository whose first sync needs a person, a manifest with lint tables of its
+own for instance, is named in the run's log and failed. It runs as the
+organization bot, whose token already writes contents, pull requests and
+workflows in every repository.
 
 ## Weekly drift check
 
@@ -153,6 +176,13 @@ renew.
 | Administration: read and write | Settings, Actions policy, security configurations, rulesets |
 | Custom properties: read | The `stack` property |
 | Webhooks: read | `org/webhooks.json` |
+
+A second job, **Every repository on the standard**, reads every repository as
+the organization bot. A repository drifts when it has no `stack`, when its sync
+pull request has waited more than 14 days, or when `rust-gate sync --check` at
+the latest release finds a managed file that differs on its default branch. Each
+drifting repository has one open issue here, `Drift: <name>`, updated on every
+run and closed once it is back on the standard.
 
 The environment holds the App's client ID as the variable
 `ORG_AUDIT_APP_CLIENT_ID` and a private key as the secret

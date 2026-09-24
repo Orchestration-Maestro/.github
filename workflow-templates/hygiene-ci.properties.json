@@ -1,0 +1,8 @@
+{
+  "name": "Hygiene CI",
+  "description": "The organization's checks for a repository without Rust, through rust-workflows' hygiene.yml: secret scan, repository hygiene, managed files and the commit hooks over every file.",
+  "iconName": "octicon workflow",
+  "categories": [
+    "Markdown"
+  ]
+}
