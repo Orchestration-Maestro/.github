@@ -115,6 +115,9 @@ def sync_one(repo, pin, version, gate_bin, workspace, dry_run):
     # The rule map follows the golden rules; the guide lists every file, the new
     # ones included once git knows of them.
     run([sys.executable, str(SCRIPTS / "golden-rules.py"), "--root", str(checkout)])
+    # The organization page lists the gate's rules as this release holds them.
+    run([sys.executable, str(SCRIPTS / "gate-rules.py"), "--root", str(checkout)],
+        env=with_gate(gate_bin))
     run(["git", "add", "--intent-to-add", "."], cwd=checkout)
     run([sys.executable, str(SCRIPTS / "copilot-instructions.py"), "--root", str(checkout)])
     files = changed_files(checkout)
