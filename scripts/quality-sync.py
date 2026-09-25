@@ -77,10 +77,14 @@ def publish(repo, checkout, files, title, text, merge):
     except RuntimeError:
         run(["gh", "api", "-X", "POST", f"repos/{ORG}/{repo}/git/refs",
              "-f", f"ref=refs/heads/{BRANCH}", "-f", f"sha={head}"])
+    # `rust-gate sync` also deletes the files it no longer writes: a path gone
+    # from the checkout is a deletion, every other one an addition.
     additions = [
         {"path": path, "contents": base64.b64encode((Path(checkout) / path).read_bytes()).decode()}
         for path in files
+        if (Path(checkout) / path).is_file()
     ]
+    deletions = [{"path": path} for path in files if not (Path(checkout) / path).exists()]
     body = {
         "query": COMMIT,
         "variables": {
@@ -88,7 +92,7 @@ def publish(repo, checkout, files, title, text, merge):
                 "branch": {"repositoryNameWithOwner": f"{ORG}/{repo}", "branchName": BRANCH},
                 "expectedHeadOid": head,
                 "message": {"headline": title},
-                "fileChanges": {"additions": additions},
+                "fileChanges": {"additions": additions, "deletions": deletions},
             }
         },
     }
