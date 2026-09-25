@@ -1,111 +1,71 @@
-# Maestro Constitution
+# Constitution
 
-The rules every specification, plan, task, review and release in the Maestro
-repositories must satisfy. The architecture lives in maestro-core's
-[`docs/architecture/`](https://github.com/Orchestration-Maestro/maestro-core/blob/main/docs/architecture/README.md);
-the decisions in its
-[`docs/adr/`](https://github.com/Orchestration-Maestro/maestro-core/blob/main/docs/adr/README.md).
-Spec Kit, installed once beside the organization's checkouts rather than in any
-repository, reads this file as its constitution.
+Spec Kit, installed once beside the organization's checkouts, reads this page as
+its constitution. It holds no rule of its own: the pages it points to do, and
+they come first. When this page, a specification, a plan or a task disagrees
+with them, they win and this page is the one to fix.
 
-## Core Principles
+## What this is about
 
-### I. Evidence over assertion (NON-NEGOTIABLE)
+We build Maestro, an organizational agent platform that removes the plumbing
+from agentic development while keeping every action governed and every answer
+traceable: a catalog of agents, skills and workflows, a local runtime that runs
+them under a host-owned policy broker, and a knowledge kernel that serves
+source-backed evidence. [What Maestro is](https://github.com/Orchestration-Maestro/maestro-core/blob/main/docs/architecture/README.md#1-what-maestro-is) says it in
+full; the [organization page](profile/README.md) lists the repositories.
 
-A capability exists when a test, a CI gate or an evaluation proves it, and not
-before. Reports never turn a failed, skipped or unavailable check into a pass;
-missing is not zero; a green run over zero relevant tests proves nothing. Every
-quality claim links to the run, report or artifact that supports it.
+## Who we are
 
-### II. Vertical slices, no scaffolding
+| Page | What it sets |
+| --- | --- |
+| [Northstar](golden-rules/northstar.md) | The direction every repository steers by: four pillars, one KPI each |
+| [Organization page](profile/README.md) | The Northstar, the golden rules and the repositories, on one page |
+| [Brand](assets/README.md) | The mark, the avatar, the palette and the type |
 
-Each slice delivers working, released software end to end. No empty crates, stub
-commands, placeholder interfaces or frameworks ahead of need. A seam exists only
-where two implementations vary across it. Only the active slice is specified in
-detail.
+## The rules
 
-### III. Test-first, deep modules
+| Page | What it holds |
+| --- | --- |
+| [Engineering rules](golden-rules/engineering.md) | Four foundations (FND), eighteen named principles (P), fourteen hard mandates (ENF) and the rules for adopting them (C); nothing overrides them |
+| [Security rules](golden-rules/security.md) | Eleven rules for people and agents alike (SEC) |
+| [Gate rules](https://github.com/Orchestration-Maestro/rust-workflows/blob/main/docs/ci.md) | The thirty-four rules the shared CI refuses: ARC, SIZE, NAME, DOC, LNT, LIB, TST, WSP, DUP, HYG, COV, PRL, DEP, VET and PRF |
+| A repository's `docs/standards/` | Its rule map: what holds each rule there, or why it does not apply (C-001) |
+| A repository's architecture and ADRs | What it builds and why; maestro-core's [architecture](https://github.com/Orchestration-Maestro/maestro-core/blob/main/docs/architecture/README.md) sets the product's principles |
 
-Changed behaviour starts with a failing test, then the smallest implementation
-that passes, then refactoring. Modules expose small interfaces over substantial
-behaviour and are tested through those interfaces. Denial and refusal tests must
-prove their stimulus reached the real guard.
+## Our stack
 
-### IV. Provenance and immutability
+What we build with. The
+[technology matrix](https://github.com/Orchestration-Maestro/maestro-core/blob/main/docs/architecture/README.md#5-technology-matrix) holds every choice, its version,
+the alternatives and why; this table only names them.
 
-Original bytes, captures, canonical documents, chunks, bundles and run artifacts
-are immutable and content-addressed. Every derived record points to its exact
-sources and to the profile that produced it. The kernel is the only authority;
-indexes, graphs and caches are generation-stamped projections that can always be
-rebuilt.
+| Layer | What we use |
+| --- | --- |
+| Language | Rust, edition 2024, for everything first-party |
+| Knowledge kernel | SQLite and content-addressed artifacts, the only authority; Qdrant and Neo4j as rebuildable projections |
+| Models | Local llama.cpp models through [maestro-model-router](https://github.com/Orchestration-Maestro/maestro-model-router); GitHub Copilot as the explicit managed route |
+| Agents and tools | GitHub Copilot's native catalog formats, MCP through rmcp, and an event-sourced workflow engine on the kernel journal |
+| Guardrails | Cedar for authorization, Landlock and seccomp for the sandbox, JSON Schema for handoff contracts |
 
-### V. The host decides (NON-NEGOTIABLE)
+How we deliver it:
 
-Policies, catalog prose, source documents, retrieved passages, model outputs and
-tool outputs are data, never grants. Only the host broker, evaluating reviewed
-policy against trusted facts, allows an effect; only host acceptance, checking
-contracts against recorded evidence, completes a task. Default deny.
+| Tool | What it does for us |
+| --- | --- |
+| [rust-workflows](https://github.com/Orchestration-Maestro/rust-workflows) | The shared CI every repository calls, and `rust-gate`, which holds the gate rules at commit and in CI |
+| [Quality sync](README.md#quality-sync) | Every repository's managed files, rendered by `rust-gate sync` and moved to each rust-workflows release by a pull request |
+| mise and prek | The pinned toolbelt `scripts/bootstrap.sh` installs, and the commit hooks, the same locally and in CI |
+| [Spec Kit](https://github.com/github/spec-kit) | Specifications, plans and tasks, under each repository's `specs/NNN-*/`; installed once, never committed |
+| [Organization settings](README.md#what-each-decision-is-for) | Rulesets, properties and security settings as code in `org/`, checked for drift every week |
+| release-please | Versions and changelogs from conventional pull request titles (ENF-004) |
 
-### VI. Rust first, exceptions visible
+## How Spec Kit applies them
 
-First-party code is Rust. A non-Rust component is allowed when it is external
-(the model router's llama.cpp, a database server, the Copilot runtime) or when a
-recorded exception names the missing capability, the alternatives considered,
-its inputs and outputs, and its owner. Existing Python producers run until their
-native replacement passes parity, source by source.
+- A specification names the rules it touches by their IDs, and a plan says what
+  holds each one there: a gate, a test or a review step, as the repository's
+  rule map does (C-001).
+- A plan and its tasks follow the four foundations, FND-001 to FND-004.
+- A departure from a rule is an exception as the
+  [engineering rules](golden-rules/engineering.md#exceptions) set it out, never a
+  local weakening (C-006).
 
-### VII. Local first, no silent degradation
-
-Local models by default; the managed route is an explicit per-node profile. No
-provider fallback, no truncation, no skipped gate, no hidden retry of a
-non-idempotent effect. An unavailable dependency is a typed refusal with a
-remediation.
-
-### VIII. Measured, not assumed
-
-Models, fusion weights, features and optimizations are chosen by recorded
-evaluation on our own suites and data; performance work starts from a
-measurement. No model, threshold or number is invented; an initial target is
-labelled as such and revisited once measured.
-
-## Quality Gates
-
-- **CI:** every repository calls `Orchestration-Maestro/rust-workflows` pinned by
-  commit (currently v1.2.1): formatting, Clippy pedantic with warnings denied,
-  tests and doctests, line coverage ≥ 90 %, mutation testing on changed code,
-  public API compatibility, unused dependencies, unsafe code denied, licence and
-  advisory policy, secret scanning, SARIF, SBOMs and attested releases.
-- **Source limits:** cognitive complexity ≤ 15; functions ≤ 100 lines and ≤ 5
-  parameters; files ≤ 500 counted lines (reported above 300); Rust, shell and
-  Just lines ≤ 100 columns; public and private items documented; no `unwrap`,
-  `expect`, `panic!`, `todo!` or `dbg!` in production code.
-- **Evaluations:** public synthetic suites gate pull requests; private suites
-  run on the reference workstation and their reports accompany any change to
-  retrieval, prompts, models or policies. A drop of more than 2 points on a
-  gated retrieval metric, or any command-exactness failure, blocks the change.
-- **Security:** policy rules ship with an allowed-neighbour test and a denied
-  test; no secret, personal path or vendor-private material in public
-  repositories.
-
-## Development Workflow
-
-- Pull requests only, squash merges, signed commits, conventional titles; one
-  pull request per repository per working session, with a `feat` and a `fix`
-  never sharing one.
-- `just check` passes locally before any commit is pushed.
-- Specs, plans and tasks follow Spec Kit (`specs/NNN-slug/`); the plan names
-  exact files, interfaces and tests; tasks are small enough to review alone.
-- Documentation tables are generated from their sources where a source exists;
-  hand-maintained duplicates are not accepted.
-- English for code, identifiers and repository prose.
-
-## Governance
-
-This constitution supersedes conflicting guidance in any other document. An
-amendment is a pull request that changes this file, states the reason and the
-migration of affected specs, and bumps the version: major for a removed or
-redefined principle, minor for an added principle or gate, patch for wording.
-Reviews check compliance; a justified exception is recorded in the plan's
-complexity-tracking table with an owner and an expiry.
-
-**Version**: 1.0.1 | **Ratified**: 2026-09-23 | **Last Amended**: 2026-09-24
+A rule changes through a pull request to the page that holds it. This page
+changes only when one of those pages moves or a new one joins.

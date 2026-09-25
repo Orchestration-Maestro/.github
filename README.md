@@ -34,7 +34,7 @@ email, profile fields and the member list.
 | `workflow-templates/hygiene-ci.*` | The "Hygiene CI" template, for a repository without Rust |
 | `workflow-templates/scorecard.*` | The "OpenSSF Scorecard" template, the same workflow for any repository |
 | `assets/` | The mark, the avatar, and the palette, type and prompts behind them |
-| `CONSTITUTION.md` | The rules every specification, plan, review and release in the organization satisfies; Spec Kit's constitution |
+| `CONSTITUTION.md` | Spec Kit's constitution: an index of the pages that hold our identity, rules and tools, which come first |
 | `AGENTS.md` | Instructions for coding agents: change order, API gotchas, invariants |
 | `CONTEXT.md` | The words this repository uses: stack, standard, file baseline, default, drift |
 | `.github/CODEOWNERS` | Every change here goes to the maintainer for review |

@@ -443,8 +443,8 @@ def render(root):
         "",
         prose("Paths below are relative to this repository. Before editing, read "
               + ", ".join(reads[:-1]) + f" and {reads[-1]}. The organization's "
-              f"[constitution]({ORG}/CONSTITUTION.md) binds every specification, plan, "
-              "review and release."),
+              f"[golden rules]({ORG}/golden-rules/engineering.md) come first: nothing "
+              "in a specification, a plan or this repository weakens them."),
         "",
         *([prose(rules), ""] if rules else []),
         prose("Keep changes scoped to the request, and read historical plans and "
