@@ -5,11 +5,11 @@ A repository drifts when it has no `stack`, when its `maestro/sync` pull
 request has waited more than 14 days, when `rust-gate sync --check` at the
 latest rust-workflows release finds a managed file that differs on its default
 branch, or when it strays from the file baseline: a file every repository
-keeps of its own is missing, a copy repeats one of this repository's
-defaults, or an issue form applies a label the repository lacks. Each
-drifting repository has one open issue here, "Drift: <name>", updated on
-every run and closed once the repository is back on the standard. Exits 1
-when any repository drifts. `--dry-run` reports and writes nothing. Needs
+keeps of its own is missing, it pins tools of its own, a copy repeats one of
+this repository's defaults, or an issue form applies a label the repository
+lacks. Each drifting repository has one open issue here, "Drift: <name>",
+updated on every run and closed once the repository is back on the standard.
+Exits 1 when any repository drifts. `--dry-run` reports and writes nothing. Needs
 GH_TOKEN (the organization bot's) and cargo. Standard library only.
 """
 
@@ -22,14 +22,16 @@ from pathlib import Path
 
 from org_quality import (
     ORG,
+    SYNC_BRANCH,
     SYNCED,
+    WORKFLOWS,
     clone,
     gh_json,
     install_gate,
     latest_release,
+    open_pull_request,
     repositories,
     run,
-    sync_pull_request,
     with_gate,
 )
 
@@ -58,9 +60,16 @@ PAGE_SCRIPT = Path(__file__).with_name("org-page.py")
 # compare them. rust-workflows keeps its own guide, and its own `just check`
 # holds its rule map to the golden rules it carries.
 GUIDE = ".github/copilot-instructions.md"
-# A file a repository needs only beside another: tools pinned by mise move
-# through the weekly tool updates.
-NEEDED_WITH = {".github/workflows/tool-updates.yml": "mise.toml"}
+# A repository's own tool pins, the files rust-workflows' `managed-files`
+# check refuses too: the pins live once, in rust-workflows, and
+# `rust-gate setup` installs them.
+TOOL_PINS = (
+    "mise.toml",
+    "mise.lock",
+    ".mise.toml",
+    ".tool-versions",
+    ".github/workflows/tool-updates.yml",
+)
 # The community files this repository gives every other one. A repository
 # keeps its own copy only for a need of its own, so a copy equal to the
 # default is drift.
@@ -82,7 +91,7 @@ def problems_of(repo, stack, gate_bin, workspace):
     problems = []
     if stack is None:
         problems.append("It has no `stack` property: set `rust`, `other` or `workflows`.")
-    pending = sync_pull_request(repo)
+    pending = open_pull_request(repo, SYNC_BRANCH)
     if pending:
         opened = datetime.fromisoformat(pending["createdAt"].replace("Z", "+00:00"))
         days = (datetime.now(timezone.utc) - opened).days
@@ -194,9 +203,13 @@ def baseline_problems(repo, home):
     if missing:
         names = ", ".join(f"`{name}`" for name in missing)
         problems.append(f"It misses {names}, which every repository keeps of its own.")
-    for name, beside in NEEDED_WITH.items():
-        if beside in paths and name not in paths:
-            problems.append(f"It has `{beside}` but not `{name}`, which keeps it current.")
+    pins = [name for name in TOOL_PINS if name in paths]
+    if pins and repo != WORKFLOWS:
+        names = ", ".join(f"`{name}`" for name in pins)
+        problems.append(
+            f"It pins tools of its own in {names}: delete them; `rust-gate setup` "
+            f"installs the tools rust-workflows pins."
+        )
     for default in DEFAULTS:
         copy = own_copy(paths, default)
         if repo == HOME:
@@ -228,8 +241,8 @@ def metadata_problems(repo):
     problems = []
     if repo != ".github" and not re.fullmatch(r"maestro(-[a-z0-9]+)+", repo):
         problems.append(
-            f"Its name is not `maestro-` then lowercase kebab-case: rename it, and move "
-            f"every GitHub Actions `uses:` that names it, since Actions follows no redirect."
+            "Its name is not `maestro-` then lowercase kebab-case: rename it, and move "
+            "every GitHub Actions `uses:` that names it, since Actions follows no redirect."
         )
     if not (meta.get("description") or "").strip():
         problems.append("It has no description: the organization page shows it.")

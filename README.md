@@ -21,8 +21,8 @@ email, profile fields and the member list.
 | `org/webhooks.json` | Organization webhooks without secrets or query strings |
 | `scripts/export-org.py` | Regenerates `org/` from the live API |
 | `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and a daily one that every repository holds the standard and the file baseline |
-| `.github/workflows/quality-sync.yml` | Sync pull request in every repository as soon as `rust-workflows` releases |
-| `scripts/quality-sync.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The sync, the per-repository drift check, and what they share |
+| `.github/workflows/quality-sync.yml` | The central rulesets moved to each `rust-workflows` release as soon as it is created, then a sync pull request in every repository |
+| `scripts/pin-rulesets.py`, `scripts/quality-sync.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The ruleset repin, the sync, the per-repository drift check, and what they share |
 | `scripts/org-page.py` | Writes every generated block of the organization page from its one source, and refuses golden rules that disagree with themselves |
 | `.github/workflows/ci.yml` and the other files `rust-gate sync` writes | This repository's own hygiene CI and managed files, as every repository holds them |
 | `.github/workflows/scorecard.yml` | This repository's weekly OpenSSF Scorecard |
@@ -72,13 +72,13 @@ its own. A repository's own file always wins.
 | Actions `artifact-and-log-retention: 30` | Public logs and artifacts are readable by anyone signed in; keep them shorter |
 | `stack` (`rust`, `other` or `workflows`, required) | Every repository says which checks guard its default branch: `rust` requires `rust / Required Rust CI`, `other` requires `hygiene / Required hygiene`, and `workflows` is `rust-workflows`, held to its own CI by its own ruleset; `quality-sync.yml` syncs `rust` and `other` |
 | `hygiene-required` | A repository without Rust passes the organization's hygiene checks before merge, as a Rust one passes its CI; kept beside `hygiene-central` until every caller is gone |
-| `hygiene-central` | Every repository without Rust runs `rust-workflows`' own `hygiene.yml`, pinned to a release commit, required by the ruleset itself ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
+| `hygiene-central` | Every repository without Rust runs `rust-workflows`' own `hygiene.yml`, pinned to the latest release's commit, required by the ruleset itself; `quality-sync.yml` moves the pin at each release ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
 | `maestrolabs-baseline` | CodeQL, secret scanning with push protection, Dependabot, private vulnerability reporting |
 | `floor-no-destruction` | No deletion or force-push of any default branch |
 | `floor-release-tags` | `v*` tags cannot be deleted or moved; creation stays open for releases |
 | `default-branch-discipline` | Every repository: pull request, squash only, resolved threads, signed commits, CodeQL results with no high alert |
 | `rust-ci-required` | Rust repositories merge only after `rust / Required Rust CI`, reported by GitHub Actions itself; kept beside `rust-central` until every caller is gone ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
-| `rust-central` | Every Rust repository's pull request runs `rust-workflows`' own `ci.yml`, pinned to a release commit, required by the ruleset itself: no repository can edit, loosen or skip the check ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
+| `rust-central` | Every Rust repository's pull request runs `rust-workflows`' own `ci.yml`, pinned to the latest release's commit, required by the ruleset itself: no repository can edit, loosen or skip the check; `quality-sync.yml` moves the pin at each release ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
 | `rust-workflows-ci-required` | `rust-workflows` merges only after its own `Required repository quality` and `Required consumer tests` |
 | `commits-are-conventional` | Records the Conventional Commit title every default branch takes. GitHub enforces its metadata restriction only on the Enterprise plan, so on Team it refuses nothing; PRL-003 in the shared CI refuses a pull request whose title is not one, and a squash merge makes that title the commit's |
 | `branch-names` | A branch can be created only under a Conventional Commit type, `feat/…`, `fix/…`, `docs/…` and the rest, or as a bot's: `maestro/sync`, `release-please--*`, `dependabot/**`, `gh-readonly-queue/**`, and GitHub's own `revert-*` (the Revert button) and `copilot/**` (the coding agent). It restricts creation outside those prefixes, since branch name patterns are Enterprise-only; PRL-004 refuses a pull request from a branch that is not lowercase kebab-case after its prefix |
@@ -103,6 +103,13 @@ its own. A repository's own file always wins.
   installed on every repository, and `rust-workflows`' `upload-coverage.yml`
   logs in through OIDC, so no Codecov token exists to leak or rotate. Codecov
   reports; the coverage floor in `rust-workflows` is what fails a run.
+- **The central rulesets follow each release, before its sync pull requests.**
+  `rust-workflows`' managed-files check runs from the rulesets' pin, so a sync
+  pull request is green only once they run the release it brings, and a ruleset
+  update does not re-run an open pull request. A repository's other pull
+  requests fail that check until its sync pull request merges, minutes for a
+  minor or patch release. A major release waits for a person, like its sync
+  pull requests.
 - **An OpenSSF Scorecard for every repository.** Each repository runs its own
   `scorecard.yml`, because the Scorecard API accepts a published result only
   from a workflow in the scored repository. It publishes the score for a README
@@ -170,7 +177,20 @@ the previous `org/webhooks.json`.
 
 `quality-sync.yml` runs as soon as `rust-workflows` creates a Release, whose
 workflow sends it the event `rust-workflows-release`, and again every day and on
-demand. It builds `rust-gate` at the latest `rust-workflows` release and, in
+demand. Its first job, `repin`, runs `scripts/pin-rulesets.py` in the `org-audit`
+environment: every organization ruleset that runs a workflow of
+`rust-workflows`, `rust-central` and `hygiene-central`, moves to the release's
+commit and tag. It then exports `org/` and, when the export differs from `org/`
+by these pins alone, opens or updates the pull request from
+`ci/pin-the-central-rulesets`, one commit GitHub signs, which merges itself once
+green. Any other difference is drift: it publishes nothing and fails. A pin
+moves only forward, and across a major release only when a person runs the
+workflow with `major` after reading the release notes; that run also
+re-publishes the major's sync pull requests, which then run under the release.
+`python3 scripts/pin-rulesets.py --dry-run` prints every update and writes
+nothing, and with `--release <tag> <commit>` shows what a release would move.
+
+The second job builds `rust-gate` at the latest `rust-workflows` release and, in
 every repository whose `stack` is `rust` or `other`, runs `rust-gate sync`,
 which moves every call to `rust-workflows` to that release. It also runs on a
 push to `golden-rules/`, the pictures or `scripts/org-page.py`. In this
@@ -196,16 +216,17 @@ if the change was intended, export and commit it here; if not, revert it on
 GitHub.
 
 It reads the organization as **Orchestration Maestro Audit**, a GitHub App that
-exists only for this check. GitHub lets an App list organization rulesets only
-with **Administration: read and write**, although the script only reads, so its
-key is treated as an admin credential: it lives only in the `org-audit`
+exists only for this check and for the `repin` job of `quality-sync.yml`, the
+one that writes. GitHub lets an App list organization rulesets only with
+**Administration: read and write**, so its key is treated as an admin
+credential: it lives only in the `org-audit`
 environment, which only `main` can use, and no pull request can reach it. The
 workflow mints a token that expires within the hour, so there is nothing to
 renew.
 
 | App permission (organization) | For |
 | --- | --- |
-| Administration: read and write | Settings, Actions policy, security configurations, rulesets |
+| Administration: read and write | Settings, Actions policy, security configurations, rulesets; the central rulesets' pins |
 | Custom properties: read | The `stack` property |
 | Webhooks: read | `org/webhooks.json` |
 
@@ -219,7 +240,9 @@ file baseline in `scripts/repository-drift.py`:
 - it misses a file every repository keeps of its own: `README.md`, `LICENSE`,
   `AGENTS.md`, `CONTEXT.md`, `.github/CODEOWNERS`, and the Scorecard and
   Dependabot auto-merge workflows;
-- it pins tools in `mise.toml` without the weekly `tool-updates.yml`;
+- it pins tools of its own in `mise.toml`, `mise.lock`, `.mise.toml`,
+  `.tool-versions` or `tool-updates.yml`: the pins live once, in
+  `rust-workflows`, and `rust-gate setup` installs them;
 - it keeps a copy identical to one of the defaults above, which a repository
   keeps only for a need of its own;
 - its issue forms apply a label it lacks, which GitHub skips;
