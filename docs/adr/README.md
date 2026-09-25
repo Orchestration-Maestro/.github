@@ -6,4 +6,4 @@ names its successor.
 
 | ADR | Decision |
 | --- | --- |
-| [0001](0001-enforce-the-standard-centrally.md) | The standard runs from rust-workflows, required by organization rulesets, not from each repository (proposed) |
+| [0001](0001-enforce-the-standard-centrally.md) | The standard runs from rust-workflows, required by organization rulesets, not from each repository (accepted) |

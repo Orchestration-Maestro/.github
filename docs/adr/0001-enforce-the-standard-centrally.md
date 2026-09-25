@@ -1,6 +1,6 @@
 # Enforce the standard centrally, from rust-workflows
 
-Status: proposed (2026-09-25).
+Status: accepted (2026-09-25).
 
 ## Context
 
@@ -261,6 +261,26 @@ for every Rust repository, lands in step 2 as the entry workflow's fixed matrix;
 opposite of this decision and are dropped. The local drift-rule commit
 `a7b3f60` in `.github` (a repository that moves its own tool pins drifts) is
 not merged; step 5 replaces it with "a repository carries no tool pin".
+
+### Where the rollout stands (2026-09-25)
+
+The owner took the decision the same day and asked for it quickly, so steps 1,
+2 and 4 were done as one release instead of the separate entry workflows above:
+rust-workflows v3.0.0 runs `ci.yml` and `hygiene.yml` themselves from a ruleset
+(`pull_request` and `merge_group`, settings from the base commit's
+`maestro-quality.toml`), builds the gate from `job.workflow_sha` (#61, #64),
+always tests macOS and Windows, refuses `license-policy: off`, and passes the
+tools' settings at run time, which retires seven generated files per
+repository (#63). The canary ran it end to end before any other repository.
+
+- Active: `rust-central` (`stack=rust`, `ci.yml`) and `hygiene-central`
+  (`stack=other`, `hygiene.yml`), both pinned to v3.0.0's commit.
+- Kept for now: `rust-ci-required` and `hygiene-required`, and each
+  repository's `ci.yml` caller, which still carries the SARIF and Codecov
+  uploads the ruleset path does not make.
+- Still to do: the uploads' future (a ruleset run with `security-events` and
+  `id-token`, or a central job), then dropping the callers and the old
+  rulesets; step 5 (`rust-gate setup`) and step 6 (automated repin).
 
 [rules]: https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-workflows-to-pass-before-merging
 [troubleshoot]: https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/troubleshooting-rules#troubleshooting-ruleset-workflows
