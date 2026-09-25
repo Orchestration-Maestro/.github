@@ -38,7 +38,6 @@ in place.
 │   │   ├── config.yml                              # Blank issues are off so every report arrives with the fields triage needs; the links cover what a form should not carry
 │   │   └── feature_request.yml                     # Propose a concrete improvement
 │   ├── workflows/                                  # GitHub Actions workflows
-│   │   ├── ci.yml                                  # CI: calls hygiene.yml; rendered by rust-gate sync
 │   │   ├── dependabot-auto-merge.yml               # Dependabot auto-merge
 │   │   ├── org-drift.yml                           # Weekly check that GitHub still matches org/, and a daily one that every repository holds the standard and the file baseline
 │   │   ├── quality-sync.yml                        # The central rulesets moved to each rust-workflows release as soon as it is created, then a sync pull request in every repository
