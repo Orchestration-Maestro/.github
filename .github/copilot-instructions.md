@@ -109,9 +109,6 @@ in place.
 ├── .gitattributes                              # How Git should treat each kind of file; rendered by rust-gate sync
 ├── .gitignore                                  # Python bytecode and linter caches from running scripts/ locally
 ├── .pre-commit-config.yaml                     # The commit hooks prek runs locally and CI runs over every file; rendered by rust-gate sync
-├── .rumdl.toml                                 # rumdl: the Markdown structure every repository holds to; rendered by rust-gate sync
-├── .taplo.toml                                 # taplo: the TOML formatter just check and the commit hook run over every TOML file in the repository; rendered by rust-gate sync
-├── .yamlfmt.yml                                # How yamlfmt formats every YAML file; rendered by rust-gate sync
 ├── AGENTS.md                                   # Instructions for coding agents: change order, API gotchas, invariants
 ├── CODE_OF_CONDUCT.md                          # Contributor Covenant 2.1
 ├── CONSTITUTION.md                             # Spec Kit's constitution: an index of the pages that come first
