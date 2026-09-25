@@ -55,7 +55,8 @@ OWN_FILES = (
 PAGE_SCRIPT = Path(__file__).with_name("org-page.py")
 # The Copilot guide and the rule map, the golden rules adapted to a repository:
 # `rust-gate guide --check` and `rust-gate rules --check` at the latest release
-# compare them. rust-workflows keeps its own guide and standards pages.
+# compare them. rust-workflows keeps its own guide, and its own `just check`
+# holds its rule map to the golden rules it carries.
 GUIDE = ".github/copilot-instructions.md"
 # A file a repository needs only beside another: tools pinned by mise move
 # through the weekly tool updates.
