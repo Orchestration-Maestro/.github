@@ -167,7 +167,7 @@ exception that stops being true fails the check.
 </details>
 <!-- end generated -->
 
-Read them in full: [engineering rules](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/engineering.md) · [security rules](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/security.md) · [Northstar](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/northstar.md) · [gate rules](https://github.com/Orchestration-Maestro/rust-workflows/blob/main/docs/ci.md)
+Read them in full: [engineering rules](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/engineering.md) · [security rules](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/security.md) · [Northstar](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/northstar.md) · [glossary](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/glossary.md) · [gate rules](https://github.com/Orchestration-Maestro/rust-workflows/blob/main/docs/ci.md)
 
 ### Aligned with
 
@@ -200,7 +200,7 @@ rules say which rule meets which control.
 | --- | --- |
 | [maestro-core](https://github.com/Orchestration-Maestro/maestro-core) | The local runtime of Maestro: knowledge kernel, retrieval and orchestration |
 | [maestro-model-router](https://github.com/Orchestration-Maestro/maestro-model-router) | Supervises llama.cpp servers and serves one OpenAI-compatible endpoint per model |
-| [release-canary](https://github.com/Orchestration-Maestro/release-canary) | Canary consumer that proves rust-workflows' live release path on real tags: binaries, provenance attestation and evidence |
+| [maestro-release-canary](https://github.com/Orchestration-Maestro/maestro-release-canary) | Canary consumer that proves rust-workflows' live release path on real tags: binaries, provenance attestation and evidence |
 | [rust-workflows](https://github.com/Orchestration-Maestro/rust-workflows) | Reusable, security-gated GitHub Actions workflows for Rust |
 <!-- end generated -->
 

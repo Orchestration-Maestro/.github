@@ -55,7 +55,9 @@ def pinned_version(checkout):
     caller = Path(checkout) / ".github/workflows/ci.yml"
     if not caller.is_file():
         return None
-    found = re.search(r"/rust-workflows/\S+@[0-9a-f]{40}\s+# v(\d+\.\d+\.\d+)", caller.read_text())
+    # Either name: rust-workflows becomes maestro-rust-workflows at a cutover.
+    found = re.search(r"/(?:maestro-)?rust-workflows/\S+@[0-9a-f]{40}\s+# v(\d+\.\d+\.\d+)",
+                      caller.read_text())
     return found.group(1) if found else None
 
 

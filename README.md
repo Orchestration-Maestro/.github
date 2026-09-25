@@ -28,7 +28,7 @@ email, profile fields and the member list.
 | `.github/workflows/scorecard.yml` | This repository's weekly OpenSSF Scorecard |
 | `.github/dependabot.yml`, `.github/workflows/dependabot-auto-merge.yml` | Weekly action updates for this repository's workflows, patch and minor merged by the bot |
 | `profile/` | The organization page on GitHub, with its banner, the Northstar panel and the pillar and foundation cards; `scripts/org-page.py` writes each block between its generated markers |
-| `golden-rules/` | The golden rules every repository follows: engineering, security, the Northstar and the standards they align with; the one source of the organization page's rules, of every rule map and of the copy `rust-gate` embeds |
+| `golden-rules/` | The golden rules every repository follows: engineering, security, the Northstar, the standards they align with and the glossary of the words every repository shares; the one source of the organization page's rules, of every rule map and of the copy `rust-gate` embeds |
 | `workflow-templates/rust-ci.*` | The "Rust CI" template offered under Actions, New workflow |
 | `workflow-templates/hygiene-ci.*` | The "Hygiene CI" template, for a repository without Rust |
 | `workflow-templates/scorecard.*` | The "OpenSSF Scorecard" template, the same workflow for any repository |
@@ -50,7 +50,7 @@ its own. A repository's own file always wins.
 | `CONTRIBUTING.md` | Contribution guide, with the rules every pull request passes |
 | `CODE_OF_CONDUCT.md` | Contributor Covenant 2.1 |
 | `SUPPORT.md` | Where each kind of question goes, and what to include |
-| `pull_request_template.md` | Pull request description template |
+| `PULL_REQUEST_TEMPLATE.md` | Pull request description template |
 | `.github/ISSUE_TEMPLATE/` | Bug and feature forms; blank issues are off |
 
 ## What each decision is for
@@ -77,7 +77,8 @@ its own. A repository's own file always wins.
 | `default-branch-discipline` | Every repository: pull request, squash only, resolved threads, signed commits, CodeQL results with no high alert |
 | `rust-ci-required` | Rust repositories merge only after `rust / Required Rust CI`, reported by GitHub Actions itself |
 | `rust-workflows-ci-required` | `rust-workflows` merges only after its own `Required repository quality` and `Required consumer tests` |
-| `commits-are-conventional` | Conventional commit titles on every default branch |
+| `commits-are-conventional` | Records the Conventional Commit title every default branch takes. GitHub enforces its metadata restriction only on the Enterprise plan, so on Team it refuses nothing; PRL-003 in the shared CI refuses a pull request whose title is not one, and a squash merge makes that title the commit's |
+| `branch-names` | A branch can be created only under a Conventional Commit type, `feat/…`, `fix/…`, `docs/…` and the rest, or as a bot's: `maestro/sync`, `release-please--*`, `dependabot/**`, `gh-readonly-queue/**`. It restricts creation outside those prefixes, since branch name patterns are Enterprise-only; PRL-004 refuses a pull request from a branch that is not lowercase kebab-case after its prefix |
 | `visibility-is-frozen` | Public runners are unmetered; a private repository would start billing |
 
 ### Standing decisions
@@ -108,7 +109,12 @@ its own. A repository's own file always wins.
 
 Settings a new repository needs that no organization default covers:
 
-1. **Stack and managed files:** set `stack` to `rust` or `other`, then run
+1. **Name, description and topics:** the name is `maestro-` followed by
+   lowercase kebab-case, the description says what it is in one line (the
+   organization page shows it), and at least one topic classifies it. The
+   drift check refuses a repository without them. Renaming one later breaks
+   every GitHub Actions `uses:` that names it: Actions follows no redirect.
+2. **Stack and managed files:** set `stack` to `rust` or `other`, then run
    `rust-gate init` at the latest `rust-workflows` release in the new
    repository and commit what it writes: the CI caller, the hooks and every
    managed file. From then on `quality-sync.yml` keeps them current.
@@ -119,18 +125,18 @@ Settings a new repository needs that no organization default covers:
    RUST_WORKFLOWS_PIN="<release commit> v<version>" rust-gate init
    ```
 
-2. **Files of its own:** `README.md`, `LICENSE`, `AGENTS.md`, `CONTEXT.md`,
+3. **Files of its own:** `README.md`, `LICENSE`, `AGENTS.md`, `CONTEXT.md`,
    `.github/CODEOWNERS`, the Copilot guide and the rule map, the file baseline
    GitHub never inherits. From the new repository's root, write the rule map
    with `rust-gate rules` and replace every "Not mapped yet" with what holds
    that rule here, then write the guide with `rust-gate guide`. Both keep what
    a person wrote, and the repository's commit hooks keep both current. The
    drift check opens an issue for any file that is missing.
-3. **Reported content:** Settings, Moderation options, Reported content, select
+4. **Reported content:** Settings, Moderation options, Reported content, select
    **All users**, Save. The Code of Conduct sends reports to this button; the
    default admits only prior contributors, so a newcomer could not report.
    There is no API for it.
-4. **Dependabot auto-merge:** turn on auto-merge, then copy
+5. **Dependabot auto-merge:** turn on auto-merge, then copy
    `rust-workflows`' `.github/workflows/dependabot-auto-merge.yml`; the bot's
    credentials are already organization-wide.
 
@@ -138,10 +144,10 @@ Settings a new repository needs that no organization default covers:
    gh api -X PATCH repos/Orchestration-Maestro/REPO -F allow_auto_merge=true
    ```
 
-5. **OpenSSF Scorecard:** add the OpenSSF Scorecard workflow from this
+6. **OpenSSF Scorecard:** add the OpenSSF Scorecard workflow from this
    organization's templates (Actions, New workflow), then the badge
    `https://api.scorecard.dev/projects/github.com/Orchestration-Maestro/REPO/badge`.
-6. **Social preview:** Settings, General, Social preview, upload a 1280 x 640
+7. **Social preview:** Settings, General, Social preview, upload a 1280 x 640
    crop of the banner (see `assets/README.md`). Web UI only.
 
 ## Refresh by hand
