@@ -23,6 +23,7 @@ email, profile fields and the member list.
 | `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and a daily one that every repository holds the standard and the file baseline |
 | `.github/workflows/quality-sync.yml` | Sync pull request in every repository as soon as `rust-workflows` releases |
 | `scripts/quality-sync.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The sync, the per-repository drift check, and what they share |
+| `scripts/gate-rules.py` | Writes the organization page's gate rules from `rust-gate gate-rules`, at every release |
 | `scripts/copilot-instructions.py` | Writes and checks each repository's `.github/copilot-instructions.md`, the Copilot guide modelled on `rust-workflows`' |
 | `scripts/golden-rules.py` | Writes and checks each repository's rule map, `docs/standards/{northstar,engineering,security}.md`: the golden rules adapted to it |
 | `.github/workflows/ci.yml` and the other files `rust-gate sync` writes | This repository's own hygiene CI and managed files, as every repository holds them |
@@ -164,8 +165,11 @@ the previous `org/webhooks.json`.
 workflow sends it the event `rust-workflows-release`, and again every day and on
 demand. It builds `rust-gate` at the latest `rust-workflows` release and, in
 every repository whose `stack` is `rust` or `other`, runs `rust-gate sync`,
-which moves every call to `rust-workflows` to that release. When a managed file changes, it opens or
-updates one pull request from `maestro/sync`, a single commit GitHub signs. A
+which moves every call to `rust-workflows` to that release. In this repository
+it also rewrites the organization page's gate rules from `rust-gate gate-rules`,
+so a rule the gate gains reaches the page with its release. When a file
+changes, it opens or updates one pull request from `maestro/sync`, a single
+commit GitHub signs. A
 minor or patch release merges itself once green; a major one waits for a person.
 A repository whose first sync needs a person, a manifest with lint tables of its
 own for instance, is named in the run's log and failed. It runs as the

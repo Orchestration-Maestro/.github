@@ -28,7 +28,7 @@ full; the [organization page](profile/README.md) lists the repositories.
 | --- | --- |
 | [Engineering rules](golden-rules/engineering.md) | Four foundations (FND), eighteen named principles (P), fourteen hard mandates (ENF) and the rules for adopting them (C); nothing overrides them |
 | [Security rules](golden-rules/security.md) | Eleven rules for people and agents alike (SEC) |
-| [Gate rules](https://github.com/Orchestration-Maestro/rust-workflows/blob/main/docs/ci.md) | The thirty-four rules the shared CI refuses: ARC, SIZE, NAME, DOC, LNT, LIB, TST, WSP, DUP, HYG, COV, PRL, DEP, VET and PRF |
+| [Gate rules](https://github.com/Orchestration-Maestro/rust-workflows/blob/main/docs/ci.md#every-rule) | Every rule the shared CI refuses, each with its ID; the organization page lists them as the latest release holds them |
 | A repository's `docs/standards/` | Its rule map: what holds each rule there, or why it does not apply (C-001) |
 | A repository's architecture and ADRs | What it builds and why; maestro-core's [architecture](https://github.com/Orchestration-Maestro/maestro-core/blob/main/docs/architecture/README.md) sets the product's principles |
 

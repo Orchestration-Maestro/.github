@@ -92,6 +92,7 @@ already here, so improve an explanation in place.
 ├── scripts/                                    # Maintenance scripts
 │   ├── copilot-instructions.py                 # Writes and checks each repository's .github/copilot-instructions.md, the Copilot guide modelled on rust-workflows'
 │   ├── export-org.py                           # Regenerates org/ from the live API
+│   ├── gate-rules.py                           # Writes the organization page's gate rules from rust-gate gate-rules, at every release
 │   ├── golden-rules.py                         # Writes and checks each repository's rule map, docs/standards/{northstar,engineering,security}.md: the golden rules adapted to it
 │   ├── org_quality.py                          # What the organization's quality scripts share
 │   ├── quality-sync.py                         # Bring every organization repository onto the latest rust-workflows release
