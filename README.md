@@ -169,8 +169,9 @@ repository it rewrites the organization page's generated blocks from their
 sources, `golden-rules/`, `rust-gate gate-rules` and each public repository's
 description, so a changed rule, a new gate rule or a new repository reaches the
 page on its own. In `rust-workflows` it brings the golden-rules pages
-`rust-gate` embeds up to these, as a `fix:` pull request that merges itself once
-green. When a file changes, it opens or updates one pull request from
+`rust-gate` embeds up to these and rewrites its rule map from them, as a `fix:`
+pull request that merges itself once green; a rule it adds waits, "Not mapped
+yet", for a person. When a file changes, it opens or updates one pull request from
 `maestro/sync`, a single commit GitHub signs. A
 minor or patch release merges itself once green; a major one waits for a person.
 A repository whose first sync needs a person, a manifest with lint tables of its
@@ -215,7 +216,8 @@ file baseline in `scripts/repository-drift.py`:
 - its issue forms apply a label it lacks, which GitHub skips;
 - its rule map in `docs/standards/` is stale, or still says "Not mapped yet":
   `rust-gate rules --check` compares it to the golden rules the latest release
-  carries (C-001);
+  carries (C-001); `rust-workflows`' own `just check` holds its rule map to the
+  copy it carries instead;
 - its Copilot guide is stale: `rust-gate guide --check` finds a file added or
   removed since the guide was written. `rust-workflows` keeps its own guide,
   the model, under its own inventory test.

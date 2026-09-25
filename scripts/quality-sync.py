@@ -8,8 +8,9 @@ for its Copilot guide: the same release writes them as the repository's own
 commit hooks do, so the two never disagree. When a file changed, open or update the pull request from
 `maestro/sync`: one commit through GitHub's createCommitOnBranch, which GitHub
 signs. A minor or patch release merges itself once green; a major one waits
-for a person. rust-workflows gets the golden-rules pages rust-gate embeds, as
-a `fix:` pull request that merges itself once green. `--dry-run` reports what
+for a person. rust-workflows gets the golden-rules pages rust-gate embeds, and
+its own rule map rewritten from them, as a `fix:` pull request that merges
+itself once green. `--dry-run` reports what
 would change and writes nothing. Needs GH_TOKEN (the organization bot's) and
 cargo. Standard library only.
 """
@@ -176,6 +177,11 @@ def carry_golden_rules(workspace, dry_run):
         return
     commit = run(["git", "rev-parse", "HEAD"], cwd=SCRIPTS.parent).strip()
     (target / "commit.txt").write_text(f"{commit}\n", encoding="utf-8")
+    # rust-workflows' own rule map follows the copy it carries, and its required
+    # `just check` refuses it stale: the gate built from this very copy rewrites
+    # it, so a change of wording merges itself and a new rule waits for a person.
+    run(["cargo", "run", "--quiet", "--locked", "--manifest-path", "gate/Cargo.toml",
+         "--", "rules"], cwd=checkout)
     files = changed_files(checkout)
     if dry_run:
         print(f"{WORKFLOWS}: would carry the golden rules of .github {commit[:7]}: "
@@ -184,7 +190,9 @@ def carry_golden_rules(workspace, dry_run):
     text = (
         f"The golden rules changed in .github at {commit[:7]}; `rust-gate rules` "
         f"embeds them, so a repository's rule map follows them once this is "
-        f"released. Each link to a page this copy does not carry points at .github.\n\n"
+        f"released. Each link to a page this copy does not carry points at .github. "
+        f"This repository's own rule map is rewritten from the copy; a rule it adds "
+        f"arrives as \"Not mapped yet\", and `just check` fails until it is mapped.\n\n"
         + "\n".join(f"- `{path}`" for path in files)
     )
     number = publish(WORKFLOWS, checkout, files,
