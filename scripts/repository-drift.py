@@ -203,6 +203,15 @@ def baseline_problems(repo, home):
     if missing:
         names = ", ".join(f"`{name}`" for name in missing)
         problems.append(f"It misses {names}, which every repository keeps of its own.")
+    # A merged pull request's branch is history the squash commit already holds;
+    # kept, it piles up. GitHub has no organization default, so each repository
+    # is checked. Only an explicit `false` counts: a token that cannot read the
+    # setting reports nothing rather than a false alarm.
+    if gh_json("api", f"repos/{ORG}/{repo}").get("delete_branch_on_merge") is False:
+        problems.append(
+            "It keeps a pull request's branch after the merge: turn on "
+            "\"Automatically delete head branches\" (`delete_branch_on_merge`)."
+        )
     pins = [name for name in TOOL_PINS if name in paths]
     if pins and repo != WORKFLOWS:
         names = ", ".join(f"`{name}`" for name in pins)

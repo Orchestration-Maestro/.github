@@ -237,6 +237,9 @@ more than 14 days, when `rust-gate sync --check` at the latest release finds a
 managed file that differs on its default branch, or when it strays from the
 file baseline in `scripts/repository-drift.py`:
 
+- it keeps a pull request's branch after the merge: every repository turns on
+  "Automatically delete head branches" (`delete_branch_on_merge`), which GitHub
+  cannot set for the whole organization;
 - it misses a file every repository keeps of its own: `README.md`, `LICENSE`,
   `AGENTS.md`, `CONTEXT.md`, `.github/CODEOWNERS`, and the Scorecard and
   Dependabot auto-merge workflows;
