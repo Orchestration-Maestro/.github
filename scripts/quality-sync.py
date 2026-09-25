@@ -2,9 +2,10 @@
 """Bring every organization repository onto the latest rust-workflows release.
 
 For each repository whose `stack` is `rust` or `other`, clone it, run
-`rust-gate sync` at the release, write its rule map from the golden rules, the
-organization page's generated blocks from their sources and its Copilot guide
-from its files, and when a file changed, open or update the pull request from
+`rust-gate sync` at the release, then `rust-gate rules` for its rule map, the
+organization page's generated blocks from their sources, and `rust-gate guide`
+for its Copilot guide: the same release writes them as the repository's own
+commit hooks do, so the two never disagree. When a file changed, open or update the pull request from
 `maestro/sync`: one commit through GitHub's createCommitOnBranch, which GitHub
 signs. A minor or patch release merges itself once green; a major one waits
 for a person. rust-workflows gets the golden-rules pages rust-gate embeds, as
@@ -107,16 +108,16 @@ def sync_one(repo, pin, version, gate_bin, workspace, dry_run):
     checkout = clone(repo, Path(workspace) / repo)
     before = pinned_version(checkout)
     run(["rust-gate", "sync"], cwd=checkout, env=with_gate(gate_bin, RUST_WORKFLOWS_PIN=pin))
-    # The rule map follows the golden rules; the guide lists every file, the new
-    # ones included once git knows of them.
-    run([sys.executable, str(SCRIPTS / "golden-rules.py"), "--root", str(checkout)])
+    # The rule map follows the golden rules this release carries.
+    run(["rust-gate", "rules"], cwd=checkout, env=with_gate(gate_bin))
     # The organization page lists the gate's rules as this release holds them.
     # The organization page shows each source as it stands, the gate's rules as
     # this release lists them.
     run([sys.executable, str(SCRIPTS / "org-page.py"), "--root", str(checkout)],
         env=with_gate(gate_bin))
+    # The guide lists every file, the new ones included once git knows of them.
     run(["git", "add", "--intent-to-add", "."], cwd=checkout)
-    run([sys.executable, str(SCRIPTS / "copilot-instructions.py"), "--root", str(checkout)])
+    run(["rust-gate", "guide"], cwd=checkout, env=with_gate(gate_bin))
     files = changed_files(checkout)
     major = before is not None and before.split(".")[0] != version.split(".")[0]
     if not files:

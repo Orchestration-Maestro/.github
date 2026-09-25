@@ -52,14 +52,11 @@ OWN_FILES = (
     "docs/standards/engineering.md",
     "docs/standards/security.md",
 )
-# Writes and checks a repository's Copilot guide. rust-workflows, whose guide
-# is the model, keeps its own under its own inventory test.
-GUIDE_SCRIPT = Path(__file__).with_name("copilot-instructions.py")
 PAGE_SCRIPT = Path(__file__).with_name("org-page.py")
+# The Copilot guide and the rule map, the golden rules adapted to a repository:
+# `rust-gate guide --check` and `rust-gate rules --check` at the latest release
+# compare them. rust-workflows keeps its own guide and standards pages.
 GUIDE = ".github/copilot-instructions.md"
-# Writes and checks a repository's rule map, the golden rules adapted to it.
-# rust-workflows keeps its own standards pages, from which the golden rules came.
-RULES_SCRIPT = Path(__file__).with_name("golden-rules.py")
 # A file a repository needs only beside another: tools pinned by mise move
 # through the weekly tool updates.
 NEEDED_WITH = {".github/workflows/tool-updates.yml": "mise.toml"}
@@ -103,14 +100,13 @@ def problems_of(repo, stack, gate_bin, workspace):
             problems.append(f"Its default branch drifts: {check.stderr.strip()}")
         if (checkout / GUIDE).is_file():
             guide = subprocess.run(
-                [sys.executable, str(GUIDE_SCRIPT), "--check", "--root", str(checkout)],
-                capture_output=True, text=True,
+                ["rust-gate", "guide", "--check"], cwd=checkout,
+                env=with_gate(gate_bin), capture_output=True, text=True,
             )
             if guide.returncode != 0:
                 problems.append(
-                    f"Its `{GUIDE}` is stale: run "
-                    f"`python3 ../.github/scripts/copilot-instructions.py` at its root "
-                    f"and commit the guide."
+                    f"Its `{GUIDE}` is stale: run `rust-gate guide` at its root and "
+                    f"commit the guide."
                 )
         page = subprocess.run(
             [sys.executable, str(PAGE_SCRIPT), "--check", "--root", str(checkout)],
@@ -125,15 +121,15 @@ def problems_of(repo, stack, gate_bin, workspace):
             )
         if (checkout / "docs/standards").is_dir():
             rules = subprocess.run(
-                [sys.executable, str(RULES_SCRIPT), "--check", "--root", str(checkout)],
-                capture_output=True, text=True,
+                ["rust-gate", "rules", "--check"], cwd=checkout,
+                env=with_gate(gate_bin), capture_output=True, text=True,
             )
             if rules.returncode != 0:
+                found = rules.stderr.strip().removeprefix("rules --check: ")
                 problems.append(
                     f"Its rule map in `docs/standards/` is stale or incomplete "
-                    f"({rules.stderr.strip().removeprefix('rule map: ')}): run "
-                    f"`python3 ../.github/scripts/golden-rules.py` at its root, map every "
-                    f"entry still \"Not mapped yet\", and commit the pages."
+                    f"({found.split('; run ', 1)[0]}): run `rust-gate rules` at its root, "
+                    f"map every entry still \"Not mapped yet\", and commit the pages."
                 )
     return problems
 
