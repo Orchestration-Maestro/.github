@@ -1,0 +1,42 @@
+{
+  "bypass_actors": [],
+  "conditions": {
+    "ref_name": {
+      "exclude": [],
+      "include": [
+        "~DEFAULT_BRANCH"
+      ]
+    },
+    "repository_property": {
+      "exclude": [],
+      "include": [
+        {
+          "name": "stack",
+          "property_values": [
+            "rust"
+          ],
+          "source": "custom"
+        }
+      ]
+    }
+  },
+  "enforcement": "active",
+  "name": "rust-central",
+  "rules": [
+    {
+      "parameters": {
+        "do_not_enforce_on_create": true,
+        "workflows": [
+          {
+            "path": ".github/workflows/ci.yml",
+            "ref": "refs/tags/v3.0.0",
+            "repository_id": 1382744803,
+            "sha": "7f8de647fc28f7d3c338e22e376276b306345d67"
+          }
+        ]
+      },
+      "type": "workflows"
+    }
+  ],
+  "target": "branch"
+}

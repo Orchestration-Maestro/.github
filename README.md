@@ -29,6 +29,7 @@ email, profile fields and the member list.
 | `.github/dependabot.yml`, `.github/workflows/dependabot-auto-merge.yml` | Weekly action updates for this repository's workflows, patch and minor merged by the bot |
 | `profile/` | The organization page on GitHub, with its banner, the Northstar panel and the pillar and foundation cards; `scripts/org-page.py` writes each block between its generated markers |
 | `golden-rules/` | The golden rules every repository follows: engineering, security, the Northstar, the standards they align with and the glossary of the words every repository shares; the one source of the organization page's rules, of every rule map and of the copy `rust-gate` embeds |
+| `docs/adr/` | Decisions about how the organization runs, each with the trade-off that produced it |
 | `workflow-templates/rust-ci.*` | The "Rust CI" template offered under Actions, New workflow |
 | `workflow-templates/hygiene-ci.*` | The "Hygiene CI" template, for a repository without Rust |
 | `workflow-templates/scorecard.*` | The "OpenSSF Scorecard" template, the same workflow for any repository |
@@ -70,12 +71,14 @@ its own. A repository's own file always wins.
 | Actions `fork-pr-contributor-approval` | Every external contributor's workflow run waits for an owner's approval |
 | Actions `artifact-and-log-retention: 30` | Public logs and artifacts are readable by anyone signed in; keep them shorter |
 | `stack` (`rust`, `other` or `workflows`, required) | Every repository says which checks guard its default branch: `rust` requires `rust / Required Rust CI`, `other` requires `hygiene / Required hygiene`, and `workflows` is `rust-workflows`, held to its own CI by its own ruleset; `quality-sync.yml` syncs `rust` and `other` |
-| `hygiene-required` | A repository without Rust passes the organization's hygiene checks before merge, as a Rust one passes its CI |
+| `hygiene-required` | A repository without Rust passes the organization's hygiene checks before merge, as a Rust one passes its CI; kept beside `hygiene-central` until every caller is gone |
+| `hygiene-central` | Every repository without Rust runs `rust-workflows`' own `hygiene.yml`, pinned to a release commit, required by the ruleset itself ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
 | `maestrolabs-baseline` | CodeQL, secret scanning with push protection, Dependabot, private vulnerability reporting |
 | `floor-no-destruction` | No deletion or force-push of any default branch |
 | `floor-release-tags` | `v*` tags cannot be deleted or moved; creation stays open for releases |
 | `default-branch-discipline` | Every repository: pull request, squash only, resolved threads, signed commits, CodeQL results with no high alert |
-| `rust-ci-required` | Rust repositories merge only after `rust / Required Rust CI`, reported by GitHub Actions itself |
+| `rust-ci-required` | Rust repositories merge only after `rust / Required Rust CI`, reported by GitHub Actions itself; kept beside `rust-central` until every caller is gone ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
+| `rust-central` | Every Rust repository's pull request runs `rust-workflows`' own `ci.yml`, pinned to a release commit, required by the ruleset itself: no repository can edit, loosen or skip the check ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
 | `rust-workflows-ci-required` | `rust-workflows` merges only after its own `Required repository quality` and `Required consumer tests` |
 | `commits-are-conventional` | Records the Conventional Commit title every default branch takes. GitHub enforces its metadata restriction only on the Enterprise plan, so on Team it refuses nothing; PRL-003 in the shared CI refuses a pull request whose title is not one, and a squash merge makes that title the commit's |
 | `branch-names` | A branch can be created only under a Conventional Commit type, `feat/…`, `fix/…`, `docs/…` and the rest, or as a bot's: `maestro/sync`, `release-please--*`, `dependabot/**`, `gh-readonly-queue/**`, and GitHub's own `revert-*` (the Revert button) and `copilot/**` (the coding agent). It restricts creation outside those prefixes, since branch name patterns are Enterprise-only; PRL-004 refuses a pull request from a branch that is not lowercase kebab-case after its prefix |
