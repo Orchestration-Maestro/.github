@@ -10,6 +10,6 @@ jobs:
   # Keep the job id `hygiene`: the hygiene-required ruleset requires the
   # check "hygiene / Required hygiene" before any merge to the default branch.
   hygiene:
-    uses: Orchestration-Maestro/rust-workflows/.github/workflows/hygiene.yml@be7aa1f3d0be144da78fba9331bdeb0038836025  # v2.3.0
+    uses: Orchestration-Maestro/rust-workflows/.github/workflows/hygiene.yml@3fe9356f17290ffdf58a4c51f2d51d6222277a05  # v2.4.0
     permissions:
       contents: read
