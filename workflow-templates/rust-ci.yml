@@ -10,13 +10,13 @@ jobs:
   # Keep the job id `rust`: the rust-ci-required ruleset requires the check
   # "rust / Required Rust CI" before any merge to the default branch.
   rust:
-    uses: Orchestration-Maestro/rust-workflows/.github/workflows/ci.yml@44f969170a3a5b70cd3b26ac6c9f9e145e30545a  # v2.1.0
+    uses: Orchestration-Maestro/rust-workflows/.github/workflows/ci.yml@adac3a9ff91d4cad03934ea69c6cc3f1538496fb  # v2.2.0
     permissions:
       contents: read
   # Clippy and secret-scan findings into the Security tab.
   sarif:
     needs: rust
-    uses: Orchestration-Maestro/rust-workflows/.github/workflows/upload-sarif.yml@44f969170a3a5b70cd3b26ac6c9f9e145e30545a  # v2.1.0
+    uses: Orchestration-Maestro/rust-workflows/.github/workflows/upload-sarif.yml@adac3a9ff91d4cad03934ea69c6cc3f1538496fb  # v2.2.0
     permissions:
       contents: read
       security-events: write  # upload SARIF to code scanning
@@ -25,7 +25,7 @@ jobs:
   # Coverage and test results into Codecov, logged in through OIDC.
   coverage:
     needs: rust
-    uses: Orchestration-Maestro/rust-workflows/.github/workflows/upload-coverage.yml@44f969170a3a5b70cd3b26ac6c9f9e145e30545a  # v2.1.0
+    uses: Orchestration-Maestro/rust-workflows/.github/workflows/upload-coverage.yml@adac3a9ff91d4cad03934ea69c6cc3f1538496fb  # v2.2.0
     permissions:
       contents: read
       id-token: write  # log in to Codecov without a stored token
