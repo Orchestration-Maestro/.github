@@ -59,7 +59,8 @@ already here, so improve an explanation in place.
 ├── golden-rules/                               # The golden rules every repository follows: engineering, security and the Northstar, shown on the organization page
 │   ├── engineering.md                          # Engineering rules
 │   ├── northstar.md                            # Speed, quality, maintainability and security are not a trade-off
-│   └── security.md                             # Security rules
+│   ├── security.md                             # Security rules
+│   └── standards.md                            # The standards the golden rules align with: each one's version, reviewed on 2026-09-24, and what it covers
 ├── org/                                        # The organization's live settings, as scripts/export-org.py exports them
 │   ├── rulesets/                               # Organization rulesets, in the shape the API accepts
 │   │   ├── commits-are-conventional.json       # Ruleset commits-are-conventional: commit_message_pattern
@@ -92,8 +93,8 @@ already here, so improve an explanation in place.
 ├── scripts/                                    # Maintenance scripts
 │   ├── copilot-instructions.py                 # Writes and checks each repository's .github/copilot-instructions.md, the Copilot guide modelled on rust-workflows'
 │   ├── export-org.py                           # Regenerates org/ from the live API
-│   ├── gate-rules.py                           # Writes the organization page's gate rules from rust-gate gate-rules, at every release
 │   ├── golden-rules.py                         # Writes and checks each repository's rule map, docs/standards/{northstar,engineering,security}.md: the golden rules adapted to it
+│   ├── org-page.py                             # Writes every generated block of the organization page from its one source, and refuses golden rules that disagree with themselves
 │   ├── org_quality.py                          # What the organization's quality scripts share
 │   ├── quality-sync.py                         # Bring every organization repository onto the latest rust-workflows release
 │   └── repository-drift.py                     # Hold every organization repository to the standard, one issue each

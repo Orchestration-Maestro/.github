@@ -23,14 +23,14 @@ email, profile fields and the member list.
 | `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and a daily one that every repository holds the standard and the file baseline |
 | `.github/workflows/quality-sync.yml` | Sync pull request in every repository as soon as `rust-workflows` releases |
 | `scripts/quality-sync.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The sync, the per-repository drift check, and what they share |
-| `scripts/gate-rules.py` | Writes the organization page's gate rules from `rust-gate gate-rules`, at every release |
+| `scripts/org-page.py` | Writes every generated block of the organization page from its one source, and refuses golden rules that disagree with themselves |
 | `scripts/copilot-instructions.py` | Writes and checks each repository's `.github/copilot-instructions.md`, the Copilot guide modelled on `rust-workflows`' |
 | `scripts/golden-rules.py` | Writes and checks each repository's rule map, `docs/standards/{northstar,engineering,security}.md`: the golden rules adapted to it |
 | `.github/workflows/ci.yml` and the other files `rust-gate sync` writes | This repository's own hygiene CI and managed files, as every repository holds them |
 | `.github/workflows/scorecard.yml` | This repository's weekly OpenSSF Scorecard |
 | `.github/dependabot.yml`, `.github/workflows/dependabot-auto-merge.yml` | Weekly action updates for this repository's workflows, patch and minor merged by the bot |
-| `profile/` | The organization page on GitHub, with its banner, the Northstar panel and the pillar and foundation cards |
-| `golden-rules/` | The golden rules every repository follows: engineering, security and the Northstar, shown on the organization page |
+| `profile/` | The organization page on GitHub, with its banner, the Northstar panel and the pillar and foundation cards; `scripts/org-page.py` writes each block between its generated markers |
+| `golden-rules/` | The golden rules every repository follows: engineering, security, the Northstar and the standards they align with; the one source of the organization page's rules, of every rule map and of the copy `rust-gate` embeds |
 | `workflow-templates/rust-ci.*` | The "Rust CI" template offered under Actions, New workflow |
 | `workflow-templates/hygiene-ci.*` | The "Hygiene CI" template, for a repository without Rust |
 | `workflow-templates/scorecard.*` | The "OpenSSF Scorecard" template, the same workflow for any repository |
@@ -165,11 +165,15 @@ the previous `org/webhooks.json`.
 workflow sends it the event `rust-workflows-release`, and again every day and on
 demand. It builds `rust-gate` at the latest `rust-workflows` release and, in
 every repository whose `stack` is `rust` or `other`, runs `rust-gate sync`,
-which moves every call to `rust-workflows` to that release. In this repository
-it also rewrites the organization page's gate rules from `rust-gate gate-rules`,
-so a rule the gate gains reaches the page with its release. When a file
-changes, it opens or updates one pull request from `maestro/sync`, a single
-commit GitHub signs. A
+which moves every call to `rust-workflows` to that release. It also runs on a
+push to `golden-rules/`, the pictures or `scripts/org-page.py`. In this
+repository it rewrites the organization page's generated blocks from their
+sources, `golden-rules/`, `rust-gate gate-rules` and each public repository's
+description, so a changed rule, a new gate rule or a new repository reaches the
+page on its own. In `rust-workflows` it brings the golden-rules pages
+`rust-gate` embeds up to these, as a `fix:` pull request that merges itself once
+green. When a file changes, it opens or updates one pull request from
+`maestro/sync`, a single commit GitHub signs. A
 minor or patch release merges itself once green; a major one waits for a person.
 A repository whose first sync needs a person, a manifest with lint tables of its
 own for instance, is named in the run's log and failed. It runs as the

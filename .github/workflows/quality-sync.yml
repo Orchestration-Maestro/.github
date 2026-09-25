@@ -8,6 +8,16 @@ name: Quality sync
     # Every day, 05:43 UTC, off the hour: the net for a missed event, and a run
     # with nothing to sync changes nothing.
     - cron: "43 5 * * *"
+  # A change to a golden rule, a picture or the page's writer reaches the
+  # organization page, every rule map and rust-workflows' copy at once. The page
+  # itself is left out: the sync's own pull request changes it.
+  push:
+    branches: [main]
+    paths:
+      - golden-rules/**
+      - profile/**
+      - "!profile/README.md"
+      - scripts/org-page.py
   workflow_dispatch:
 permissions:
   contents: read

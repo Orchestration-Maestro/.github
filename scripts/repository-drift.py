@@ -55,7 +55,7 @@ OWN_FILES = (
 # Writes and checks a repository's Copilot guide. rust-workflows, whose guide
 # is the model, keeps its own under its own inventory test.
 GUIDE_SCRIPT = Path(__file__).with_name("copilot-instructions.py")
-GATE_RULES_SCRIPT = Path(__file__).with_name("gate-rules.py")
+PAGE_SCRIPT = Path(__file__).with_name("org-page.py")
 GUIDE = ".github/copilot-instructions.md"
 # Writes and checks a repository's rule map, the golden rules adapted to it.
 # rust-workflows keeps its own standards pages, from which the golden rules came.
@@ -112,15 +112,16 @@ def problems_of(repo, stack, gate_bin, workspace):
                     f"`python3 ../.github/scripts/copilot-instructions.py` at its root "
                     f"and commit the guide."
                 )
-        gate_rules = subprocess.run(
-            [sys.executable, str(GATE_RULES_SCRIPT), "--check", "--root", str(checkout)],
+        page = subprocess.run(
+            [sys.executable, str(PAGE_SCRIPT), "--check", "--root", str(checkout)],
             env=with_gate(gate_bin), capture_output=True, text=True,
         )
-        if gate_rules.returncode != 0:
+        if page.returncode != 0:
             problems.append(
-                f"Its organization page lists other gate rules than the latest release "
-                f"holds ({gate_rules.stderr.strip()}): run `python3 scripts/gate-rules.py` "
-                f"with that release's `rust-gate` and commit the page."
+                f"Its organization page does not say what its sources say "
+                f"({page.stderr.strip()}): fix the source it names, or run "
+                f"`python3 scripts/org-page.py` with the latest release's `rust-gate` "
+                f"and commit the page."
             )
         if (checkout / "docs/standards").is_dir():
             rules = subprocess.run(
