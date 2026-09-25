@@ -5,6 +5,15 @@ its constitution. It holds no rule of its own: the pages it points to do, and
 they come first. When this page, a specification, a plan or a task disagrees
 with them, they win and this page is the one to fix.
 
+## What this is about
+
+We build Maestro, an organizational agent platform that removes the plumbing
+from agentic development while keeping every action governed and every answer
+traceable: a catalog of agents, skills and workflows, a local runtime that runs
+them under a host-owned policy broker, and a knowledge kernel that serves
+source-backed evidence. [What Maestro is](https://github.com/Orchestration-Maestro/maestro-core/blob/main/docs/architecture/README.md#1-what-maestro-is) says it in
+full; the [organization page](profile/README.md) lists the repositories.
+
 ## Who we are
 
 | Page | What it sets |
@@ -23,7 +32,21 @@ with them, they win and this page is the one to fix.
 | A repository's `docs/standards/` | Its rule map: what holds each rule there, or why it does not apply (C-001) |
 | A repository's architecture and ADRs | What it builds and why; maestro-core's [architecture](https://github.com/Orchestration-Maestro/maestro-core/blob/main/docs/architecture/README.md) sets the product's principles |
 
-## The tools we use
+## Our stack
+
+What we build with. The
+[technology matrix](https://github.com/Orchestration-Maestro/maestro-core/blob/main/docs/architecture/README.md#5-technology-matrix) holds every choice, its version,
+the alternatives and why; this table only names them.
+
+| Layer | What we use |
+| --- | --- |
+| Language | Rust, edition 2024, for everything first-party |
+| Knowledge kernel | SQLite and content-addressed artifacts, the only authority; Qdrant and Neo4j as rebuildable projections |
+| Models | Local llama.cpp models through [maestro-model-router](https://github.com/Orchestration-Maestro/maestro-model-router); GitHub Copilot as the explicit managed route |
+| Agents and tools | GitHub Copilot's native catalog formats, MCP through rmcp, and an event-sourced workflow engine on the kernel journal |
+| Guardrails | Cedar for authorization, Landlock and seccomp for the sandbox, JSON Schema for handoff contracts |
+
+How we deliver it:
 
 | Tool | What it does for us |
 | --- | --- |
