@@ -41,7 +41,7 @@ in place.
 │   │   ├── ci.yml                                  # CI: calls hygiene.yml; rendered by rust-gate sync
 │   │   ├── dependabot-auto-merge.yml               # Dependabot auto-merge
 │   │   ├── org-drift.yml                           # Weekly check that GitHub still matches org/, and a daily one that every repository holds the standard and the file baseline
-│   │   ├── quality-sync.yml                        # Sync pull request in every repository as soon as rust-workflows releases
+│   │   ├── quality-sync.yml                        # The central rulesets moved to each rust-workflows release as soon as it is created, then a sync pull request in every repository
 │   │   └── scorecard.yml                           # This repository's weekly OpenSSF Scorecard
 │   ├── CODEOWNERS                                  # Every change here goes to the maintainer for review
 │   ├── copilot-instructions.md                     # This guide, written by rust-gate guide at every commit
@@ -101,6 +101,7 @@ in place.
 │   ├── export-org.py                               # Regenerates org/ from the live API
 │   ├── org-page.py                                 # Writes every generated block of the organization page from its one source, and refuses golden rules that disagree with themselves
 │   ├── org_quality.py                              # What the organization's quality scripts share
+│   ├── pin-rulesets.py                             # Move the organization rulesets that run rust-workflows to its latest release
 │   ├── quality-sync.py                             # Bring every organization repository onto the latest rust-workflows release
 │   └── repository-drift.py                         # Hold every organization repository to the standard, one issue each
 ├── workflow-templates/                             # Workflow templates offered under Actions, New workflow

@@ -280,7 +280,11 @@ repository (#63). The canary ran it end to end before any other repository.
   uploads the ruleset path does not make.
 - Still to do: the uploads' future (a ruleset run with `security-events` and
   `id-token`, or a central job), then dropping the callers and the old
-  rulesets; step 5 (`rust-gate setup`) and step 6 (automated repin).
+  rulesets; step 5 (`rust-gate setup`).
+- Step 6 is `quality-sync.yml`'s `repin` job. It moves the rulesets before the
+  sync pull requests, not after: the managed-files check runs from the
+  rulesets' pin, so a sync pull request checked by the previous release fails,
+  and a ruleset update does not re-run it.
 
 [rules]: https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-workflows-to-pass-before-merging
 [troubleshoot]: https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/troubleshooting-rules#troubleshooting-ruleset-workflows

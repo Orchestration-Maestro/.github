@@ -19,14 +19,78 @@ name: Quality sync
       - "!profile/README.md"
       - scripts/org-page.py
   workflow_dispatch:
+    inputs:
+      major:
+        description: Also move the central rulesets across a major release, once its notes are read
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
   group: quality-sync
   cancel-in-progress: false
 jobs:
+  # The rulesets move first: rust-workflows' managed-files check runs from the
+  # rulesets' pin, so a sync pull request is green only once they run the
+  # release it brings. A ruleset update does not re-run an open pull request.
+  repin:
+    name: The central rulesets on the latest rust-workflows release
+    if: github.event_name != 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Rulesets are written only with Administration write: the audit App's
+    # key, which lives only in this environment, restricted to the default
+    # branch, and no pull_request trigger can reach it.
+    environment: org-audit
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout the reviewed state
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Mint the audit token
+        id: audit
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
+        with:
+          client-id: ${{ vars.ORG_AUDIT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.ORG_AUDIT_APP_PRIVATE_KEY }}
+          # The App is installed with no repository: the token reaches the
+          # organization's settings and nothing else.
+          owner: ${{ github.repository_owner }}  # zizmor: ignore[github-app]
+          permission-organization-administration: write
+          permission-organization-custom-properties: read
+          permission-organization-hooks: read
+      # The organization bot's token reads the release and opens the pull
+      # request that records the pins in org/, a commit GitHub signs.
+      - name: Mint the bot token
+        id: bot
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          # The release is read from rust-workflows, the pull request opened here.
+          owner: ${{ github.repository_owner }}  # zizmor: ignore[github-app]
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Move the rulesets and record them
+        env:
+          GH_TOKEN: ${{ steps.bot.outputs.token }}
+          ORG_ADMIN_TOKEN: ${{ steps.audit.outputs.token }}
+          MAJOR: ${{ inputs.major }}
+        run: |
+          set -euo pipefail
+          if [[ "${MAJOR}" == "true" ]]; then
+            python3 scripts/pin-rulesets.py --major
+          else
+            python3 scripts/pin-rulesets.py
+          fi
   sync:
     name: Every repository on the latest rust-workflows release
+    needs: repin
+    # A failed repin still syncs: the next run moves the rulesets, and the
+    # sync pull requests it re-publishes run again under the release.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:

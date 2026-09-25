@@ -1,10 +1,12 @@
 """What the organization's quality scripts share.
 
 The GitHub CLI, the latest rust-workflows release, every repository with its
-`stack`, and rust-gate built at that release. Standard library only; `gh` reads
-its token from GH_TOKEN.
+`stack`, rust-gate built at that release, and the pull request, one signed
+commit, that publishes a change. Standard library only; `gh` reads its token
+from GH_TOKEN.
 """
 
+import base64
 import hashlib
 import json
 import os
@@ -15,6 +17,8 @@ from pathlib import Path
 
 ORG = "Orchestration-Maestro"
 WORKFLOWS = "rust-workflows"
+# The branch every sync pull request comes from.
+SYNC_BRANCH = "maestro/sync"
 
 # The stacks `rust-gate sync` holds. `workflows` is rust-workflows itself, the
 # home of the gate, whose caller, Dependabot settings and hooks are its own.
@@ -27,6 +31,12 @@ JAQ_URL = (
     "jaq-x86_64-unknown-linux-gnu"
 )
 JAQ_SHA256 = "5922c7b67d9bd6841d6676d1f954410c6bf04b47203dcb661c4f052dfef7f454"
+
+COMMIT = """
+mutation ($input: CreateCommitOnBranchInput!) {
+  createCommitOnBranch(input: $input) { commit { oid } }
+}
+"""
 
 
 def run(args, cwd=None, env=None, stdin=None):
@@ -101,10 +111,53 @@ def clone(repo, directory):
     return Path(directory)
 
 
-def sync_pull_request(repo):
-    """The open pull request from `maestro/sync`, or None."""
+def open_pull_request(repo, branch):
+    """The open pull request from `branch`, or None."""
     found = gh_json(
-        "pr", "list", "-R", f"{ORG}/{repo}", "--head", "maestro/sync",
+        "pr", "list", "-R", f"{ORG}/{repo}", "--head", branch,
         "--state", "open", "--json", "number,createdAt,url",
     )
     return found[0] if found else None
+
+
+def publish(repo, checkout, files, branch, title, text, merge):
+    """Commit `files` on `branch` from the default branch's head, and open or
+    update its pull request, queued to merge itself once green when `merge`."""
+    head = run(["git", "rev-parse", "HEAD"], cwd=checkout).strip()
+    reference = f"repos/{ORG}/{repo}/git/refs/heads/{branch}"
+    try:
+        run(["gh", "api", "-X", "PATCH", reference, "-f", f"sha={head}", "-F", "force=true"])
+    except RuntimeError:
+        run(["gh", "api", "-X", "POST", f"repos/{ORG}/{repo}/git/refs",
+             "-f", f"ref=refs/heads/{branch}", "-f", f"sha={head}"])
+    # `rust-gate sync` also deletes the files it no longer writes: a path gone
+    # from the checkout is a deletion, every other one an addition.
+    additions = [
+        {"path": path, "contents": base64.b64encode((Path(checkout) / path).read_bytes()).decode()}
+        for path in files
+        if (Path(checkout) / path).is_file()
+    ]
+    deletions = [{"path": path} for path in files if not (Path(checkout) / path).exists()]
+    body = {
+        "query": COMMIT,
+        "variables": {
+            "input": {
+                "branch": {"repositoryNameWithOwner": f"{ORG}/{repo}", "branchName": branch},
+                "expectedHeadOid": head,
+                "message": {"headline": title},
+                "fileChanges": {"additions": additions, "deletions": deletions},
+            }
+        },
+    }
+    gh_json("api", "graphql", "--input", "-", stdin=json.dumps(body))
+    existing = open_pull_request(repo, branch)
+    if existing:
+        number = str(existing["number"])
+        run(["gh", "pr", "edit", number, "-R", f"{ORG}/{repo}", "--title", title, "--body", text])
+    else:
+        url = run(["gh", "pr", "create", "-R", f"{ORG}/{repo}", "--head", branch,
+                   "--title", title, "--body", text]).strip()
+        number = url.rsplit("/", 1)[-1]
+    if merge:
+        run(["gh", "pr", "merge", number, "-R", f"{ORG}/{repo}", "--auto", "--squash"])
+    return number

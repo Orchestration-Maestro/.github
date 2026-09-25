@@ -22,7 +22,10 @@ GitHub is the source of truth; `org/` is its export, written by
 5. Commit the export and the README row together.
 
 `org/` changes only through the export; the weekly `org-drift.yml` check fails
-on any file that disagrees with GitHub.
+on any file that disagrees with GitHub. One change runs these steps itself: at
+each `rust-workflows` release, `quality-sync.yml`'s `repin` job
+(`scripts/pin-rulesets.py`) moves the central rulesets' pins, exports, and opens
+the pull request that records them, and stops on any other difference.
 
 ## GitHub API gotchas
 
@@ -38,9 +41,9 @@ on any file that disagrees with GitHub.
 - **Custom properties:** before deleting one, move every ruleset off it; search
   `org/rulesets/*.json` for its name.
 - **Tokens:** listing organization rulesets needs Administration read *and
-  write*, for an App as for a fine-grained token. The drift check's audit App
-  therefore holds an admin credential; its key stays in the `org-audit`
-  environment. Locally, webhooks need the `admin:org_hook` scope; without it
+  write*, for an App as for a fine-grained token. The audit App, which the
+  drift check reads with and the ruleset repin writes with, therefore holds an
+  admin credential; its key stays in the `org-audit` environment. Locally, webhooks need the `admin:org_hook` scope; without it
   the export keeps the previous `org/webhooks.json`.
 - **`unclassified` warning:** GitHub added an organization field. Classify it in
   `scripts/export-org.py`: GitHub's default in `ORG_DEFAULTS`, or `ORG_IGNORED`
@@ -64,6 +67,11 @@ on any file that disagrees with GitHub.
   comment (`@<sha>  # v2.0.0`); `quality-sync.yml` moves every repository's
   pins, these templates included, as soon as a release is created, and
   Dependabot leaves them alone. A template moves only to a published release.
+- **The central rulesets move before the sync.** `rust-central` and
+  `hygiene-central` pin `sha` and `ref` to a release; the `repin` job moves them
+  ahead of the sync pull requests, which the managed-files check they run holds
+  to the rulesets' release. Across a major release they move only when a person
+  runs `quality-sync.yml` with `major`.
 - **One rule set for all repositories:** every ruleset targets `~ALL`, except
   `rust-ci-required`, which targets `stack=rust`, `hygiene-required`, which
   targets `stack=other`, and `rust-workflows-ci-required`, which holds

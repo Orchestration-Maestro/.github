@@ -15,8 +15,6 @@ would change and writes nothing. Needs GH_TOKEN (the organization bot's) and
 cargo. Standard library only.
 """
 
-import base64
-import json
 import re
 import sys
 import tempfile
@@ -24,30 +22,24 @@ from pathlib import Path
 
 from org_quality import (
     ORG,
+    SYNC_BRANCH,
     SYNCED,
     WORKFLOWS,
     clone,
-    gh_json,
     install_gate,
     latest_release,
+    open_pull_request,
+    publish,
     repositories,
     run,
-    sync_pull_request,
     with_gate,
 )
 
-BRANCH = "maestro/sync"
 # Where rust-workflows keeps the golden-rules pages rust-gate embeds.
 CARRIED = "gate/golden-rules"
 RULES_URL = f"https://github.com/{ORG}/.github/blob/main/golden-rules"
 # The organization's own writers, beside this script.
 SCRIPTS = Path(__file__).resolve().parent
-
-COMMIT = """
-mutation ($input: CreateCommitOnBranchInput!) {
-  createCommitOnBranch(input: $input) { commit { oid } }
-}
-"""
 
 
 def pinned_version(checkout):
@@ -65,49 +57,6 @@ def changed_files(checkout):
     """Every file `rust-gate sync` wrote that differs from the default branch."""
     status = run(["git", "status", "--porcelain", "--untracked-files=all"], cwd=checkout)
     return sorted(line[3:] for line in status.splitlines())
-
-
-def publish(repo, checkout, files, title, text, merge):
-    """Commit `files` on `maestro/sync` from the default branch's head, and open
-    or update its pull request, queued to merge itself once green when `merge`."""
-    head = run(["git", "rev-parse", "HEAD"], cwd=checkout).strip()
-    reference = f"repos/{ORG}/{repo}/git/refs/heads/{BRANCH}"
-    try:
-        run(["gh", "api", "-X", "PATCH", reference, "-f", f"sha={head}", "-F", "force=true"])
-    except RuntimeError:
-        run(["gh", "api", "-X", "POST", f"repos/{ORG}/{repo}/git/refs",
-             "-f", f"ref=refs/heads/{BRANCH}", "-f", f"sha={head}"])
-    # `rust-gate sync` also deletes the files it no longer writes: a path gone
-    # from the checkout is a deletion, every other one an addition.
-    additions = [
-        {"path": path, "contents": base64.b64encode((Path(checkout) / path).read_bytes()).decode()}
-        for path in files
-        if (Path(checkout) / path).is_file()
-    ]
-    deletions = [{"path": path} for path in files if not (Path(checkout) / path).exists()]
-    body = {
-        "query": COMMIT,
-        "variables": {
-            "input": {
-                "branch": {"repositoryNameWithOwner": f"{ORG}/{repo}", "branchName": BRANCH},
-                "expectedHeadOid": head,
-                "message": {"headline": title},
-                "fileChanges": {"additions": additions, "deletions": deletions},
-            }
-        },
-    }
-    gh_json("api", "graphql", "--input", "-", stdin=json.dumps(body))
-    existing = sync_pull_request(repo)
-    if existing:
-        number = str(existing["number"])
-        run(["gh", "pr", "edit", number, "-R", f"{ORG}/{repo}", "--title", title, "--body", text])
-    else:
-        url = run(["gh", "pr", "create", "-R", f"{ORG}/{repo}", "--head", BRANCH,
-                   "--title", title, "--body", text]).strip()
-        number = url.rsplit("/", 1)[-1]
-    if merge:
-        run(["gh", "pr", "merge", number, "-R", f"{ORG}/{repo}", "--auto", "--squash"])
-    return number
 
 
 def sync_one(repo, pin, version, gate_bin, workspace, dry_run):
@@ -128,7 +77,7 @@ def sync_one(repo, pin, version, gate_bin, workspace, dry_run):
     files = changed_files(checkout)
     major = before is not None and before.split(".")[0] != version.split(".")[0]
     if not files:
-        existing = sync_pull_request(repo)
+        existing = open_pull_request(repo, SYNC_BRANCH)
         if existing and not dry_run:
             run(["gh", "pr", "close", str(existing["number"]), "-R", f"{ORG}/{repo}",
                  "--comment", "The default branch already holds these files."])
@@ -148,7 +97,7 @@ def sync_one(repo, pin, version, gate_bin, workspace, dry_run):
         + "\n".join(f"- `{path}`" for path in files)
     )
     title = f"chore: sync the organization's files to rust-workflows v{version}"
-    number = publish(repo, checkout, files, title, text, not major)
+    number = publish(repo, checkout, files, SYNC_BRANCH, title, text, not major)
     print(f"{repo}: pull request #{number}, {len(files)} files{' (major)' if major else ''}")
 
 
@@ -175,7 +124,7 @@ def carry_golden_rules(workspace, dry_run):
         (target / name).write_text(carried((source / name).read_text(encoding="utf-8"),
                                            names), encoding="utf-8")
     if not changed_files(checkout):
-        existing = sync_pull_request(WORKFLOWS)
+        existing = open_pull_request(WORKFLOWS, SYNC_BRANCH)
         if existing and not dry_run:
             run(["gh", "pr", "close", str(existing["number"]), "-R", f"{ORG}/{WORKFLOWS}",
                  "--comment", "The default branch already carries these golden rules."])
@@ -201,7 +150,7 @@ def carry_golden_rules(workspace, dry_run):
         f"arrives as \"Not mapped yet\", and `just check` fails until it is mapped.\n\n"
         + "\n".join(f"- `{path}`" for path in files)
     )
-    number = publish(WORKFLOWS, checkout, files,
+    number = publish(WORKFLOWS, checkout, files, SYNC_BRANCH,
                      f"fix: carry the golden rules of .github {commit[:7]}", text, True)
     print(f"{WORKFLOWS}: pull request #{number}, the golden rules of .github {commit[:7]}")
 
