@@ -286,6 +286,14 @@ repository (#63). The canary ran it end to end before any other repository.
   rulesets' pin, so a sync pull request checked by the previous release fails,
   and a ruleset update does not re-run it.
 
+### Step 4 done (2026-09-25, v4.0.0)
+
+rust-workflows v4.0.0 uploads the SARIF and coverage from the central check
+(rust-workflows#67), and its `rust-gate sync` deletes each repository's
+`ci.yml` caller. `rust-central` and `hygiene-central` run v4.0.0;
+`rust-ci-required` and `hygiene-required` are deleted, with the Rust and
+hygiene CI templates, and the `stack` description names the central rulesets.
+
 [rules]: https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-workflows-to-pass-before-merging
 [troubleshoot]: https://docs.github.com/en/enterprise-cloud@latest/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/troubleshooting-rules#troubleshooting-ruleset-workflows
 [rest]: https://docs.github.com/en/rest/orgs/rules

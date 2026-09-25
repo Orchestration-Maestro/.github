@@ -6,7 +6,7 @@
       "workflows"
     ],
     "default_value": "other",
-    "description": "Which checks guard the default branch: 'rust' requires 'rust / Required Rust CI', 'other' requires 'hygiene / Required hygiene', 'workflows' is rust-workflows, held to its own CI by its own ruleset.",
+    "description": "Which central checks guard the default branch: 'rust' runs rust-workflows' ci.yml (ruleset rust-central), 'other' its hygiene.yml (hygiene-central), 'workflows' is rust-workflows, held to its own CI by its own ruleset.",
     "property_name": "stack",
     "require_explicit_values": false,
     "required": true,

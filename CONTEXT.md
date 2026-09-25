@@ -17,7 +17,7 @@ _Avoid_: template, policy
 
 **Managed file**:
 A file `rust-gate sync` writes and keeps current, such as `.editorconfig` or
-the CI caller. Nobody edits one by hand.
+the commit hooks. Nobody edits one by hand.
 _Avoid_: generated file, synced config
 
 **File baseline**:

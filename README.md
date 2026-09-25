@@ -15,7 +15,7 @@ email, profile fields and the member list.
 | --- | --- |
 | `org/settings.json` | Organization fields that differ from the defaults table in the script |
 | `org/actions.json` | Actions policy: allowed actions, SHA pinning, and anything else non-default |
-| `org/custom-properties.json` | The `stack` property the Rust and hygiene rulesets select on |
+| `org/custom-properties.json` | The `stack` property the central rulesets select on |
 | `org/security-configurations.json` | `maestrolabs-baseline`, enforced and the default for every new repository |
 | `org/rulesets/*.json` | Organization rulesets, in the shape `PUT orgs/{org}/rulesets/{id}` accepts |
 | `org/webhooks.json` | Organization webhooks without secrets or query strings |
@@ -24,15 +24,13 @@ email, profile fields and the member list.
 | `.github/workflows/quality-sync.yml` | The central rulesets moved to each `rust-workflows` release as soon as it is created, then a sync pull request in every repository |
 | `scripts/pin-rulesets.py`, `scripts/quality-sync.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The ruleset repin, the sync, the per-repository drift check, and what they share |
 | `scripts/org-page.py` | Writes every generated block of the organization page from its one source, and refuses golden rules that disagree with themselves |
-| `.github/workflows/ci.yml` and the other files `rust-gate sync` writes | This repository's own hygiene CI and managed files, as every repository holds them |
+| `.pre-commit-config.yaml` and the other files `rust-gate sync` writes | This repository's managed files, as every repository holds them; `hygiene-central` runs its CI |
 | `.github/workflows/scorecard.yml` | This repository's weekly OpenSSF Scorecard |
 | `.github/dependabot.yml`, `.github/workflows/dependabot-auto-merge.yml` | Weekly action updates for this repository's workflows, patch and minor merged by the bot |
 | `profile/` | The organization page on GitHub, with its banner, the Northstar panel and the pillar and foundation cards; `scripts/org-page.py` writes each block between its generated markers |
 | `golden-rules/` | The golden rules every repository follows: engineering, security, the Northstar, the standards they align with and the glossary of the words every repository shares; the one source of the organization page's rules, of every rule map and of the copy `rust-gate` embeds |
 | `docs/adr/` | Decisions about how the organization runs, each with the trade-off that produced it |
-| `workflow-templates/rust-ci.*` | The "Rust CI" template offered under Actions, New workflow |
-| `workflow-templates/hygiene-ci.*` | The "Hygiene CI" template, for a repository without Rust |
-| `workflow-templates/scorecard.*` | The "OpenSSF Scorecard" template, the same workflow for any repository |
+| `workflow-templates/scorecard.*` | The "OpenSSF Scorecard" template offered under Actions, New workflow, the same workflow for any repository |
 | `assets/` | The mark, the avatar, and the palette, type and prompts behind them |
 | `CONSTITUTION.md` | Spec Kit's constitution: an index of the pages that hold our identity, rules and tools, which come first |
 | `AGENTS.md` | Instructions for coding agents: change order, API gotchas, invariants |
@@ -70,14 +68,12 @@ its own. A repository's own file always wins.
 | Actions `self-hosted-runners: none` | On a public repository, any pull request would run code on the runner's machine |
 | Actions `fork-pr-contributor-approval` | Every external contributor's workflow run waits for an owner's approval |
 | Actions `artifact-and-log-retention: 30` | Public logs and artifacts are readable by anyone signed in; keep them shorter |
-| `stack` (`rust`, `other` or `workflows`, required) | Every repository says which checks guard its default branch: `rust` requires `rust / Required Rust CI`, `other` requires `hygiene / Required hygiene`, and `workflows` is `rust-workflows`, held to its own CI by its own ruleset; `quality-sync.yml` syncs `rust` and `other` |
-| `hygiene-required` | A repository without Rust passes the organization's hygiene checks before merge, as a Rust one passes its CI; kept beside `hygiene-central` until every caller is gone |
+| `stack` (`rust`, `other` or `workflows`, required) | Every repository says which checks guard its default branch: `rust` runs `rust-workflows`' `ci.yml` through `rust-central`, `other` its `hygiene.yml` through `hygiene-central`, and `workflows` is `rust-workflows`, held to its own CI by its own ruleset; `quality-sync.yml` syncs `rust` and `other` |
 | `hygiene-central` | Every repository without Rust runs `rust-workflows`' own `hygiene.yml`, pinned to the latest release's commit, required by the ruleset itself; `quality-sync.yml` moves the pin at each release ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
 | `maestrolabs-baseline` | CodeQL, secret scanning with push protection, Dependabot, private vulnerability reporting |
 | `floor-no-destruction` | No deletion or force-push of any default branch |
 | `floor-release-tags` | `v*` tags cannot be deleted or moved; creation stays open for releases |
 | `default-branch-discipline` | Every repository: pull request, squash only, resolved threads, signed commits, CodeQL results with no high alert |
-| `rust-ci-required` | Rust repositories merge only after `rust / Required Rust CI`, reported by GitHub Actions itself; kept beside `rust-central` until every caller is gone ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
 | `rust-central` | Every Rust repository's pull request runs `rust-workflows`' own `ci.yml`, pinned to the latest release's commit, required by the ruleset itself: no repository can edit, loosen or skip the check; `quality-sync.yml` moves the pin at each release ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
 | `rust-workflows-ci-required` | `rust-workflows` merges only after its own `Required repository quality` and `Required consumer tests` |
 | `commits-are-conventional` | Records the Conventional Commit title every default branch takes. GitHub enforces its metadata restriction only on the Enterprise plan, so on Team it refuses nothing; PRL-003 in the shared CI refuses a pull request whose title is not one, and a squash merge makes that title the commit's |
@@ -126,8 +122,9 @@ Settings a new repository needs that no organization default covers:
    every GitHub Actions `uses:` that names it: Actions follows no redirect.
 2. **Stack and managed files:** set `stack` to `rust` or `other`, then run
    `rust-gate init` at the latest `rust-workflows` release in the new
-   repository and commit what it writes: the CI caller, the hooks and every
-   managed file. From then on `quality-sync.yml` keeps them current.
+   repository and commit what it writes: the hooks and every managed file.
+   `rust-central` or `hygiene-central` runs its CI from then on, and
+   `quality-sync.yml` keeps the files current.
 
    ```bash
    gh api -X PATCH repos/Orchestration-Maestro/REPO/properties/values \

@@ -100,9 +100,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-      # The organization bot's token: the sync pull request writes
-      # .github/workflows/ci.yml in every repository, and GitHub signs the
-      # commit createCommitOnBranch makes with it.
+      # The organization bot's token: the sync pull request writes workflows in
+      # every repository, and GitHub signs the commit createCommitOnBranch makes
+      # with it.
       - name: Mint the bot token
         id: token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
