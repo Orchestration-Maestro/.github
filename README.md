@@ -78,7 +78,7 @@ its own. A repository's own file always wins.
 | `rust-ci-required` | Rust repositories merge only after `rust / Required Rust CI`, reported by GitHub Actions itself |
 | `rust-workflows-ci-required` | `rust-workflows` merges only after its own `Required repository quality` and `Required consumer tests` |
 | `commits-are-conventional` | Records the Conventional Commit title every default branch takes. GitHub enforces its metadata restriction only on the Enterprise plan, so on Team it refuses nothing; PRL-003 in the shared CI refuses a pull request whose title is not one, and a squash merge makes that title the commit's |
-| `branch-names` | A branch can be created only under a Conventional Commit type, `feat/…`, `fix/…`, `docs/…` and the rest, or as a bot's: `maestro/sync`, `release-please--*`, `dependabot/**`, `gh-readonly-queue/**`. It restricts creation outside those prefixes, since branch name patterns are Enterprise-only; PRL-004 refuses a pull request from a branch that is not lowercase kebab-case after its prefix |
+| `branch-names` | A branch can be created only under a Conventional Commit type, `feat/…`, `fix/…`, `docs/…` and the rest, or as a bot's: `maestro/sync`, `release-please--*`, `dependabot/**`, `gh-readonly-queue/**`, and GitHub's own `revert-*` (the Revert button) and `copilot/**` (the coding agent). It restricts creation outside those prefixes, since branch name patterns are Enterprise-only; PRL-004 refuses a pull request from a branch that is not lowercase kebab-case after its prefix |
 | `visibility-is-frozen` | Public runners are unmetered; a private repository would start billing |
 
 ### Standing decisions

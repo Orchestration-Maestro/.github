@@ -2,7 +2,26 @@
   "bypass_actors": [],
   "conditions": {
     "ref_name": {
-      "exclude": [],
+      "exclude": [
+        "~DEFAULT_BRANCH",
+        "refs/heads/maestro/sync",
+        "refs/heads/release-please--*",
+        "refs/heads/dependabot/**",
+        "refs/heads/gh-readonly-queue/**",
+        "refs/heads/revert-*",
+        "refs/heads/copilot/**",
+        "refs/heads/feat/**",
+        "refs/heads/fix/**",
+        "refs/heads/docs/**",
+        "refs/heads/style/**",
+        "refs/heads/refactor/**",
+        "refs/heads/perf/**",
+        "refs/heads/test/**",
+        "refs/heads/build/**",
+        "refs/heads/ci/**",
+        "refs/heads/chore/**",
+        "refs/heads/revert/**"
+      ],
       "include": [
         "~ALL"
       ]
@@ -18,13 +37,7 @@
   "name": "branch-names",
   "rules": [
     {
-      "parameters": {
-        "name": "Conventional branch name",
-        "negate": false,
-        "operator": "regex",
-        "pattern": "^(main|maestro/sync|release-please--.+|dependabot/.+|gh-readonly-queue/.+|(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)/[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)*)$"
-      },
-      "type": "branch_name_pattern"
+      "type": "creation"
     }
   ],
   "target": "branch"
