@@ -101,6 +101,28 @@ The documentation leaves unclear, and a live run must settle:
    skipped rule.
 7. Which pin wins when a rule gives both `ref` and `sha`.
 
+### Live test, 2026-09-25
+
+An active ruleset targeting maestro-release-canary alone required a probe
+workflow from a rust-workflows branch, pinned by `sha`, on a pull request with
+no change of its own (release-canary pull request 14, closed; ruleset, branches
+and probe deleted afterwards). It settled:
+
+- The rule is enforced on the Team plan, not only accepted (1): with every other
+  check green, the pull request stayed `BLOCKED` and a merge was refused while
+  the probe failed; once the probe passed, the same pull request became `CLEAN`
+  after nothing but a new pin and a re-run.
+- `job.workflow_sha` and `github.workflow_sha` name the pinned rust-workflows
+  commit, and `github.repository` names release-canary (2).
+- A plain `actions/checkout` checks out release-canary's pull request: the probe
+  read its `maestro-quality.toml` (3).
+- A `matrix` ran `cargo test` on `ubuntu-24.04`, `macos-15` and `windows-2025`
+  (5, the matrix half).
+
+Still open: `permissions` beyond `contents: read` (4), reusable-workflow calls
+(5), whether a same-named job can satisfy the rule, and Actions disabled (6),
+and `ref` against `sha` (7): both named the same commit in the test.
+
 ## Decision
 
 The standard runs from rust-workflows, required by organization rulesets; a
