@@ -4,15 +4,17 @@
 A repository drifts when it has no `stack`, when its `maestro/sync` pull
 request has waited more than 14 days, when `rust-gate sync --check` at the
 latest rust-workflows release finds a managed file that differs on its default
-branch, or when it strays from the file baseline: a file every repository
-keeps of its own is missing, it pins tools of its own, a copy repeats one of
-this repository's defaults, or an issue form applies a label the repository
-lacks. Each drifting repository has one open issue here, "Drift: <name>",
+branch, when its `merge-queue` ruleset is missing, not active or not the one
+in `org/repository-rulesets/`, or when it strays from the file baseline: a
+file every repository keeps of its own is missing, it pins tools of its own, a
+copy repeats one of this repository's defaults, or an issue form applies a
+label the repository lacks. Each drifting repository has one open issue here, "Drift: <name>",
 updated on every run and closed once the repository is back on the standard.
 Exits 1 when any repository drifts. `--dry-run` reports and writes nothing. Needs
 GH_TOKEN (the organization bot's) and cargo. Standard library only.
 """
 
+import json
 import re
 import subprocess
 import sys
@@ -84,6 +86,13 @@ DEFAULTS = (
     ".github/ISSUE_TEMPLATE/feature_request.yml",
 )
 FORMS = ".github/ISSUE_TEMPLATE/"
+# The merge queue every repository's default branch goes through. GitHub refuses
+# a `merge_queue` rule in an organization ruleset (HTTP 422), so each repository
+# carries this ruleset of its own.
+MERGE_QUEUE = Path(__file__).resolve().parent.parent / "org/repository-rulesets/merge-queue.json"
+# rust-workflows' ci-internal.yml does not run on `merge_group` yet, so a queue
+# would never merge; it joins once the pull request that adds it merges.
+MERGE_QUEUE_EXEMPT = {WORKFLOWS}
 
 
 def problems_of(repo, stack, gate_bin, workspace):
@@ -242,6 +251,29 @@ def baseline_problems(repo, home):
     return problems
 
 
+def merge_queue_problems(repo, standard):
+    """What keeps `repo`'s merge queue off `standard`, the ruleset in
+    `org/repository-rulesets/`, one sentence at most. Its id and timestamps
+    are the repository's own; its conditions and rules are compared."""
+    if repo in MERGE_QUEUE_EXEMPT:
+        return []
+    name = standard["name"]
+    source = f"org/repository-rulesets/{name}.json"
+    rulesets = f"repos/{ORG}/{repo}/rulesets"
+    found = [ruleset for ruleset in gh_json("api", rulesets) if ruleset["name"] == name]
+    if not found:
+        return [f"It has no `{name}` ruleset: create it from `{HOME}` with "
+                f"`gh api -X POST {rulesets} --input {source}`."]
+    live = gh_json("api", f"{rulesets}/{found[0]['id']}")
+    restore = (f"restore it from `{HOME}` with "
+               f"`gh api -X PUT {rulesets}/{live['id']} --input {source}`")
+    if live.get("enforcement") != "active":
+        return [f"Its `{name}` ruleset is {live.get('enforcement')}, not active: {restore}."]
+    if any(live.get(field) != standard[field] for field in ("conditions", "rules")):
+        return [f"Its `{name}` ruleset differs from the organization's: {restore}."]
+    return []
+
+
 def metadata_problems(repo):
     """What keeps `repo`'s name, description and topics off the organization's
     naming, one sentence each: every repository but .github is named
@@ -288,12 +320,14 @@ def main():
     dry_run = "--dry-run" in sys.argv[1:]
     tag, _ = latest_release()
     home = defaults_of()
+    merge_queue = json.loads(MERGE_QUEUE.read_text(encoding="utf-8"))
     drifting = []
     with tempfile.TemporaryDirectory() as workspace:
         gate_bin = install_gate(tag, Path(workspace) / "gate")
         for repo, stack in repositories():
             problems = problems_of(repo, stack, gate_bin, workspace)
             problems += baseline_problems(repo, home)
+            problems += merge_queue_problems(repo, merge_queue)
             problems += metadata_problems(repo)
             report(repo, problems, dry_run)
             state = "on the standard" if not problems else " ".join(problems)
