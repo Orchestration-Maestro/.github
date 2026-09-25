@@ -11,9 +11,9 @@ Paths below are relative to this repository. Before editing, read
 [AGENTS.md](../AGENTS.md) for the rules that bind every change,
 [CONTEXT.md](../CONTEXT.md) for the words it uses and
 [CONTRIBUTING.md](../CONTRIBUTING.md) for how a change is proposed. The
-organization's
-[constitution](https://github.com/Orchestration-Maestro/.github/blob/main/CONSTITUTION.md)
-binds every specification, plan, review and release.
+organization's [golden
+rules](https://github.com/Orchestration-Maestro/.github/blob/main/golden-rules/engineering.md)
+come first: nothing in a specification, a plan or this repository weakens them.
 
 For quality, engineering or security changes, read
 [northstar.md](../docs/standards/northstar.md),
@@ -112,7 +112,7 @@ already here, so improve an explanation in place.
 ├── .yamlfmt.yml                                # How yamlfmt formats every YAML file; rendered by rust-gate sync
 ├── AGENTS.md                                   # Instructions for coding agents: change order, API gotchas, invariants
 ├── CODE_OF_CONDUCT.md                          # Contributor Covenant 2.1
-├── CONSTITUTION.md                             # The rules every specification, plan, review and release in the organization satisfies; Spec Kit's constitution
+├── CONSTITUTION.md                             # Spec Kit's constitution: an index of the pages that come first
 ├── CONTEXT.md                                  # The words this repository uses: stack, standard, file baseline, default, drift
 ├── CONTRIBUTING.md                             # Contribution guide, with the rules every pull request passes
 ├── LICENSE                                     # MIT, for this repository only: GitHub never inherits a license
