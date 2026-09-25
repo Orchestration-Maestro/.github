@@ -1,0 +1,44 @@
+{
+  "bypass_actors": [],
+  "conditions": {
+    "ref_name": {
+      "exclude": [
+        "~DEFAULT_BRANCH",
+        "refs/heads/maestro/sync",
+        "refs/heads/release-please--*",
+        "refs/heads/dependabot/**",
+        "refs/heads/gh-readonly-queue/**",
+        "refs/heads/revert-*",
+        "refs/heads/copilot/**",
+        "refs/heads/feat/**",
+        "refs/heads/fix/**",
+        "refs/heads/docs/**",
+        "refs/heads/style/**",
+        "refs/heads/refactor/**",
+        "refs/heads/perf/**",
+        "refs/heads/test/**",
+        "refs/heads/build/**",
+        "refs/heads/ci/**",
+        "refs/heads/chore/**",
+        "refs/heads/revert/**"
+      ],
+      "include": [
+        "~ALL"
+      ]
+    },
+    "repository_name": {
+      "exclude": [],
+      "include": [
+        "~ALL"
+      ]
+    }
+  },
+  "enforcement": "active",
+  "name": "branch-names",
+  "rules": [
+    {
+      "type": "creation"
+    }
+  ],
+  "target": "branch"
+}

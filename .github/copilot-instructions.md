@@ -58,11 +58,13 @@ in place.
 │       └── security.md                         # Security rules in .github
 ├── golden-rules/                               # The golden rules every repository follows: engineering, security and the Northstar, shown on the organization page
 │   ├── engineering.md                          # Engineering rules
+│   ├── glossary.md                             # The words every repository of the organization uses for the organization's own concepts
 │   ├── northstar.md                            # Speed, quality, maintainability and security are not a trade-off
 │   ├── security.md                             # Security rules
 │   └── standards.md                            # The standards the golden rules align with: each one's version, reviewed on 2026-09-24, and what it covers
 ├── org/                                        # The organization's live settings, as scripts/export-org.py exports them
 │   ├── rulesets/                               # Organization rulesets, in the shape the API accepts
+│   │   ├── branch-names.json                   # Ruleset branch-names: branch_name_pattern
 │   │   ├── commits-are-conventional.json       # Ruleset commits-are-conventional: commit_message_pattern
 │   │   ├── default-branch-discipline.json      # Ruleset default-branch-discipline: code_scanning, pull_request, required_signatures
 │   │   ├── floor-no-destruction.json           # Ruleset floor-no-destruction: deletion, non_fast_forward
@@ -116,11 +118,11 @@ in place.
 ├── CONTEXT.md                                  # The words this repository uses: stack, standard, file baseline, default, drift
 ├── CONTRIBUTING.md                             # Contribution guide, with the rules every pull request passes
 ├── LICENSE                                     # MIT, for this repository only: GitHub never inherits a license
+├── PULL_REQUEST_TEMPLATE.md                    # Pull request description template
 ├── README.md                                   # The organization's .github repository: its public profile, the defaults every repository inherits
 ├── SECURITY.md                                 # Security policy, pointing reporters at private vulnerability reporting
 ├── SUPPORT.md                                  # Where each kind of question goes, and what to include
 ├── maestro-quality.toml                        # This repository's quality settings; rust-gate sync reads them
-├── pull_request_template.md                    # Pull request description template
 └── typos.toml                                  # The words this repository means, from [typos] words in maestro-quality.toml; rendered by rust-gate sync
 ```
 

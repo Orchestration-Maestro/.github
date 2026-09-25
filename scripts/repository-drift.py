@@ -69,7 +69,7 @@ DEFAULTS = (
     "CONTRIBUTING.md",
     "SECURITY.md",
     "SUPPORT.md",
-    "pull_request_template.md",
+    "PULL_REQUEST_TEMPLATE.md",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/config.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
@@ -220,6 +220,24 @@ def baseline_problems(repo, home):
     return problems
 
 
+def metadata_problems(repo):
+    """What keeps `repo`'s name, description and topics off the organization's
+    naming, one sentence each: every repository but .github is named
+    `maestro-` then lowercase kebab-case, says what it is and has a topic."""
+    meta = gh_json("api", f"repos/{ORG}/{repo}")
+    problems = []
+    if repo != ".github" and not re.fullmatch(r"maestro(-[a-z0-9]+)+", repo):
+        problems.append(
+            f"Its name is not `maestro-` then lowercase kebab-case: rename it, and move "
+            f"every GitHub Actions `uses:` that names it, since Actions follows no redirect."
+        )
+    if not (meta.get("description") or "").strip():
+        problems.append("It has no description: the organization page shows it.")
+    if not meta.get("topics"):
+        problems.append("It has no topic: add at least one that classifies it.")
+    return problems
+
+
 def report(repo, problems, dry_run):
     """Open, update or close the repository's drift issue."""
     title = f"Drift: {repo}"
@@ -254,6 +272,7 @@ def main():
         for repo, stack in repositories():
             problems = problems_of(repo, stack, gate_bin, workspace)
             problems += baseline_problems(repo, home)
+            problems += metadata_problems(repo)
             report(repo, problems, dry_run)
             state = "on the standard" if not problems else " ".join(problems)
             print(f"{repo}: {state}")

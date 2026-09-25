@@ -29,6 +29,7 @@ full; the [organization page](profile/README.md) lists the repositories.
 | [Engineering rules](golden-rules/engineering.md) | The foundations (FND), the named principles (P), the hard mandates (ENF) and the rules for adopting them (C); nothing overrides them |
 | [Security rules](golden-rules/security.md) | The rules for people and agents alike (SEC) |
 | [Standards](golden-rules/standards.md) | The standards the golden rules align with, each with its version and what it covers |
+| [Glossary](golden-rules/glossary.md) | The words every repository shares; a word it marks `_Never_` is refused by the gate everywhere (HYG-007) |
 | [Gate rules](https://github.com/Orchestration-Maestro/rust-workflows/blob/main/docs/ci.md#every-rule) | Every rule the shared CI refuses, each with its ID; the organization page lists them as the latest release holds them |
 | A repository's `docs/standards/` | Its rule map: what holds each rule there, or why it does not apply (C-001) |
 | A repository's architecture and ADRs | What it builds and why; maestro-core's [architecture](https://github.com/Orchestration-Maestro/maestro-core/blob/main/docs/architecture/README.md) sets the product's principles |
