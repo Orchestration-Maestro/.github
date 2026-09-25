@@ -29,6 +29,7 @@ email, profile fields and the member list.
 | `.github/dependabot.yml`, `.github/workflows/dependabot-auto-merge.yml` | Weekly action updates for this repository's workflows, patch and minor merged by the bot |
 | `profile/` | The organization page on GitHub, with its banner, the Northstar panel and the pillar and foundation cards; `scripts/org-page.py` writes each block between its generated markers |
 | `golden-rules/` | The golden rules every repository follows: engineering, security, the Northstar, the standards they align with and the glossary of the words every repository shares; the one source of the organization page's rules, of every rule map and of the copy `rust-gate` embeds |
+| `docs/adr/` | Decisions about how the organization runs, each with the trade-off that produced it |
 | `workflow-templates/rust-ci.*` | The "Rust CI" template offered under Actions, New workflow |
 | `workflow-templates/hygiene-ci.*` | The "Hygiene CI" template, for a repository without Rust |
 | `workflow-templates/scorecard.*` | The "OpenSSF Scorecard" template, the same workflow for any repository |
