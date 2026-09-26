@@ -206,7 +206,7 @@ rules say which rule meets which control.
 | --- | --- |
 | [maestro-core](https://github.com/Orchestration-Maestro/maestro-core) | The local runtime of Maestro: knowledge kernel, retrieval and orchestration |
 | [maestro-model-router](https://github.com/Orchestration-Maestro/maestro-model-router) | Supervises llama.cpp servers and serves one OpenAI-compatible endpoint per model |
-| [maestro-release-canary](https://github.com/Orchestration-Maestro/maestro-release-canary) | Canary consumer that proves rust-workflows' live release path on real tags: binaries, provenance attestation and evidence |
+| [maestro-release-canary](https://github.com/Orchestration-Maestro/maestro-release-canary) | Canary consumer that proves maestro-rust-workflows' live release path on real tags: binaries, provenance attestation and evidence |
 | [maestro-rust-workflows](https://github.com/Orchestration-Maestro/maestro-rust-workflows) | Reusable, security-gated GitHub Actions workflows for Rust |
 <!-- end generated -->
 

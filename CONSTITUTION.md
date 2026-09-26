@@ -30,7 +30,7 @@ full; the [organization page](profile/README.md) lists the repositories.
 | [Security rules](golden-rules/security.md) | The rules for people and agents alike (SEC) |
 | [Standards](golden-rules/standards.md) | The standards the golden rules align with, each with its version and what it covers |
 | [Glossary](golden-rules/glossary.md) | The words every repository shares; a word it marks `_Never_` is refused by the gate everywhere (HYG-007) |
-| [Gate rules](https://github.com/Orchestration-Maestro/rust-workflows/blob/main/docs/ci.md#every-rule) | Every rule the shared CI refuses, each with its ID; the organization page lists them as the latest release holds them |
+| [Gate rules](https://github.com/Orchestration-Maestro/maestro-rust-workflows/blob/main/docs/ci.md#every-rule) | Every rule the shared CI refuses, each with its ID; the organization page lists them as the latest release holds them |
 | A repository's `docs/standards/` | Its rule map: what holds each rule there, or why it does not apply (C-001) |
 | A repository's architecture and ADRs | What it builds and why; maestro-core's [architecture](https://github.com/Orchestration-Maestro/maestro-core/blob/main/docs/architecture/README.md) sets the product's principles |
 
@@ -52,8 +52,8 @@ How we deliver it:
 
 | Tool | What it does for us |
 | --- | --- |
-| [rust-workflows](https://github.com/Orchestration-Maestro/rust-workflows) | The shared CI every repository calls, and `rust-gate`, which holds the gate rules at commit and in CI |
-| [Quality sync](README.md#quality-sync) | Every repository's managed files, rendered by `rust-gate sync` and moved to each rust-workflows release by a pull request |
+| [maestro-rust-workflows](https://github.com/Orchestration-Maestro/maestro-rust-workflows) | The shared CI every repository calls, and `rust-gate`, which holds the gate rules at commit and in CI |
+| [Quality sync](README.md#quality-sync) | Every repository's managed files, rendered by `rust-gate sync` and moved to each maestro-rust-workflows release by a pull request |
 | mise and prek | The pinned toolbelt `scripts/bootstrap.sh` installs, and the commit hooks, the same locally and in CI |
 | [Spec Kit](https://github.com/github/spec-kit) | Specifications, plans and tasks, under each repository's `specs/NNN-*/`; installed once, never committed |
 | [Organization settings](README.md#what-each-decision-is-for) | Rulesets, properties and security settings as code in `org/`, checked for drift every week |

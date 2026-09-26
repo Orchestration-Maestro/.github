@@ -6,7 +6,7 @@ Each block has one source, and only this script copies it onto the page:
 - northstar: golden-rules/northstar.md, its motto, opening paragraph and pillars
 - foundations, mandates, principles: golden-rules/engineering.md
 - security: golden-rules/security.md
-- gate-rules: rust-workflows' list, as `rust-gate gate-rules` prints it
+- gate-rules: maestro-rust-workflows' list, as `rust-gate gate-rules` prints it
 - standards: golden-rules/standards.md
 - repositories: the description each public repository shows on GitHub
 

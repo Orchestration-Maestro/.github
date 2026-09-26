@@ -10,7 +10,7 @@
     "repository_name": {
       "exclude": [],
       "include": [
-        "rust-workflows"
+        "maestro-rust-workflows"
       ]
     }
   },
