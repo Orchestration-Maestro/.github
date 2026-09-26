@@ -99,7 +99,7 @@ repos:
         always_run: true
         language: rust
         additional_dependencies:
-          - "cli:https://github.com/Orchestration-Maestro/maestro-rust-workflows:v4.3.0:rust-gate"
+          - "cli:https://github.com/Orchestration-Maestro/maestro-rust-workflows:v4.3.1:rust-gate"
           - "cli:jaq:3.1.1"
         pass_filenames: false
       - id: rust-gate-rules
@@ -108,7 +108,7 @@ repos:
         always_run: true
         language: rust
         additional_dependencies:
-          - "cli:https://github.com/Orchestration-Maestro/maestro-rust-workflows:v4.3.0:rust-gate"
+          - "cli:https://github.com/Orchestration-Maestro/maestro-rust-workflows:v4.3.1:rust-gate"
           - "cli:jaq:3.1.1"
         pass_filenames: false
       - id: rust-gate-guide
@@ -117,6 +117,6 @@ repos:
         always_run: true
         language: rust
         additional_dependencies:
-          - "cli:https://github.com/Orchestration-Maestro/maestro-rust-workflows:v4.3.0:rust-gate"
+          - "cli:https://github.com/Orchestration-Maestro/maestro-rust-workflows:v4.3.1:rust-gate"
           - "cli:jaq:3.1.1"
         pass_filenames: false
