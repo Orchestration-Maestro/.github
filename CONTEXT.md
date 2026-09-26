@@ -39,7 +39,7 @@ _Avoid_: deviation, violation
 
 **Sync pull request**:
 The pull request from `maestro/sync` that `quality-sync.yml` opens in a
-repository when `rust-workflows` releases.
+repository when `maestro-rust-workflows` releases.
 
 **Export**:
 `org/`: the organization's live settings as `scripts/export-org.py` reads

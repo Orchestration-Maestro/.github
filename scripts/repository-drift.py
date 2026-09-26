@@ -3,7 +3,7 @@
 
 A repository drifts when it has no `stack`, when its `maestro/sync` pull
 request has waited more than 14 days, when `rust-gate sync --check` at the
-latest rust-workflows release finds a managed file that differs on its default
+latest maestro-rust-workflows release finds a managed file that differs on its default
 branch, when its `merge-queue` ruleset is missing, not active or not the one
 in `org/repository-rulesets/`, or when it strays from the file baseline: a
 file every repository keeps of its own is missing, it pins tools of its own, a
@@ -40,7 +40,7 @@ from org_quality import (
 HOME = ".github"
 OLDEST_DAYS = 14
 
-# The file baseline, as rust-workflows holds it. Every repository keeps these
+# The file baseline, as maestro-rust-workflows holds it. Every repository keeps these
 # files of its own: GitHub never inherits them and `rust-gate sync` does not
 # write them.
 OWN_FILES = (
@@ -59,11 +59,11 @@ OWN_FILES = (
 PAGE_SCRIPT = Path(__file__).with_name("org-page.py")
 # The Copilot guide and the rule map, the golden rules adapted to a repository:
 # `rust-gate guide --check` and `rust-gate rules --check` at the latest release
-# compare them. rust-workflows keeps its own guide, and its own `just check`
+# compare them. maestro-rust-workflows keeps its own guide, and its own `just check`
 # holds its rule map to the golden rules it carries.
 GUIDE = ".github/copilot-instructions.md"
-# A repository's own tool pins, the files rust-workflows' `managed-files`
-# check refuses too: the pins live once, in rust-workflows, and
+# A repository's own tool pins, the files maestro-rust-workflows' `managed-files`
+# check refuses too: the pins live once, in maestro-rust-workflows, and
 # `rust-gate setup` installs them.
 TOOL_PINS = (
     "mise.toml",
@@ -223,7 +223,7 @@ def baseline_problems(repo, home):
         names = ", ".join(f"`{name}`" for name in pins)
         problems.append(
             f"It pins tools of its own in {names}: delete them; `rust-gate setup` "
-            f"installs the tools rust-workflows pins."
+            f"installs the tools maestro-rust-workflows pins."
         )
     for default in DEFAULTS:
         copy = own_copy(paths, default)

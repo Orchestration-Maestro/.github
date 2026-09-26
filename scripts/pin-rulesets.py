@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Move the organization rulesets that run rust-workflows to its latest release.
+"""Move the organization rulesets that run maestro-rust-workflows to its latest release.
 
-`rust-central` and `hygiene-central` run a workflow of rust-workflows through a
+`rust-central` and `hygiene-central` run a workflow of maestro-rust-workflows through a
 `workflows` rule, pinned by `sha` to a release's commit with `ref` naming its
 tag. This moves every such pin to the latest release, then exports `org/` and
 opens or updates the pull request from `ci/pin-the-central-rulesets` that
@@ -49,7 +49,7 @@ def version(ref):
 
 
 def home_workflows(ruleset, home_id):
-    """Every workflow `ruleset` runs from rust-workflows."""
+    """Every workflow `ruleset` runs from maestro-rust-workflows."""
     for rule in ruleset.get("rules", []):
         if rule.get("type") == "workflows":
             for workflow in rule["parameters"]["workflows"]:
@@ -58,7 +58,7 @@ def home_workflows(ruleset, home_id):
 
 
 def repinned(ruleset, home_id, tag, sha):
-    """`ruleset` with every workflow it runs from rust-workflows pinned to the
+    """`ruleset` with every workflow it runs from maestro-rust-workflows pinned to the
     release, and each move as (path, old ref, old sha)."""
     moved = copy.deepcopy(ruleset)
     moves = []
@@ -145,11 +145,11 @@ def record(admin, home_id, tag, sha):
         print("org/: records every pin")
         return
     text = (
-        f"The central rulesets now run rust-workflows {tag}, commit {sha}: this "
+        f"The central rulesets now run maestro-rust-workflows {tag}, commit {sha}: this "
         f"records them in `org/`, exported from GitHub. It merges itself once every "
         f"check passes.\n\n" + "\n".join(f"- `{path}`" for path in files)
     )
-    title = f"ci: pin the central rulesets to rust-workflows {tag}"
+    title = f"ci: pin the central rulesets to maestro-rust-workflows {tag}"
     number = publish(HOME, ROOT, files, BRANCH, title, text, True)
     print(f"org/: pull request #{number}, {len(files)} files")
 

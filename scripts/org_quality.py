@@ -1,6 +1,6 @@
 """What the organization's quality scripts share.
 
-The GitHub CLI, the latest rust-workflows release, every repository with its
+The GitHub CLI, the latest maestro-rust-workflows release, every repository with its
 `stack`, rust-gate built at that release, and the pull request, one signed
 commit, that publishes a change. Standard library only; `gh` reads its token
 from GH_TOKEN.
@@ -16,16 +16,16 @@ import urllib.request
 from pathlib import Path
 
 ORG = "Orchestration-Maestro"
-WORKFLOWS = "rust-workflows"
+WORKFLOWS = "maestro-rust-workflows"
 # The branch every sync pull request comes from.
 SYNC_BRANCH = "maestro/sync"
 
-# The stacks `rust-gate sync` holds. `workflows` is rust-workflows itself, the
+# The stacks `rust-gate sync` holds. `workflows` is maestro-rust-workflows itself, the
 # home of the gate, whose CI, Dependabot settings and hooks are its own.
 SYNCED = {"rust", "other"}
 
 # jaq, the TOML and JSON reader rust-gate runs, at the version and digest
-# rust-workflows pins in its own ci.yml.
+# maestro-rust-workflows pins in its own ci.yml.
 JAQ_URL = (
     "https://github.com/01mf02/jaq/releases/download/v3.1.1/"
     "jaq-x86_64-unknown-linux-gnu"
@@ -55,7 +55,7 @@ def gh_json(*args, stdin=None):
 
 
 def latest_release():
-    """The latest rust-workflows release: its tag and the commit it names."""
+    """The latest maestro-rust-workflows release: its tag and the commit it names."""
     tag = gh_json("release", "view", "-R", f"{ORG}/{WORKFLOWS}", "--json", "tagName")[
         "tagName"
     ]
@@ -92,7 +92,7 @@ def install_gate(tag, directory):
     with urllib.request.urlopen(JAQ_URL, timeout=60) as response:
         data = response.read()
     if hashlib.sha256(data).hexdigest() != JAQ_SHA256:
-        sys.exit("jaq does not match the digest rust-workflows pins")
+        sys.exit("jaq does not match the digest maestro-rust-workflows pins")
     binary.write_bytes(data)
     binary.chmod(0o755)
     return directory / "bin"

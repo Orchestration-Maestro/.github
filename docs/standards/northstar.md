@@ -18,7 +18,7 @@ repository starts from defaults instead of copies.
 
 | Pillar | KPI | Current | Target | Measured by |
 | --- | --- | --- | --- | --- |
-| Speed | Time from a rust-workflows release to every sync pull request | not measured | set from the first baseline | The `quality-sync.yml` run after the release event |
+| Speed | Time from a maestro-rust-workflows release to every sync pull request | not measured | set from the first baseline | The `quality-sync.yml` run after the release event |
 | Quality | Repositories off the standard | 2 (read 2026-09-24) | 0 | Open `Drift:` issues from the daily drift check |
 | Maintainability | Settings changed by hand, outside `org/` | 0 (read 2026-09-24) | 0 | The weekly settings drift check |
 | Security | Repositories without private vulnerability reporting | 0 (read 2026-09-24) | 0 | The enforced security configuration `maestrolabs-baseline` |

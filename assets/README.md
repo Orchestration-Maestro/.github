@@ -44,8 +44,8 @@ Foundation logo: no letter R, no gear teeth.
 - Organization description (Organization settings, Profile): "Automated
   guardrails for faster, better, more maintainable and more secure code. Our
   Northstar: never reached, always pursued."
-- Every claim is one a KPI in `rust-workflows`'
-  [northstar.md](https://github.com/Orchestration-Maestro/rust-workflows/blob/main/docs/standards/northstar.md)
+- Every claim is one a KPI in `maestro-rust-workflows`'
+  [northstar.md](https://github.com/Orchestration-Maestro/maestro-rust-workflows/blob/main/docs/standards/northstar.md)
   backs.
 
 ## Icons

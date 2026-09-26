@@ -23,7 +23,7 @@ GitHub is the source of truth; `org/` is its export, written by
 
 `org/` changes only through the export; the weekly `org-drift.yml` check fails
 on any file that disagrees with GitHub. One change runs these steps itself: at
-each `rust-workflows` release, `quality-sync.yml`'s `repin` job
+each `maestro-rust-workflows` release, `quality-sync.yml`'s `repin` job
 (`scripts/pin-rulesets.py`) moves the central rulesets' pins, exports, and opens
 the pull request that records them, and stops on any other difference.
 
@@ -66,7 +66,7 @@ repository drift check holds each repository to it.
   version in a trailing comment; `permissions:` is explicit; input reaches
   `run:` only through `env:`. The organization rejects any other action or pin.
 - **No repository calls the CI.** `rust-central` and `hygiene-central` run
-  `rust-workflows`' `ci.yml` and `hygiene.yml` in every repository. `rust-gate
+  `maestro-rust-workflows`' `ci.yml` and `hygiene.yml` in every repository. `rust-gate
   sync` deletes the `.github/workflows/ci.yml` caller it once wrote, and the
   managed-files check fails while one remains, so no template offers one.
 - **The central rulesets move before the sync.** `rust-central` and
@@ -77,7 +77,7 @@ repository drift check holds each repository to it.
 - **One rule set for all repositories:** every ruleset targets `~ALL`, except
   `rust-central`, which targets `stack=rust`, `hygiene-central`, which
   targets `stack=other`, and `rust-workflows-ci-required`, which holds
-  `rust-workflows`, `stack=workflows`, to its own CI. A
+  `maestro-rust-workflows`, `stack=workflows`, to its own CI. A
   repository-specific exception is its own ruleset, decided by the owner.
 - **File baseline:** every repository keeps its own `README.md`, `LICENSE`,
   `AGENTS.md`, `CONTEXT.md`, `.github/CODEOWNERS`, Copilot guide, rule map,
@@ -86,16 +86,16 @@ repository drift check holds each repository to it.
   Community files live here as defaults; a repository keeps its own copy only
   for a need of its own. The daily drift check opens an issue for every gap.
 - **Copilot guides are generated.** `rust-gate guide` writes each
-  repository's `.github/copilot-instructions.md` but `rust-workflows`', as its
+  repository's `.github/copilot-instructions.md` but `maestro-rust-workflows`', as its
   commit hook and the sync run it; improve an explanation in place, since it
   keeps it. This repository's own guide included.
 - **Golden rules are mapped in every repository.** `golden-rules/` holds the
   rules; each repository's `docs/standards/` says what holds each one there
   (C-001), written by `rust-gate rules`, which keeps every entry a person
-  wrote. A rule added to `golden-rules/` reaches rust-workflows' copy at once,
-  every repository with the next rust-workflows release as "Not mapped yet",
+  wrote. A rule added to `golden-rules/` reaches maestro-rust-workflows' copy at once,
+  every repository with the next maestro-rust-workflows release as "Not mapped yet",
   and the drift check fails until it is mapped.
-  `rust-workflows`' own `just check` holds its rule map to the copy it
+  `maestro-rust-workflows`' own `just check` holds its rule map to the copy it
   carries, which the carry pull request rewrites.
 - **Names follow one convention.** A repository is `maestro-` then
   lowercase kebab-case, `.github` aside, with a description and a topic (drift

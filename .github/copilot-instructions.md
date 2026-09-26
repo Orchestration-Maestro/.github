@@ -40,7 +40,7 @@ in place.
 │   ├── workflows/                                  # GitHub Actions workflows
 │   │   ├── dependabot-auto-merge.yml               # Dependabot auto-merge
 │   │   ├── org-drift.yml                           # Weekly check that GitHub still matches org/, and a daily one that every repository holds the standard and the file baseline
-│   │   ├── quality-sync.yml                        # The central rulesets moved to each rust-workflows release as soon as it is created, then a sync pull request in every repository
+│   │   ├── quality-sync.yml                        # The central rulesets moved to each maestro-rust-workflows release as soon as it is created, then a sync pull request in every repository
 │   │   └── scorecard.yml                           # This repository's weekly OpenSSF Scorecard
 │   ├── CODEOWNERS                                  # Every change here goes to the maintainer for review
 │   ├── copilot-instructions.md                     # This guide, written by rust-gate guide at every commit
@@ -52,7 +52,7 @@ in place.
 │   └── maestro-mark-flat.svg                       # Master mark, one color (#B7410E); derive every other version from it
 ├── docs/                                           # Documentation
 │   ├── adr/                                        # Decisions about how the organization runs, each with the trade-off that produced it
-│   │   ├── 0001-enforce-the-standard-centrally.md  # Enforce the standard centrally, from rust-workflows
+│   │   ├── 0001-enforce-the-standard-centrally.md  # Enforce the standard centrally, from maestro-rust-workflows
 │   │   └── README.md                               # Hard-to-reverse decisions about how the organization runs, each with the trade-off that produced it
 │   └── standards/                                  # Standards
 │       ├── engineering.md                          # Engineering rules in .github
@@ -100,8 +100,8 @@ in place.
 │   ├── export-org.py                               # Regenerates org/ from the live API
 │   ├── org-page.py                                 # Writes every generated block of the organization page from its one source, and refuses golden rules that disagree with themselves
 │   ├── org_quality.py                              # What the organization's quality scripts share
-│   ├── pin-rulesets.py                             # Move the organization rulesets that run rust-workflows to its latest release
-│   ├── quality-sync.py                             # Bring every organization repository onto the latest rust-workflows release
+│   ├── pin-rulesets.py                             # Move the organization rulesets that run maestro-rust-workflows to its latest release
+│   ├── quality-sync.py                             # Bring every organization repository onto the latest maestro-rust-workflows release
 │   ├── repository-drift.py                         # Hold every organization repository to the standard, one issue each
 │   └── test_repository_drift.py                    # Tests for repository-drift.py's merge-queue check
 ├── workflow-templates/                             # Workflow templates offered under Actions, New workflow

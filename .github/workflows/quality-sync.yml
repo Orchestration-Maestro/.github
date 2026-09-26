@@ -1,6 +1,6 @@
 name: Quality sync
 "on":
-  # rust-workflows' release workflow sends this event as it creates a Release:
+  # maestro-rust-workflows' release workflow sends this event as it creates a Release:
   # the release reaches every repository at once.
   repository_dispatch:
     types: [rust-workflows-release]
@@ -9,7 +9,7 @@ name: Quality sync
     # with nothing to sync changes nothing.
     - cron: "43 5 * * *"
   # A change to a golden rule, a picture or the page's writer reaches the
-  # organization page, every rule map and rust-workflows' copy at once. The page
+  # organization page, every rule map and maestro-rust-workflows' copy at once. The page
   # itself is left out: the sync's own pull request changes it.
   push:
     branches: [main]
@@ -30,11 +30,11 @@ concurrency:
   group: quality-sync
   cancel-in-progress: false
 jobs:
-  # The rulesets move first: rust-workflows' managed-files check runs from the
+  # The rulesets move first: maestro-rust-workflows' managed-files check runs from the
   # rulesets' pin, so a sync pull request is green only once they run the
   # release it brings. A ruleset update does not re-run an open pull request.
   repin:
-    name: The central rulesets on the latest rust-workflows release
+    name: The central rulesets on the latest maestro-rust-workflows release
     if: github.event_name != 'push'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -69,7 +69,7 @@ jobs:
         with:
           client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-          # The release is read from rust-workflows, the pull request opened here.
+          # The release is read from maestro-rust-workflows, the pull request opened here.
           owner: ${{ github.repository_owner }}  # zizmor: ignore[github-app]
           permission-contents: write
           permission-pull-requests: write
@@ -86,7 +86,7 @@ jobs:
             python3 scripts/pin-rulesets.py
           fi
   sync:
-    name: Every repository on the latest rust-workflows release
+    name: Every repository on the latest maestro-rust-workflows release
     needs: repin
     # A failed repin still syncs: the next run moves the rulesets, and the
     # sync pull requests it re-publishes run again under the release.
