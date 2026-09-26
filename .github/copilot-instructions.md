@@ -65,6 +65,8 @@ in place.
 │   ├── security.md                                 # Security rules
 │   └── standards.md                                # The standards the golden rules align with: each one's version, reviewed on 2026-09-24, and what it covers
 ├── org/                                            # The organization's live settings, as scripts/export-org.py exports them
+│   ├── repository-rulesets/                        # Repository rulesets
+│   │   └── merge-queue.json                        # The ruleset every repository carries of its own, in the shape POST repos/{owner}/{repo}/rulesets accepts; written by hand, not exported
 │   ├── rulesets/                                   # Organization rulesets, in the shape the API accepts
 │   │   ├── branch-names.json                       # Ruleset branch-names: branch_name_pattern
 │   │   ├── commits-are-conventional.json           # Ruleset commits-are-conventional: commit_message_pattern
@@ -100,7 +102,8 @@ in place.
 │   ├── org_quality.py                              # What the organization's quality scripts share
 │   ├── pin-rulesets.py                             # Move the organization rulesets that run rust-workflows to its latest release
 │   ├── quality-sync.py                             # Bring every organization repository onto the latest rust-workflows release
-│   └── repository-drift.py                         # Hold every organization repository to the standard, one issue each
+│   ├── repository-drift.py                         # Hold every organization repository to the standard, one issue each
+│   └── test_repository_drift.py                    # Tests for repository-drift.py's merge-queue check
 ├── workflow-templates/                             # Workflow templates offered under Actions, New workflow
 │   ├── scorecard.properties.json                   # Scores the repository's supply-chain practices weekly and on every push to the default branch
 │   └── scorecard.yml                               # OpenSSF Scorecard

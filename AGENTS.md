@@ -27,6 +27,12 @@ each `rust-workflows` release, `quality-sync.yml`'s `repin` job
 (`scripts/pin-rulesets.py`) moves the central rulesets' pins, exports, and opens
 the pull request that records them, and stops on any other difference.
 
+One file in `org/` is written by hand:
+`org/repository-rulesets/merge-queue.json`, the ruleset every repository
+carries of its own, since GitHub refuses a `merge_queue` rule in an
+organization ruleset (HTTP 422). The export leaves it alone; the daily
+repository drift check holds each repository to it.
+
 ## GitHub API gotchas
 
 - **Rulesets:** update from the full current state. GET the ruleset, change one
@@ -107,6 +113,10 @@ the pull request that records them, and stops on any other difference.
 - **Commits** are signed with conventional titles; the default branch takes only
   squash-merged pull requests. Bundle a session's work into one pull request,
   titled for its most visible change.
+- **Merge through the queue.** The merge queue is the organization's standard:
+  every repository but `rust-workflows`, until its CI runs on `merge_group`,
+  carries the `merge-queue` ruleset. Merge with `gh pr merge --auto`, which
+  queues the pull request once its checks pass.
 
 ## File placement
 
@@ -126,6 +136,7 @@ actionlint .github/workflows/*.yml
 zizmor --offline .github/workflows
 gitleaks dir . --redact
 typos .
+python3 -m unittest discover -s scripts
 ```
 
 Done when every command passes, and a second export leaves `org/` unchanged.

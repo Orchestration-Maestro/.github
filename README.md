@@ -18,11 +18,13 @@ email, profile fields and the member list.
 | `org/custom-properties.json` | The `stack` property the central rulesets select on |
 | `org/security-configurations.json` | `maestrolabs-baseline`, enforced and the default for every new repository |
 | `org/rulesets/*.json` | Organization rulesets, in the shape `PUT orgs/{org}/rulesets/{id}` accepts |
+| `org/repository-rulesets/merge-queue.json` | The ruleset every repository carries of its own, in the shape `POST repos/{owner}/{repo}/rulesets` accepts; written by hand, not exported |
 | `org/webhooks.json` | Organization webhooks without secrets or query strings |
 | `scripts/export-org.py` | Regenerates `org/` from the live API |
 | `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and a daily one that every repository holds the standard and the file baseline |
 | `.github/workflows/quality-sync.yml` | The central rulesets moved to each `rust-workflows` release as soon as it is created, then a sync pull request in every repository |
 | `scripts/pin-rulesets.py`, `scripts/quality-sync.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The ruleset repin, the sync, the per-repository drift check, and what they share |
+| `scripts/test_*.py` | Their tests: `python3 -m unittest discover -s scripts` |
 | `scripts/org-page.py` | Writes every generated block of the organization page from its one source, and refuses golden rules that disagree with themselves |
 | `.pre-commit-config.yaml` and the other files `rust-gate sync` writes | This repository's managed files, as every repository holds them; `hygiene-central` runs its CI |
 | `.github/workflows/scorecard.yml` | This repository's weekly OpenSSF Scorecard |
@@ -79,9 +81,14 @@ its own. A repository's own file always wins.
 | `commits-are-conventional` | Records the Conventional Commit title every default branch takes. GitHub enforces its metadata restriction only on the Enterprise plan, so on Team it refuses nothing; PRL-003 in the shared CI refuses a pull request whose title is not one, and a squash merge makes that title the commit's |
 | `branch-names` | A branch can be created only under a Conventional Commit type, `feat/…`, `fix/…`, `docs/…` and the rest, or as a bot's: `maestro/sync`, `release-please--*`, `dependabot/…`, `gh-readonly-queue/…` (the merge queue), and GitHub's own `revert-*` (the Revert button) and `copilot/…` (the coding agent). It restricts creation outside those prefixes, since branch name patterns are Enterprise-only. Each prefix is excluded as `prefix/**/*`: a trailing `**` matches one level only, which refused the merge queue's `gh-readonly-queue/main/pr-…` and Dependabot's `dependabot/cargo/…`; PRL-004 refuses a pull request from a branch that is not lowercase kebab-case after its prefix |
 | `visibility-is-frozen` | Public runners are unmetered; a private repository would start billing |
+| `merge-queue` (each repository) | A pull request merges through the merge queue, squashed, one at a time: its checks run again on the default branch as it will be, so two green pull requests cannot merge into a red branch. GitHub refuses a `merge_queue` rule in an organization ruleset (HTTP 422), so each repository carries `org/repository-rulesets/merge-queue.json`, and the drift check flags one that lacks it; `rust-workflows` joins once its own CI runs on `merge_group` |
 
 ### Standing decisions
 
+- **Merge through the queue.** Every repository's default branch takes a pull
+  request only from its merge queue. Queue one with `gh pr merge --auto`: it
+  joins the queue once its checks pass and its threads are resolved, and
+  merges once they pass again on top of the queue.
 - **The same rules for every repository.** Every ruleset targets all
   repositories: none can opt out of pull requests, signed commits or the CodeQL
   gate. A repository that needs direct pushes needs its own reviewed ruleset
@@ -234,6 +241,9 @@ more than 14 days, when `rust-gate sync --check` at the latest release finds a
 managed file that differs on its default branch, or when it strays from the
 file baseline in `scripts/repository-drift.py`:
 
+- its `merge-queue` ruleset is missing, not active, or has conditions or rules
+  other than `org/repository-rulesets/merge-queue.json`'s; the issue gives the
+  `gh api` command that restores it;
 - it keeps a pull request's branch after the merge: every repository turns on
   "Automatically delete head branches" (`delete_branch_on_merge`), which GitHub
   cannot set for the whole organization;
