@@ -43,13 +43,13 @@ SCRIPTS = Path(__file__).resolve().parent
 
 
 def pinned_version(checkout):
-    """The rust-workflows version the repository's caller pins, or None."""
-    caller = Path(checkout) / ".github/workflows/ci.yml"
-    if not caller.is_file():
+    """The rust-workflows version the repository's commit hooks install, or None."""
+    hooks = Path(checkout) / ".pre-commit-config.yaml"
+    if not hooks.is_file():
         return None
     # Either name: rust-workflows becomes maestro-rust-workflows at a cutover.
-    found = re.search(r"/(?:maestro-)?rust-workflows/\S+@[0-9a-f]{40}\s+# v(\d+\.\d+\.\d+)",
-                      caller.read_text())
+    found = re.search(r"/(?:maestro-)?rust-workflows:v(\d+\.\d+\.\d+):rust-gate",
+                      hooks.read_text())
     return found.group(1) if found else None
 
 

@@ -21,7 +21,7 @@ WORKFLOWS = "rust-workflows"
 SYNC_BRANCH = "maestro/sync"
 
 # The stacks `rust-gate sync` holds. `workflows` is rust-workflows itself, the
-# home of the gate, whose caller, Dependabot settings and hooks are its own.
+# home of the gate, whose CI, Dependabot settings and hooks are its own.
 SYNCED = {"rust", "other"}
 
 # jaq, the TOML and JSON reader rust-gate runs, at the version and digest

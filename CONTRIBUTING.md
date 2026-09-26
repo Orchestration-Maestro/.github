@@ -24,7 +24,7 @@ bypass them.
 | Signed commits | The default branch accepts only signed commits; GitHub signs the squash merge |
 | Resolved conversations | Every review thread is resolved before merge |
 | CodeQL | No new high or critical security alert and no CodeQL error |
-| Rust CI | Rust repositories pass `rust / Required Rust CI` from [rust-workflows](https://github.com/Orchestration-Maestro/rust-workflows) |
+| Organization CI | Rust repositories pass the `ci.yml` of [rust-workflows](https://github.com/Orchestration-Maestro/rust-workflows), a repository without Rust its `hygiene.yml`; the organization runs both, no repository can edit or skip them |
 
 Workflows from a first-time or external contributor wait for a maintainer's
 approval before they run.
