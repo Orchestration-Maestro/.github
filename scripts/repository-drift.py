@@ -90,9 +90,6 @@ FORMS = ".github/ISSUE_TEMPLATE/"
 # a `merge_queue` rule in an organization ruleset (HTTP 422), so each repository
 # carries this ruleset of its own.
 MERGE_QUEUE = Path(__file__).resolve().parent.parent / "org/repository-rulesets/merge-queue.json"
-# rust-workflows' ci-internal.yml does not run on `merge_group` yet, so a queue
-# would never merge; it joins once the pull request that adds it merges.
-MERGE_QUEUE_EXEMPT = {WORKFLOWS}
 
 
 def problems_of(repo, stack, gate_bin, workspace):
@@ -255,8 +252,6 @@ def merge_queue_problems(repo, standard):
     """What keeps `repo`'s merge queue off `standard`, the ruleset in
     `org/repository-rulesets/`, one sentence at most. Its id and timestamps
     are the repository's own; its conditions and rules are compared."""
-    if repo in MERGE_QUEUE_EXEMPT:
-        return []
     name = standard["name"]
     source = f"org/repository-rulesets/{name}.json"
     rulesets = f"repos/{ORG}/{repo}/rulesets"
