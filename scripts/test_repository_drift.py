@@ -67,10 +67,10 @@ class MergeQueueProblems(unittest.TestCase):
         reordered = json.loads(json.dumps(live(), sort_keys=True))
         self.assertEqual(problems([{"id": 7, "name": "merge-queue"}], reordered), [])
 
-    def test_rust_workflows_is_exempt_and_not_read(self):
-        with mock.patch.object(drift, "gh_json") as gh_json:
-            self.assertEqual(drift.merge_queue_problems(drift.WORKFLOWS, STANDARD), [])
-        gh_json.assert_not_called()
+    def test_rust_workflows_is_held_to_the_queue_like_any_repository(self):
+        with mock.patch.object(drift, "gh_json", return_value=[]):
+            found = drift.merge_queue_problems(drift.WORKFLOWS, STANDARD)
+        self.assertEqual(len(found), 1)
 
 
 if __name__ == "__main__":
