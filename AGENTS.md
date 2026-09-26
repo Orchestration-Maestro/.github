@@ -65,21 +65,17 @@ repository drift check holds each repository to it.
   `ossf/scorecard-action`, pinned to a full commit SHA with the
   version in a trailing comment; `permissions:` is explicit; input reaches
   `run:` only through `env:`. The organization rejects any other action or pin.
-- **Rust CI job id is `rust`.** `rust-ci-required` requires the check
-  `rust / Required Rust CI` from GitHub Actions (app id 15368). A caller job with
-  another id blocks every merge in Rust repositories.
-- **The CI templates are what `rust-gate sync` renders.** Each pins the full SHA
-  of a `rust-workflows` release tag's commit, with the tag as the trailing
-  comment (`@<sha>  # v2.0.0`); `quality-sync.yml` moves every repository's
-  pins, these templates included, as soon as a release is created, and
-  Dependabot leaves them alone. A template moves only to a published release.
+- **No repository calls the CI.** `rust-central` and `hygiene-central` run
+  `rust-workflows`' `ci.yml` and `hygiene.yml` in every repository. `rust-gate
+  sync` deletes the `.github/workflows/ci.yml` caller it once wrote, and the
+  managed-files check fails while one remains, so no template offers one.
 - **The central rulesets move before the sync.** `rust-central` and
   `hygiene-central` pin `sha` and `ref` to a release; the `repin` job moves them
   ahead of the sync pull requests, which the managed-files check they run holds
   to the rulesets' release. Across a major release they move only when a person
   runs `quality-sync.yml` with `major`.
 - **One rule set for all repositories:** every ruleset targets `~ALL`, except
-  `rust-ci-required`, which targets `stack=rust`, `hygiene-required`, which
+  `rust-central`, which targets `stack=rust`, `hygiene-central`, which
   targets `stack=other`, and `rust-workflows-ci-required`, which holds
   `rust-workflows`, `stack=workflows`, to its own CI. A
   repository-specific exception is its own ruleset, decided by the owner.

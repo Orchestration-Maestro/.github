@@ -74,9 +74,7 @@ in place.
 │   │   ├── floor-no-destruction.json               # Ruleset floor-no-destruction: deletion, non_fast_forward
 │   │   ├── floor-release-tags.json                 # Ruleset floor-release-tags: deletion, non_fast_forward, update
 │   │   ├── hygiene-central.json                    # Ruleset hygiene-central: workflows
-│   │   ├── hygiene-required.json                   # Ruleset hygiene-required: required_status_checks
 │   │   ├── rust-central.json                       # Ruleset rust-central: workflows
-│   │   ├── rust-ci-required.json                   # Ruleset rust-ci-required: required_status_checks
 │   │   ├── rust-workflows-ci-required.json         # Ruleset rust-workflows-ci-required: required_status_checks
 │   │   └── visibility-is-frozen.json               # Ruleset visibility-is-frozen: repository_visibility
 │   ├── actions.json                                # Actions policy: allowed actions, SHA pinning, and anything else non-default
@@ -107,10 +105,6 @@ in place.
 │   ├── repository-drift.py                         # Hold every organization repository to the standard, one issue each
 │   └── test_repository_drift.py                    # Tests for repository-drift.py's merge-queue check
 ├── workflow-templates/                             # Workflow templates offered under Actions, New workflow
-│   ├── hygiene-ci.properties.json                  # The organization's checks for a repository without Rust, through rust-workflows' hygiene.yml: secret scan, repository hygiene
-│   ├── hygiene-ci.yml                              # CI: calls hygiene.yml; rendered by rust-gate sync
-│   ├── rust-ci.properties.json                     # The organization's Rust gates through rust-workflows: formatting, Clippy, tests, coverage, advisories, secret scan, MSRV
-│   ├── rust-ci.yml                                 # CI: calls ci.yml, upload-coverage.yml, upload-sarif.yml; rendered by rust-gate sync
 │   ├── scorecard.properties.json                   # Scores the repository's supply-chain practices weekly and on every push to the default branch
 │   └── scorecard.yml                               # OpenSSF Scorecard
 ├── .editorconfig                                   # Editor settings that survive the editor; rendered by rust-gate sync
