@@ -114,8 +114,7 @@ repository drift check holds each repository to it.
   squash-merged pull requests. Bundle a session's work into one pull request,
   titled for its most visible change.
 - **Merge through the queue.** The merge queue is the organization's standard:
-  every repository but `rust-workflows`, until its CI runs on `merge_group`,
-  carries the `merge-queue` ruleset. Merge with `gh pr merge --auto`, which
+  every repository carries the `merge-queue` ruleset. Merge with `gh pr merge --auto`, which
   queues the pull request once its checks pass.
 
 ## File placement
