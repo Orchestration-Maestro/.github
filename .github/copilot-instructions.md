@@ -75,6 +75,7 @@ in place.
 │   │   ├── floor-release-tags.json                 # Ruleset floor-release-tags: deletion, non_fast_forward, update
 │   │   ├── hygiene-central.json                    # Ruleset hygiene-central: workflows
 │   │   ├── rust-central.json                       # Ruleset rust-central: workflows
+│   │   ├── rust-slices.json                        # Ruleset rust-slices: workflows
 │   │   ├── rust-workflows-ci-required.json         # Ruleset rust-workflows-ci-required: required_status_checks
 │   │   └── visibility-is-frozen.json               # Ruleset visibility-is-frozen: repository_visibility
 │   ├── actions.json                                # Actions policy: allowed actions, SHA pinning, and anything else non-default
