@@ -1,0 +1,7 @@
+[
+  {
+    "repository": "lbug",
+    "part": "rust-gate sync",
+    "reason": "vendored upstream crate; upstream lint table kept to minimise divergence"
+  }
+]

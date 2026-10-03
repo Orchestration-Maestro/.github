@@ -20,6 +20,7 @@ email, profile fields and the member list.
 | `org/rulesets/*.json` | Organization rulesets, in the shape `PUT orgs/{org}/rulesets/{id}` accepts |
 | `org/repository-rulesets/merge-queue.json` | The ruleset every repository carries of its own, in the shape `POST repos/{owner}/{repo}/rulesets` accepts; written by hand, not exported |
 | `org/webhooks.json` | Organization webhooks without secrets or query strings |
+| `org/sync-exceptions.json` | Reviewed quality-sync exceptions: repository, exact part skipped and reason; written by hand, not exported |
 | `scripts/export-org.py` | Regenerates `org/` from the live API |
 | `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and a daily one that every repository holds the standard and the file baseline |
 | `.github/workflows/quality-sync.yml` | The central rulesets moved to each `maestro-rust-workflows` release as soon as it is created, then a sync pull request in every repository |
@@ -58,6 +59,7 @@ its own. A repository's own file always wins.
 
 | Setting | Why |
 | --- | --- |
+| Sync exception: `lbug`, `rust-gate sync` | Vendored upstream crate; keep its upstream lint table to minimise divergence. The gate has no lint-only skip, so only this command is skipped; rules, page, guide and PR handling still run |
 | `two_factor_requirement_enabled` | A member account without 2FA is a compromise of every repository |
 | `members_can_create_*repositories: false` | Only owners create repositories, so each one starts under these rulesets |
 | `members_can_create_teams: false` | Only owners grant access through teams |
@@ -207,8 +209,17 @@ pull request that merges itself once green; a rule it adds waits, "Not mapped
 yet", for a person. When a file changes, it opens or updates one pull request from
 `maestro/sync`, a single commit GitHub signs. A
 minor or patch release merges itself once green; a major one waits for a person.
-A repository whose first sync needs a person, a manifest with lint tables of its
-own for instance, is named in the run's log and failed. It runs as the
+`org/sync-exceptions.json` explicitly records exceptions with `repository`, `part`
+and a nonempty `reason`. Unknown repositories (including archived or unsynced ones),
+unknown parts, duplicate entries and malformed entries are refused before syncing.
+The only supported part is `rust-gate sync`: v4.8.7 cannot skip Cargo lint management
+alone. For the vendored `lbug` crate this keeps the upstream `[lints.clippy]` table;
+its managed files and release pins are not rewritten, but `rust-gate rules`, the
+organization page writer, `rust-gate guide` and normal PR handling still run.
+The exception is printed in the run log and recorded in any sync PR body.
+Every other repository still runs all steps. A repository whose first sync needs
+a person, a manifest with lint tables of its own for instance, is named in the
+run's log and failed unless it has a reviewed exception. It runs as the
 organization bot, whose token already writes contents, pull requests and
 workflows in every repository.
 

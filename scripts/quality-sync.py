@@ -2,7 +2,8 @@
 """Bring every organization repository onto the latest maestro-rust-workflows release.
 
 For each repository whose `stack` is `rust` or `other`, clone it, run
-`rust-gate sync` at the release, then `rust-gate rules` for its rule map, the
+`rust-gate sync` at the release (unless org/sync-exceptions.json exempts that
+command), then `rust-gate rules` for its rule map, the
 organization page's generated blocks from their sources, and `rust-gate guide`
 for its Copilot guide: the same release writes them as the repository's own
 commit hooks do, so the two never disagree. When a file changed, open or update the pull request from
@@ -15,6 +16,7 @@ would change and writes nothing. Needs GH_TOKEN (the organization bot's) and
 cargo. Standard library only.
 """
 
+import json
 import re
 import sys
 import tempfile
@@ -40,6 +42,28 @@ CARRIED = "gate/golden-rules"
 RULES_URL = f"https://github.com/{ORG}/.github/blob/main/golden-rules"
 # The organization's own writers, beside this script.
 SCRIPTS = Path(__file__).resolve().parent
+EXCEPTIONS = SCRIPTS.parent / "org/sync-exceptions.json"
+
+
+def load_exceptions(repos, path=EXCEPTIONS):
+    """Refuse stale or malformed exceptions before any repository is changed."""
+    entries = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(entries, list):
+        raise RuntimeError(f"{path}: expected a list of sync exceptions")
+    known = {repo for repo, stack in repos if stack in SYNCED}
+    exceptions = {}
+    for entry in entries:
+        if (not isinstance(entry, dict)
+                or set(entry) != {"repository", "part", "reason"}
+                or not all(isinstance(value, str) and value.strip() for value in entry.values())):
+            raise RuntimeError(f"{path}: expected repository, part and nonempty reason strings")
+        repo = entry["repository"]
+        if repo not in known or entry["part"] != "rust-gate sync":
+            raise RuntimeError(f"{path}: unknown repository or part: {repo}, {entry['part']}")
+        if repo in exceptions:
+            raise RuntimeError(f"{path}: duplicate exception for {repo}")
+        exceptions[repo] = entry
+    return exceptions
 
 
 def pinned_version(checkout):
@@ -59,11 +83,17 @@ def changed_files(checkout):
     return sorted(line[3:] for line in status.splitlines())
 
 
-def sync_one(repo, pin, version, gate_bin, workspace, dry_run):
+def sync_one(repo, pin, version, gate_bin, workspace, dry_run, exceptions):
     """Sync one repository; report what changed."""
     checkout = clone(repo, Path(workspace) / repo)
     before = pinned_version(checkout)
-    run(["rust-gate", "sync"], cwd=checkout, env=with_gate(gate_bin, RUST_WORKFLOWS_PIN=pin))
+    exception = exceptions.get(repo)
+    skipped = ""
+    if exception:
+        skipped = f"Skipped `{exception['part']}`: {exception['reason']}."
+        print(f"{repo}: {skipped}")
+    else:
+        run(["rust-gate", "sync"], cwd=checkout, env=with_gate(gate_bin, RUST_WORKFLOWS_PIN=pin))
     # The rule map follows the golden rules this release carries.
     run(["rust-gate", "rules"], cwd=checkout, env=with_gate(gate_bin))
     # The organization page lists the gate's rules as this release holds them.
@@ -92,8 +122,9 @@ def sync_one(repo, pin, version, gate_bin, workspace, dry_run):
         else "A minor or patch release: this merges itself once every check passes."
     )
     text = (
-        f"`rust-gate sync` at maestro-rust-workflows v{version} rewrote the files every "
-        f"organization repository holds as the gate renders them.\n\n{note}\n\n"
+        f"Quality sync at maestro-rust-workflows v{version} updated the organization's files.\n\n"
+        + (f"{skipped}\n\n" if skipped else "")
+        + f"{note}\n\n"
         + "\n".join(f"- `{path}`" for path in files)
     )
     title = f"chore: sync the organization's files to maestro-rust-workflows v{version}"
@@ -157,17 +188,20 @@ def carry_golden_rules(workspace, dry_run):
 
 def main():
     dry_run = "--dry-run" in sys.argv[1:]
+    repos = repositories()
+    exceptions = load_exceptions(repos)
     tag, sha = latest_release()
     version = tag.removeprefix("v")
     failed = []
     with tempfile.TemporaryDirectory() as workspace:
         gate_bin = install_gate(tag, Path(workspace) / "gate")
-        for repo, stack in repositories():
+        for repo, stack in repos:
             if stack not in SYNCED:
                 print(f"{repo}: stack {stack}, not synced")
                 continue
             try:
-                sync_one(repo, f"{sha} v{version}", version, gate_bin, workspace, dry_run)
+                sync_one(repo, f"{sha} v{version}", version, gate_bin, workspace, dry_run,
+                         exceptions)
             except RuntimeError as error:
                 print(f"{repo}: {error}", file=sys.stderr)
                 failed.append(repo)

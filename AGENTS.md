@@ -27,11 +27,15 @@ each `maestro-rust-workflows` release, `quality-sync.yml`'s `repin` job
 (`scripts/pin-rulesets.py`) moves the central rulesets' pins, exports, and opens
 the pull request that records them, and stops on any other difference.
 
-One file in `org/` is written by hand:
-`org/repository-rulesets/merge-queue.json`, the ruleset every repository
-carries of its own, since GitHub refuses a `merge_queue` rule in an
-organization ruleset (HTTP 422). The export leaves it alone; the daily
-repository drift check holds each repository to it.
+Two files in `org/` are written by hand:
+- `org/repository-rulesets/merge-queue.json`, the ruleset every repository
+  carries of its own, since GitHub refuses a `merge_queue` rule in an
+  organization ruleset (HTTP 422). The daily repository drift check holds
+  each repository to it.
+- `org/sync-exceptions.json`, reviewed exceptions to quality-sync commands,
+  with a repository, exact part skipped and reason. No custom property changes.
+
+The export leaves both alone.
 
 ## GitHub API gotchas
 
