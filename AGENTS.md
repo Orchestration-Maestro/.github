@@ -28,6 +28,7 @@ each `maestro-rust-workflows` release, `quality-sync.yml`'s `repin` job
 the pull request that records them, and stops on any other difference.
 
 Two files in `org/` are written by hand:
+
 - `org/repository-rulesets/merge-queue.json`, the ruleset every repository
   carries of its own, since GitHub refuses a `merge_queue` rule in an
   organization ruleset (HTTP 422). The daily repository drift check holds
