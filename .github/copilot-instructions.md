@@ -82,6 +82,7 @@ in place.
 │   ├── custom-properties.json                      # The stack property the Rust and hygiene rulesets select on
 │   ├── security-configurations.json                # maestrolabs-baseline, enforced and the default for every new repository
 │   ├── settings.json                               # Organization fields that differ from the defaults table in the script
+│   ├── sync-exceptions.json                        # Reviewed quality-sync exceptions: repository, exact part skipped and reason; written by hand, not exported
 │   └── webhooks.json                               # Organization webhooks without secrets or query strings
 ├── profile/                                        # The organization page on GitHub, with its banner, the Northstar panel and the pillar and foundation cards
 │   ├── foundations/                                # The foundation cards on the organization page
@@ -104,6 +105,7 @@ in place.
 │   ├── pin-rulesets.py                             # Move the organization rulesets that run maestro-rust-workflows to its latest release
 │   ├── quality-sync.py                             # Bring every organization repository onto the latest maestro-rust-workflows release
 │   ├── repository-drift.py                         # Hold every organization repository to the standard, one issue each
+│   ├── test_quality_sync.py                        # Quality-sync exception tests; run python3 -m unittest discover -s scripts
 │   └── test_repository_drift.py                    # Tests for repository-drift.py's merge-queue check
 ├── workflow-templates/                             # Workflow templates offered under Actions, New workflow
 │   ├── scorecard.properties.json                   # Scores the repository's supply-chain practices weekly and on every push to the default branch
