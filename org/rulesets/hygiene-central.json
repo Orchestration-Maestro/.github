@@ -29,9 +29,9 @@
         "workflows": [
           {
             "path": ".github/workflows/hygiene.yml",
-            "ref": "refs/tags/v4.8.1",
+            "ref": "refs/tags/v4.8.2",
             "repository_id": 1382744803,
-            "sha": "ba2e8356c09e77afcebf3dfc47ad2be26d95957c"
+            "sha": "5f41c3ed9383f0f82ae1513f8decc0e7af2a3bcf"
           }
         ]
       },
