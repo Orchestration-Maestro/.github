@@ -92,9 +92,8 @@ starts at version 0.1.0.
   its redirects stop once the old name is reused. Nothing may call the old
   repository by name when it is renamed.
 - **Other repositories:**
-  - `maestro-model-router` drops `maestro-quality.toml`, `scorecard.yml` and
-    `dependabot-auto-merge.yml`. The files stay in its history, and its own
-    workflow stays.
+  - `maestro-model-router` gets no changes: it is rebuilt fresh on mistral.rs,
+    so the old router is not patched.
   - `maestro-release-canary` is archived: its only job was to prove the old
     release path.
   - `maestro-core` is frozen. Its CI was disabled on 2026-10-04.
@@ -108,8 +107,8 @@ starts at version 0.1.0.
   - an unformatted copy fails the format check;
   - a copy with a Clippy warning fails the lint check;
   - a copy with a failing test fails the test check.
-- **Proof on a real repository:** a pull request on `maestro-model-router`
-  passes the new CI.
+- **Proof on a real repository:** the first pull request with Rust code in the
+  fresh `maestro` repository passes the new CI.
 - **Prior art:** the old repository's "Consumer CI" job ran the shared workflow
   on fixture repositories the same way.
 
@@ -126,7 +125,7 @@ starts at version 0.1.0.
   1. The organization stops depending on the old program.
   2. The fresh `maestro-rust-workflows` 0.1.0 proves the new CI.
   3. The organization rules run the new CI, and the old repository is archived.
-  4. `maestro-model-router` runs the new CI cleanly, and the canary is
-     archived.
+  4. The canary is archived. The real-repository proof moves to the first Rust
+     pull request in `maestro`, because the router is rebuilt fresh.
 - **Effort:** about 6–11 hours for one lane, plus one review. This is an
   estimate, not a measurement.
