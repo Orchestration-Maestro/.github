@@ -101,8 +101,9 @@ The tracked-file inventory and explanations are maintained by hand.
 │   ├── org_quality.py                              # What the organization's quality scripts share
 │   ├── pin-rulesets.py                             # Move the organization rulesets that run maestro-rust-workflows to its latest release
 │   ├── repository-drift.py                         # Hold every organization repository to the standard, one issue each
+│   ├── test_org_page.py                            # Page rendering and checks without rust-gate
 │   ├── test_pin_rulesets.py                        # Repin dry-run and signed-publication tests
-│   └── test_repository_drift.py                    # Tests for repository-drift.py's merge-queue check
+│   └── test_repository_drift.py                    # Tests for repository-drift.py's page and merge-queue checks
 ├── workflow-templates/                             # Workflow templates offered under Actions, New workflow
 │   ├── scorecard.properties.json                   # Scores the repository's supply-chain practices weekly and on every push to the default branch
 │   └── scorecard.yml                               # OpenSSF Scorecard

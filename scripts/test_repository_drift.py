@@ -1,16 +1,22 @@
-"""Tests for repository-drift.py's merge-queue check. Run from the repository's
+"""Tests for repository-drift.py's page and merge-queue checks. Run from the repository's
 root with `python3 -m unittest discover -s scripts`. Standard library only."""
 
 import copy
 import importlib.util
 import json
+import os
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 from unittest import mock
 
+from test_org_page import PAGE_SCRIPT, page_checkout
+
 SPEC = importlib.util.spec_from_file_location(
     "repository_drift", Path(__file__).with_name("repository-drift.py")
 )
+assert SPEC is not None and SPEC.loader is not None
 drift = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(drift)
 
@@ -33,6 +39,33 @@ def problems(listed, ruleset=None):
     answers = {RULESETS: listed, f"{RULESETS}/7": ruleset}
     with mock.patch.object(drift, "gh_json", side_effect=lambda _, path: answers[path]):
         return drift.merge_queue_problems("maestro-core", STANDARD)
+
+
+class PageProblems(unittest.TestCase):
+    def test_a_differing_page_is_reported_without_rewriting_it(self):
+        with page_checkout() as (root, env):
+            rendered = subprocess.run(
+                [sys.executable, str(PAGE_SCRIPT), "--root", str(root)],
+                env=env, capture_output=True, text=True,
+            )
+            self.assertEqual(rendered.returncode, 0, rendered.stderr)
+            with mock.patch.object(drift, "clone", return_value=root), \
+                    mock.patch.dict(os.environ, env, clear=True):
+                self.assertEqual(drift.problems_of(".github", "other", root), [])
+                page = root / "profile/README.md"
+                stale = page.read_text(encoding="utf-8").replace(
+                    "| Example repository |", "| Stale description |",
+                )
+                page.write_text(stale, encoding="utf-8")
+                for stack in ("other", "rust"):
+                    with self.subTest(stack=stack):
+                        self.assertEqual(drift.problems_of(".github", stack, root), [
+                            "Its organization page does not say what its sources say "
+                            "(profile/README.md: a generated block differs from its source; "
+                            "run scripts/org-page.py): fix the source it names, or run "
+                            "`python3 scripts/org-page.py` and commit the page."
+                        ])
+                self.assertEqual(page.read_text(encoding="utf-8"), stale)
 
 
 class MergeQueueProblems(unittest.TestCase):
