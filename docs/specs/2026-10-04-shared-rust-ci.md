@@ -27,7 +27,7 @@ copied into each repository:
 | Lint: any warning fails | `cargo clippy --workspace --all-targets --locked -- -D warnings` | Linux |
 | Tests | `cargo test --workspace --locked` | Linux, macOS, Windows |
 
-It runs on every pull request and every push to `main`, and it takes no
+It runs on every pull request and every merge-queue run, and it takes no
 settings.
 
 The old CI is archived, not deleted. The old repository is renamed
@@ -76,7 +76,9 @@ starts at version 0.1.0.
   and `actions/cache`, and installs the toolchain with `rustup`.
 - **Versions:** the new repository starts at 0.1.0 and releases with
   release-please. The organization rules pin a version tag, and the repin job in
-  this repository moves them on each release.
+  this repository moves them on each release. Each release carries checksums,
+  a software bill of materials and an attestation, with verification steps, as
+  SEC-011 requires.
 - **The new repository** runs Matt Pocock's skills setup and keeps its own
   required checks: a self-test of the shared workflow.
 - **This repository:**
