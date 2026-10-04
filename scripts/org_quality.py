@@ -13,6 +13,7 @@ import os
 import subprocess
 import sys
 import urllib.request
+import uuid
 from pathlib import Path
 
 ORG = "Orchestration-Maestro"
@@ -125,11 +126,7 @@ def publish(repo, checkout, files, branch, title, text, merge):
     update its pull request, queued to merge itself once green when `merge`."""
     head = run(["git", "rev-parse", "HEAD"], cwd=checkout).strip()
     reference = f"repos/{ORG}/{repo}/git/refs/heads/{branch}"
-    try:
-        run(["gh", "api", "-X", "PATCH", reference, "-f", f"sha={head}", "-F", "force=true"])
-    except RuntimeError:
-        run(["gh", "api", "-X", "POST", f"repos/{ORG}/{repo}/git/refs",
-             "-f", f"ref=refs/heads/{branch}", "-f", f"sha={head}"])
+    temporary = f"fix/sync-build-{uuid.uuid4().hex}"
     # `rust-gate sync` also deletes the files it no longer writes: a path gone
     # from the checkout is a deletion, every other one an addition.
     additions = [
@@ -142,14 +139,28 @@ def publish(repo, checkout, files, branch, title, text, merge):
         "query": COMMIT,
         "variables": {
             "input": {
-                "branch": {"repositoryNameWithOwner": f"{ORG}/{repo}", "branchName": branch},
+                "branch": {"repositoryNameWithOwner": f"{ORG}/{repo}", "branchName": temporary},
                 "expectedHeadOid": head,
                 "message": {"headline": title},
                 "fileChanges": {"additions": additions, "deletions": deletions},
             }
         },
     }
-    gh_json("api", "graphql", "--input", "-", stdin=json.dumps(body))
+    # Keep GitHub's signed commit, without ever emptying an existing PR branch.
+    run(["gh", "api", "-X", "POST", f"repos/{ORG}/{repo}/git/refs",
+         "-f", f"ref=refs/heads/{temporary}", "-f", f"sha={head}"])
+    try:
+        result = gh_json("api", "graphql", "--input", "-", stdin=json.dumps(body))
+        commit = result["data"]["createCommitOnBranch"]["commit"]["oid"]
+        try:
+            run(["gh", "api", "-X", "PATCH", reference,
+                 "-f", f"sha={commit}", "-F", "force=true"])
+        except RuntimeError:
+            run(["gh", "api", "-X", "POST", f"repos/{ORG}/{repo}/git/refs",
+                 "-f", f"ref=refs/heads/{branch}", "-f", f"sha={commit}"])
+    finally:
+        run(["gh", "api", "-X", "DELETE",
+             f"repos/{ORG}/{repo}/git/refs/heads/{temporary}"])
     existing = open_pull_request(repo, branch)
     if existing:
         number = str(existing["number"])
