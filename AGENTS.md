@@ -152,3 +152,18 @@ Done when every command passes, and a second export leaves `org/` unchanged.
 - **New repository in the organization:** apply README's "New repository
   checklist".
 - **Drift token setup or renewal:** README's "Drift checks".
+
+## Agent skills
+
+### Issue tracker
+
+Issues are GitHub issues in this repository; a spec lands on `main` under
+`docs/specs/` first, and its issue links to it. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Matt Pocock's five default triage labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context. See `docs/agents/domain.md`.
