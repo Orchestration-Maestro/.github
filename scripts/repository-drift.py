@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 """Hold every organization repository to the standard, one issue each.
 
-A repository drifts when it has no `stack`, when its `maestro/sync` pull
-request has waited more than 14 days, when `rust-gate sync --check` at the
-latest maestro-rust-workflows release finds a managed file that differs on its default
-branch, when its `merge-queue` ruleset is missing, not active or not the one
-in `org/repository-rulesets/`, or when it strays from the file baseline: a
-file every repository keeps of its own is missing, it pins tools of its own, a
-copy repeats one of this repository's defaults, or an issue form applies a
-label the repository lacks. Each drifting repository has one open issue here, "Drift: <name>",
-updated on every run and closed once the repository is back on the standard.
-Exits 1 when any repository drifts. `--dry-run` reports and writes nothing. Needs
-GH_TOKEN (the organization bot's) and cargo. Standard library only.
+A repository drifts when it has no `stack`, its merge queue differs from
+org/repository-rulesets/, or it strays from the file baseline or metadata.
+Each drifting repository has one issue here, updated on every run and closed
+once it is back on the standard. Exits 1 when any repository drifts.
+`--dry-run` reports and writes nothing. Needs GH_TOKEN (the organization bot's).
+Standard library only.
 """
 
 import json
@@ -19,30 +14,19 @@ import re
 import subprocess
 import sys
 import tempfile
-from datetime import datetime, timezone
 from pathlib import Path
 
 from org_quality import (
     ORG,
-    SYNC_BRANCH,
-    SYNCED,
     WORKFLOWS,
     clone,
     gh_json,
-    install_gate,
-    latest_release,
-    open_pull_request,
     repositories,
     run,
-    with_gate,
 )
 
 HOME = ".github"
-OLDEST_DAYS = 14
-
-# The file baseline, as maestro-rust-workflows holds it. Every repository keeps these
-# files of its own: GitHub never inherits them and `rust-gate sync` does not
-# write them.
+# The file baseline: GitHub never inherits these repository-owned files.
 OWN_FILES = (
     "README.md",
     "LICENSE",
@@ -57,14 +41,7 @@ OWN_FILES = (
     "docs/standards/security.md",
 )
 PAGE_SCRIPT = Path(__file__).with_name("org-page.py")
-# The Copilot guide and the rule map, the golden rules adapted to a repository:
-# `rust-gate guide --check` and `rust-gate rules --check` at the latest release
-# compare them. maestro-rust-workflows keeps its own guide, and its own `just check`
-# holds its rule map to the golden rules it carries.
-GUIDE = ".github/copilot-instructions.md"
-# A repository's own tool pins, the files maestro-rust-workflows' `managed-files`
-# check refuses too: the pins live once, in maestro-rust-workflows, and
-# `rust-gate setup` installs them.
+# Repository-local tool pins are outside the shared standard.
 TOOL_PINS = (
     "mise.toml",
     "mise.lock",
@@ -92,61 +69,23 @@ FORMS = ".github/ISSUE_TEMPLATE/"
 MERGE_QUEUE = Path(__file__).resolve().parent.parent / "org/repository-rulesets/merge-queue.json"
 
 
-def problems_of(repo, stack, gate_bin, workspace):
+def problems_of(repo, stack, workspace):
     """What keeps `repo` off the standard, one sentence each."""
     problems = []
     if stack is None:
         problems.append("It has no `stack` property: set `rust`, `other` or `workflows`.")
-    pending = open_pull_request(repo, SYNC_BRANCH)
-    if pending:
-        opened = datetime.fromisoformat(pending["createdAt"].replace("Z", "+00:00"))
-        days = (datetime.now(timezone.utc) - opened).days
-        if days > OLDEST_DAYS:
-            problems.append(
-                f"Its sync pull request {pending['url']} has waited {days} days; "
-                f"merge it or fix what it breaks."
-            )
-    if stack in SYNCED:
+    if stack in {"rust", "other"}:
         checkout = clone(repo, Path(workspace) / repo)
-        check = subprocess.run(
-            ["rust-gate", "sync", "--check"], cwd=checkout,
-            env=with_gate(gate_bin), capture_output=True, text=True,
-        )
-        if check.returncode != 0:
-            problems.append(f"Its default branch drifts: {check.stderr.strip()}")
-        if (checkout / GUIDE).is_file():
-            guide = subprocess.run(
-                ["rust-gate", "guide", "--check"], cwd=checkout,
-                env=with_gate(gate_bin), capture_output=True, text=True,
-            )
-            if guide.returncode != 0:
-                problems.append(
-                    f"Its `{GUIDE}` is stale: run `rust-gate guide` at its root and "
-                    f"commit the guide."
-                )
         page = subprocess.run(
             [sys.executable, str(PAGE_SCRIPT), "--check", "--root", str(checkout)],
-            env=with_gate(gate_bin), capture_output=True, text=True,
+            capture_output=True, text=True,
         )
         if page.returncode != 0:
             problems.append(
                 f"Its organization page does not say what its sources say "
                 f"({page.stderr.strip()}): fix the source it names, or run "
-                f"`python3 scripts/org-page.py` with the latest release's `rust-gate` "
-                f"and commit the page."
+                f"`python3 scripts/org-page.py` and commit the page."
             )
-        if (checkout / "docs/standards").is_dir():
-            rules = subprocess.run(
-                ["rust-gate", "rules", "--check"], cwd=checkout,
-                env=with_gate(gate_bin), capture_output=True, text=True,
-            )
-            if rules.returncode != 0:
-                found = rules.stderr.strip().removeprefix("rules --check: ")
-                problems.append(
-                    f"Its rule map in `docs/standards/` is stale or incomplete "
-                    f"({found.split('; run ', 1)[0]}): run `rust-gate rules` at its root, "
-                    f"map every entry still \"Not mapped yet\", and commit the pages."
-                )
     return problems
 
 
@@ -222,8 +161,8 @@ def baseline_problems(repo, home):
     if pins and repo != WORKFLOWS:
         names = ", ".join(f"`{name}`" for name in pins)
         problems.append(
-            f"It pins tools of its own in {names}: delete them; `rust-gate setup` "
-            f"installs the tools maestro-rust-workflows pins."
+            f"It pins tools of its own in {names}: delete them; "
+            f"the shared CI owns its toolchain."
         )
     for default in DEFAULTS:
         copy = own_copy(paths, default)
@@ -313,14 +252,12 @@ def report(repo, problems, dry_run):
 
 def main():
     dry_run = "--dry-run" in sys.argv[1:]
-    tag, _ = latest_release()
     home = defaults_of()
     merge_queue = json.loads(MERGE_QUEUE.read_text(encoding="utf-8"))
     drifting = []
     with tempfile.TemporaryDirectory() as workspace:
-        gate_bin = install_gate(tag, Path(workspace) / "gate")
         for repo, stack in repositories():
-            problems = problems_of(repo, stack, gate_bin, workspace)
+            problems = problems_of(repo, stack, workspace)
             problems += baseline_problems(repo, home)
             problems += merge_queue_problems(repo, merge_queue)
             problems += metadata_problems(repo)

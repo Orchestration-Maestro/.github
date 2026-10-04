@@ -6,18 +6,15 @@ Each block has one source, and only this script copies it onto the page:
 - northstar: golden-rules/northstar.md, its motto, opening paragraph and pillars
 - foundations, mandates, principles: golden-rules/engineering.md
 - security: golden-rules/security.md
-- gate-rules: maestro-rust-workflows' list, as `rust-gate gate-rules` prints it
 - standards: golden-rules/standards.md
 - repositories: the description each public repository shows on GitHub
 
 It refuses golden rules that disagree with themselves first: a count in words
 that is not the number of rules, a rule without its `>` summary, a standard a
 rule maps that golden-rules/standards.md does not list, a missing picture.
-quality-sync.py runs it whenever a source changes and at every release, and
 repository-drift.py runs `--check`.
 
-Run it from this repository's root, with `rust-gate` on the PATH and `gh`
-signed in:
+Run it from this repository's root, with `gh` signed in:
 
     python3 scripts/org-page.py [--check] [--root DIR]
 
@@ -293,20 +290,6 @@ def principles(sources):
                   [(rule, name, meaning) for rule, name, meaning, _ in rows])
 
 
-def gate_rules(_):
-    """The rules the shared CI refuses, as the latest release lists them."""
-    listing = subprocess.run(["rust-gate", "gate-rules"], capture_output=True, text=True,
-                             check=True).stdout
-    rules = [line.split("\t") for line in listing.splitlines()]
-    excepted = [rule for rule, _, kind, _ in rules if kind == "exception"]
-    note = paragraph(f"Only {listed(excepted)} take an exception, recorded with its reason "
-                     f"in the repository's `maestro-quality.toml`; an exception that stops "
-                     f"being true fails the check.")
-    return folded(len(rules), "gate rules", "what the shared CI refuses on every pull "
-                  "request, most of them already at commit", "Rule",
-                  [(rule, name, holds) for rule, name, _, holds in rules], [note, ""])
-
-
 def standards(sources):
     """What golden-rules/standards.md says, then its table."""
     opening = sources.found("standards", r"^# .+\n\n(.*?)\n\n", "opening paragraph",
@@ -343,7 +326,6 @@ BLOCKS = {
     "mandates": mandates,
     "security": security,
     "principles": principles,
-    "gate-rules": gate_rules,
     "standards": standards,
     "repositories": repositories,
 }
