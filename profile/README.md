@@ -155,7 +155,7 @@ rules say which rule meets which control.
 | [maestro-manifests](https://github.com/Orchestration-Maestro/maestro-manifests) | Maestro's catalog of agents, skills, instructions, MCP servers and presets, organised by owner |
 | [maestro-model-router](https://github.com/Orchestration-Maestro/maestro-model-router) | Supervises llama.cpp servers and serves one OpenAI-compatible endpoint per model |
 | [maestro-release-canary](https://github.com/Orchestration-Maestro/maestro-release-canary) | Canary consumer that proves maestro-rust-workflows' live release path on real tags: binaries, provenance attestation and evidence |
-| [maestro-rust-workflows](https://github.com/Orchestration-Maestro/maestro-rust-workflows) | Reusable, security-gated GitHub Actions workflows for Rust |
+| [maestro-rust-workflows](https://github.com/Orchestration-Maestro/maestro-rust-workflows) | One shared Rust CI at Pi's level: format, lint, and tests on Linux, macOS and Windows |
 <!-- end generated -->
 
 Found a vulnerability? Report it privately: see our

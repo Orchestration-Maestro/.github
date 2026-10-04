@@ -76,7 +76,7 @@ its own. A repository's own file always wins.
 | `floor-no-destruction` | No deletion or force-push of any default branch |
 | `floor-release-tags` | `v*` tags cannot be deleted or moved; creation stays open for releases |
 | `default-branch-discipline` | Every repository: pull request, squash only, resolved threads, signed commits, CodeQL results with no high alert |
-| `rust-central` | Every Rust repository's pull request runs `maestro-rust-workflows`' own `ci.yml`, pinned to the latest release's commit, required by the ruleset itself: no repository can edit, loosen or skip the check; `quality-sync.yml` moves the pin at each release ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
+| `rust-central`, `rust-slices` | Rust pull requests to the default branch and `feat/*-integration` run the new `maestro-rust-workflows`' `ci.yml`, starting at v0.1.0: format and Clippy on Linux, tests on three systems. The rulesets require the pinned release; `quality-sync.yml` moves both pins at each release. The old `maestro-rust-workflows-v4` is archived with its tags intact ([shared CI spec](docs/specs/2026-10-04-shared-rust-ci.md)) |
 | `rust-workflows-ci-required` | `maestro-rust-workflows` merges only after its own `Required repository quality` and `Required consumer tests` |
 | `commits-are-conventional` | Records the Conventional Commit title every default branch takes. GitHub enforces its metadata restriction only on the Enterprise plan, so on Team it refuses nothing; PRL-003 in the shared CI refuses a pull request whose title is not one, and a squash merge makes that title the commit's |
 | `branch-names` | A branch can be created only under a Conventional Commit type, `feat/…`, `fix/…`, `docs/…` and the rest, or as a bot's: `maestro/sync`, `release-please--*`, `dependabot/…`, `gh-readonly-queue/…` (the merge queue), and GitHub's own `revert-*` (the Revert button) and `copilot/…` (the coding agent). It restricts creation outside those prefixes, since branch name patterns are Enterprise-only. Each prefix is excluded as `prefix/**/*`: a trailing `**` matches one level only, which refused the merge queue's `gh-readonly-queue/main/pr-…` and Dependabot's `dependabot/cargo/…`; PRL-004 refuses a pull request from a branch that is not lowercase kebab-case after its prefix |
@@ -170,9 +170,10 @@ the previous `org/webhooks.json`.
 workflow sends it the event `rust-workflows-release`, and again every day and on
 demand. Its first job, `repin`, runs `scripts/pin-rulesets.py` in the `org-audit`
 environment: every organization ruleset that runs a workflow of
-`maestro-rust-workflows`, `rust-central` and `hygiene-central`, moves to the release's
-commit and tag. It then exports `org/` and, when the export differs from `org/`
-by these pins alone, opens or updates the pull request from
+`maestro-rust-workflows`, `rust-central` and `rust-slices`, moves to the release's
+commit and tag. The disabled `hygiene-central` keeps its archived repository's pin.
+The job then exports `org/` and, when the export differs from `org/` by these pins
+alone, opens or updates the pull request from
 `ci/pin-the-central-rulesets`, one commit GitHub signs, which merges itself once
 green. Any other difference is drift: it publishes nothing and fails. A pin
 moves only forward, and across a major release only when a person runs the
