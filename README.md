@@ -20,14 +20,13 @@ email, profile fields and the member list.
 | `org/rulesets/*.json` | Organization rulesets, in the shape `PUT orgs/{org}/rulesets/{id}` accepts |
 | `org/repository-rulesets/merge-queue.json` | The ruleset every repository carries of its own, in the shape `POST repos/{owner}/{repo}/rulesets` accepts; written by hand, not exported |
 | `org/webhooks.json` | Organization webhooks without secrets or query strings |
-| `org/sync-exceptions.json` | Reviewed quality-sync exceptions: repository, exact part skipped and reason; written by hand, not exported |
 | `scripts/export-org.py` | Regenerates `org/` from the live API |
 | `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and a daily one that every repository holds the standard and the file baseline |
-| `.github/workflows/quality-sync.yml` | The central rulesets moved to each `maestro-rust-workflows` release as soon as it is created, then a sync pull request in every repository |
-| `scripts/pin-rulesets.py`, `scripts/quality-sync.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The ruleset repin, the sync, the per-repository drift check, and what they share |
+| `.github/workflows/quality-sync.yml` | The central rulesets moved to each `maestro-rust-workflows` release as soon as it is created, then a pull request recording the pins |
+| `scripts/pin-rulesets.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The ruleset repin, the per-repository drift check, and what they share |
 | `scripts/test_*.py` | Their tests: `python3 -m unittest discover -s scripts` |
 | `scripts/org-page.py` | Writes every generated block of the organization page from its one source, and refuses golden rules that disagree with themselves |
-| `.pre-commit-config.yaml` and the other files `rust-gate sync` writes | This repository's managed files, as every repository holds them; `hygiene-central` runs its CI |
+| `.pre-commit-config.yaml` and the other files `rust-gate sync` writes | This repository's existing tool configuration; automated managed-file sync has stopped |
 | `.github/workflows/scorecard.yml` | This repository's weekly OpenSSF Scorecard |
 | `.github/dependabot.yml`, `.github/workflows/dependabot-auto-merge.yml` | Weekly action updates for this repository's workflows, patch and minor merged by the bot |
 | `profile/` | The organization page on GitHub, with its banner, the Northstar panel and the pillar and foundation cards; `scripts/org-page.py` writes each block between its generated markers |
@@ -59,7 +58,6 @@ its own. A repository's own file always wins.
 
 | Setting | Why |
 | --- | --- |
-| Sync exception: `lbug`, `rust-gate sync` | Vendored upstream crate; keep its upstream lint table to minimise divergence. The gate has no lint-only skip, so only this command is skipped; rules, page, guide and PR handling still run |
 | `two_factor_requirement_enabled` | A member account without 2FA is a compromise of every repository |
 | `members_can_create_*repositories: false` | Only owners create repositories, so each one starts under these rulesets |
 | `members_can_create_teams: false` | Only owners grant access through teams |
@@ -72,8 +70,8 @@ its own. A repository's own file always wins.
 | Actions `self-hosted-runners: none` | On a public repository, any pull request would run code on the runner's machine |
 | Actions `fork-pr-contributor-approval` | Every external contributor's workflow run waits for an owner's approval |
 | Actions `artifact-and-log-retention: 30` | Public logs and artifacts are readable by anyone signed in; keep them shorter |
-| `stack` (`rust`, `other` or `workflows`, required) | Every repository says which checks guard its default branch: `rust` runs `maestro-rust-workflows`' `ci.yml` through `rust-central`, `other` its `hygiene.yml` through `hygiene-central`, and `workflows` is `maestro-rust-workflows`, held to its own CI by its own ruleset; `quality-sync.yml` syncs `rust` and `other` |
-| `hygiene-central` | Every repository without Rust runs `maestro-rust-workflows`' own `hygiene.yml`, pinned to the latest release's commit, required by the ruleset itself; `quality-sync.yml` moves the pin at each release ([ADR 0001](docs/adr/0001-enforce-the-standard-centrally.md)) |
+| `stack` (`rust`, `other` or `workflows`, required) | Selects the central Rust CI for `rust`; `other` keeps the organization rules and GitHub scanning; `workflows` holds the workflows repository to its own CI |
+| `hygiene-central` (disabled) | Retained but disabled so archiving the old CI cannot block non-Rust repositories ([shared CI spec](docs/specs/2026-10-04-shared-rust-ci.md)) |
 | `maestrolabs-baseline` | CodeQL, secret scanning with push protection, Dependabot, private vulnerability reporting |
 | `floor-no-destruction` | No deletion or force-push of any default branch |
 | `floor-release-tags` | `v*` tags cannot be deleted or moved; creation stays open for releases |
@@ -108,13 +106,9 @@ its own. A repository's own file always wins.
   installed on every repository, and `maestro-rust-workflows`' `upload-coverage.yml`
   logs in through OIDC, so no Codecov token exists to leak or rotate. Codecov
   reports; the coverage floor in `maestro-rust-workflows` is what fails a run.
-- **The central rulesets follow each release, before its sync pull requests.**
-  `maestro-rust-workflows`' managed-files check runs from the rulesets' pin, so a sync
-  pull request is green only once they run the release it brings, and a ruleset
-  update does not re-run an open pull request. A repository's other pull
-  requests fail that check until its sync pull request merges, minutes for a
-  minor or patch release. A major release waits for a person, like its sync
-  pull requests.
+- **The central rulesets follow each release.** The repin job records only
+  release-pin changes; other differences are drift. Major releases wait for a
+  person to read their notes and dispatch with `major`.
 - **An OpenSSF Scorecard for every repository.** Each repository runs its own
   `scorecard.yml`, because the Scorecard API accepts a published result only
   from a workflow in the scored repository. It publishes the score for a README
@@ -129,25 +123,16 @@ Settings a new repository needs that no organization default covers:
    organization page shows it), and at least one topic classifies it. The
    drift check refuses a repository without them. Renaming one later breaks
    every GitHub Actions `uses:` that names it: Actions follows no redirect.
-2. **Stack and managed files:** set `stack` to `rust` or `other`, then run
-   `rust-gate init` at the latest `maestro-rust-workflows` release in the new
-   repository and commit what it writes: the hooks and every managed file.
-   `rust-central` or `hygiene-central` runs its CI from then on, and
-   `quality-sync.yml` keeps the files current.
+2. **Stack:** set `stack` to `rust` or `other`. `rust-central` supplies Rust
+   CI; the old hygiene check is disabled. No managed-file sync runs.
 
    ```bash
    gh api -X PATCH repos/Orchestration-Maestro/REPO/properties/values \
      --input - <<< '{"properties":[{"property_name":"stack","value":"rust"}]}'
-   RUST_WORKFLOWS_PIN="<release commit> v<version>" rust-gate init
    ```
 
-3. **Files of its own:** `README.md`, `LICENSE`, `AGENTS.md`, `CONTEXT.md`,
-   `.github/CODEOWNERS`, the Copilot guide and the rule map, the file baseline
-   GitHub never inherits. From the new repository's root, write the rule map
-   with `rust-gate rules` and replace every "Not mapped yet" with what holds
-   that rule here, then write the guide with `rust-gate guide`. Both keep what
-   a person wrote, and the repository's commit hooks keep both current. The
-   drift check opens an issue for any file that is missing.
+3. **Files of its own:** keep the file baseline listed in
+   `scripts/repository-drift.py`. GitHub never inherits those files.
 4. **Reported content:** Settings, Moderation options, Reported content, select
    **All users**, Save. The Code of Conduct sends reports to this button; the
    default admits only prior contributors, so a newcomer could not report.
@@ -191,37 +176,13 @@ by these pins alone, opens or updates the pull request from
 `ci/pin-the-central-rulesets`, one commit GitHub signs, which merges itself once
 green. Any other difference is drift: it publishes nothing and fails. A pin
 moves only forward, and across a major release only when a person runs the
-workflow with `major` after reading the release notes; that run also
-re-publishes the major's sync pull requests, which then run under the release.
+workflow with `major` after reading the release notes.
 `python3 scripts/pin-rulesets.py --dry-run` prints every update and writes
 nothing, and with `--release <tag> <commit>` shows what a release would move.
 
-The second job builds `rust-gate` at the latest `maestro-rust-workflows` release and, in
-every repository whose `stack` is `rust` or `other`, runs `rust-gate sync`,
-which moves every call to `maestro-rust-workflows` to that release. It also runs on a
-push to `golden-rules/`, the pictures or `scripts/org-page.py`. In this
-repository it rewrites the organization page's generated blocks from their
-sources, `golden-rules/`, `rust-gate gate-rules` and each public repository's
-description, so a changed rule, a new gate rule or a new repository reaches the
-page on its own. In `maestro-rust-workflows` it brings the golden-rules pages
-`rust-gate` embeds up to these and rewrites its rule map from them, as a `fix:`
-pull request that merges itself once green; a rule it adds waits, "Not mapped
-yet", for a person. When a file changes, it opens or updates one pull request from
-`maestro/sync`, a single commit GitHub signs. A
-minor or patch release merges itself once green; a major one waits for a person.
-`org/sync-exceptions.json` explicitly records exceptions with `repository`, `part`
-and a nonempty `reason`. Unknown repositories (including archived or unsynced ones),
-unknown parts, duplicate entries and malformed entries are refused before syncing.
-The only supported part is `rust-gate sync`: v4.8.7 cannot skip Cargo lint management
-alone. For the vendored `lbug` crate this keeps the upstream `[lints.clippy]` table;
-its managed files and release pins are not rewritten, but `rust-gate rules`, the
-organization page writer, `rust-gate guide` and normal PR handling still run.
-The exception is printed in the run log and recorded in any sync PR body.
-Every other repository still runs all steps. A repository whose first sync needs
-a person, a manifest with lint tables of its own for instance, is named in the
-run's log and failed unless it has a reviewed exception. It runs as the
-organization bot, whose token already writes contents, pull requests and
-workflows in every repository.
+The managed-files sync job and its scripts have been removed. Generate the
+organization page explicitly with `python3 scripts/org-page.py`; its remaining
+blocks use golden rules and repository descriptions, not the old CI program.
 
 ## Drift checks
 
@@ -247,9 +208,7 @@ renew.
 
 A second job, **Every repository on the standard**, reads every repository as
 the organization bot every day, on every push to `main` and on demand. A
-repository drifts when it has no `stack`, when its sync pull request has waited
-more than 14 days, when `rust-gate sync --check` at the latest release finds a
-managed file that differs on its default branch, or when it strays from the
+repository drifts when it has no `stack`, or when it strays from the
 file baseline in `scripts/repository-drift.py`:
 
 - its `merge-queue` ruleset is missing, not active, or has conditions or rules
@@ -263,17 +222,12 @@ file baseline in `scripts/repository-drift.py`:
   Dependabot auto-merge workflows;
 - it pins tools of its own in `mise.toml`, `mise.lock`, `.mise.toml`,
   `.tool-versions` or `tool-updates.yml`: the pins live once, in
-  `maestro-rust-workflows`, and `rust-gate setup` installs them;
+  the shared CI rather than individual repositories;
 - it keeps a copy identical to one of the defaults above, which a repository
   keeps only for a need of its own;
 - its issue forms apply a label it lacks, which GitHub skips;
-- its rule map in `docs/standards/` is stale, or still says "Not mapped yet":
-  `rust-gate rules --check` compares it to the golden rules the latest release
-  carries (C-001); `maestro-rust-workflows`' own `just check` holds its rule map to the
-  copy it carries instead;
-- its Copilot guide is stale: `rust-gate guide --check` finds a file added or
-  removed since the guide was written. `maestro-rust-workflows` keeps its own guide,
-  the model, under its own inventory test.
+- its organization page is stale: `python3 scripts/org-page.py --check`
+  compares its generated blocks to their sources.
 
 Each drifting repository has one open issue here, `Drift: <name>`, updated on
 every run and closed once it is back on the standard.

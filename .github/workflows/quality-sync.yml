@@ -8,16 +8,6 @@ name: Quality sync
     # Every day, 05:43 UTC, off the hour: the net for a missed event, and a run
     # with nothing to sync changes nothing.
     - cron: "43 5 * * *"
-  # A change to a golden rule, a picture or the page's writer reaches the
-  # organization page, every rule map and maestro-rust-workflows' copy at once. The page
-  # itself is left out: the sync's own pull request changes it.
-  push:
-    branches: [main]
-    paths:
-      - golden-rules/**
-      - profile/**
-      - "!profile/README.md"
-      - scripts/org-page.py
   workflow_dispatch:
     inputs:
       major:
@@ -30,12 +20,8 @@ concurrency:
   group: quality-sync
   cancel-in-progress: false
 jobs:
-  # The rulesets move first: maestro-rust-workflows' managed-files check runs from the
-  # rulesets' pin, so a sync pull request is green only once they run the
-  # release it brings. A ruleset update does not re-run an open pull request.
   repin:
     name: The central rulesets on the latest maestro-rust-workflows release
-    if: github.event_name != 'push'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Rulesets are written only with Administration write: the audit App's
@@ -85,38 +71,3 @@ jobs:
           else
             python3 scripts/pin-rulesets.py
           fi
-  sync:
-    name: Every repository on the latest maestro-rust-workflows release
-    needs: repin
-    # A failed repin still syncs: the next run moves the rulesets, and the
-    # sync pull requests it re-publishes run again under the release.
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout the sync script
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          persist-credentials: false
-      # The organization bot's token: the sync pull request writes workflows in
-      # every repository, and GitHub signs the commit createCommitOnBranch makes
-      # with it.
-      - name: Mint the bot token
-        id: token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
-        with:
-          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
-          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-          # Every repository of the organization is synced.
-          owner: ${{ github.repository_owner }}  # zizmor: ignore[github-app]
-          permission-contents: write
-          permission-pull-requests: write
-          permission-workflows: write
-      - name: Sync every repository
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          set -euo pipefail
-          python3 scripts/quality-sync.py

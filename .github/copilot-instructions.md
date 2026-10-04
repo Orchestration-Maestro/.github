@@ -26,9 +26,7 @@ as records, not as instructions to start new work.
 
 ## Repository tree
 
-Every tracked file, with what it is for. `rust-gate guide` writes this tree at
-every commit and keeps each explanation already here, so improve an explanation
-in place.
+The tracked-file inventory and explanations are maintained by hand.
 
 ```text
 .                                                   # Repository root
@@ -40,11 +38,11 @@ in place.
 │   ├── workflows/                                  # GitHub Actions workflows
 │   │   ├── dependabot-auto-merge.yml               # Dependabot auto-merge
 │   │   ├── org-drift.yml                           # Weekly check that GitHub still matches org/, and a daily one that every repository holds the standard and the file baseline
-│   │   ├── quality-sync.yml                        # The central rulesets moved to each maestro-rust-workflows release as soon as it is created, then a sync pull request in every repository
+│   │   ├── quality-sync.yml                        # The central rulesets moved to each maestro-rust-workflows release as soon as it is created, then a pull request recording the pins
 │   │   └── scorecard.yml                           # This repository's weekly OpenSSF Scorecard
 │   ├── CODEOWNERS                                  # Every change here goes to the maintainer for review
-│   ├── copilot-instructions.md                     # This guide, written by rust-gate guide at every commit
-│   └── dependabot.yml                              # The organization merges only conventional titles: "ci(deps): bump ..."; rendered by rust-gate sync
+│   ├── copilot-instructions.md                     # This guide, maintained by hand
+│   └── dependabot.yml                              # The organization merges only conventional titles: "ci(deps): bump ..."
 ├── assets/                                         # The mark, the avatar, and the palette, type and prompts behind them
 │   ├── README.md                                   # The banner and the cards live in ../profile/, next to the page that shows them
 │   ├── avatar.jpg                                  # Organization picture, uploaded in Organization settings, Profile (web UI only)
@@ -82,7 +80,6 @@ in place.
 │   ├── custom-properties.json                      # The stack property the Rust and hygiene rulesets select on
 │   ├── security-configurations.json                # maestrolabs-baseline, enforced and the default for every new repository
 │   ├── settings.json                               # Organization fields that differ from the defaults table in the script
-│   ├── sync-exceptions.json                        # Reviewed quality-sync exceptions: repository, exact part skipped and reason; written by hand, not exported
 │   └── webhooks.json                               # Organization webhooks without secrets or query strings
 ├── profile/                                        # The organization page on GitHub, with its banner, the Northstar panel and the pillar and foundation cards
 │   ├── foundations/                                # The foundation cards on the organization page
@@ -103,17 +100,16 @@ in place.
 │   ├── org-page.py                                 # Writes every generated block of the organization page from its one source, and refuses golden rules that disagree with themselves
 │   ├── org_quality.py                              # What the organization's quality scripts share
 │   ├── pin-rulesets.py                             # Move the organization rulesets that run maestro-rust-workflows to its latest release
-│   ├── quality-sync.py                             # Bring every organization repository onto the latest maestro-rust-workflows release
 │   ├── repository-drift.py                         # Hold every organization repository to the standard, one issue each
-│   ├── test_quality_sync.py                        # Quality-sync exception tests; run python3 -m unittest discover -s scripts
+│   ├── test_pin_rulesets.py                        # Repin dry-run and signed-publication tests
 │   └── test_repository_drift.py                    # Tests for repository-drift.py's merge-queue check
 ├── workflow-templates/                             # Workflow templates offered under Actions, New workflow
 │   ├── scorecard.properties.json                   # Scores the repository's supply-chain practices weekly and on every push to the default branch
 │   └── scorecard.yml                               # OpenSSF Scorecard
-├── .editorconfig                                   # Editor settings that survive the editor; rendered by rust-gate sync
-├── .gitattributes                                  # How Git should treat each kind of file; rendered by rust-gate sync
+├── .editorconfig                                   # Editor settings that survive the editor
+├── .gitattributes                                  # How Git should treat each kind of file
 ├── .gitignore                                      # Python bytecode and linter caches from running scripts/ locally
-├── .pre-commit-config.yaml                         # The commit hooks prek runs locally and CI runs over every file; rendered by rust-gate sync
+├── .pre-commit-config.yaml                         # The commit hooks prek runs locally and CI runs over every file
 ├── AGENTS.md                                       # Instructions for coding agents: change order, API gotchas, invariants
 ├── CODE_OF_CONDUCT.md                              # Contributor Covenant 2.1
 ├── CONSTITUTION.md                                 # Spec Kit's constitution: an index of the pages that come first
@@ -124,8 +120,8 @@ in place.
 ├── README.md                                       # The organization's .github repository: its public profile, the defaults every repository inherits
 ├── SECURITY.md                                     # Security policy, pointing reporters at private vulnerability reporting
 ├── SUPPORT.md                                      # Where each kind of question goes, and what to include
-├── maestro-quality.toml                            # This repository's quality settings; rust-gate sync reads them
-└── typos.toml                                      # The words this repository means, from [typos] words in maestro-quality.toml; rendered by rust-gate sync
+├── maestro-quality.toml                            # This repository's retained quality settings
+└── typos.toml                                      # The words this repository means, from [typos] words in maestro-quality.toml
 ```
 
 ## Change and verification procedure
@@ -133,9 +129,8 @@ in place.
 1. Read the rules in AGENTS.md that cover the files you change, and keep every
    gate intact: never weaken one to pass.
 2. Add an executable regression check for a change in behaviour.
-3. The commit hook `rust-gate guide` rewrites this guide when a file is added,
-   moved or removed; commit it with the change. The organization's daily drift
-   check reports a guide left stale.
+3. Update this guide by hand when a file is added, moved or removed; commit
+   it with the change.
 4. Run `prek run --all-files`, and report the commands you actually ran.
 5. Commits are signed, with a conventional title; the default branch takes only
    squash-merged pull requests.

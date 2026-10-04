@@ -93,30 +93,3 @@ repos:
         language: pygrep
         entry: '^.{81,}$'
         stages: [commit-msg]
-      - id: rust-gate-hygiene
-        name: Repository hygiene
-        entry: rust-gate hygiene --local
-        always_run: true
-        language: rust
-        additional_dependencies:
-          - "cli:https://github.com/Orchestration-Maestro/maestro-rust-workflows:v4.9.2:rust-gate"
-          - "cli:jaq:3.1.1"
-        pass_filenames: false
-      - id: rust-gate-rules
-        name: Rule map from the golden rules
-        entry: rust-gate rules
-        always_run: true
-        language: rust
-        additional_dependencies:
-          - "cli:https://github.com/Orchestration-Maestro/maestro-rust-workflows:v4.9.2:rust-gate"
-          - "cli:jaq:3.1.1"
-        pass_filenames: false
-      - id: rust-gate-guide
-        name: Copilot guide from the tracked files
-        entry: rust-gate guide
-        always_run: true
-        language: rust
-        additional_dependencies:
-          - "cli:https://github.com/Orchestration-Maestro/maestro-rust-workflows:v4.9.2:rust-gate"
-          - "cli:jaq:3.1.1"
-        pass_filenames: false

@@ -1,38 +1,19 @@
 """What the organization's quality scripts share.
 
 The GitHub CLI, the latest maestro-rust-workflows release, every repository with its
-`stack`, rust-gate built at that release, and the pull request, one signed
+`stack`, and the pull request, one signed
 commit, that publishes a change. Standard library only; `gh` reads its token
 from GH_TOKEN.
 """
 
 import base64
-import hashlib
 import json
-import os
 import subprocess
-import sys
-import urllib.request
 import uuid
 from pathlib import Path
 
 ORG = "Orchestration-Maestro"
 WORKFLOWS = "maestro-rust-workflows"
-# The branch every sync pull request comes from.
-SYNC_BRANCH = "maestro/sync"
-
-# The stacks `rust-gate sync` holds. `workflows` is maestro-rust-workflows itself, the
-# home of the gate, whose CI, Dependabot settings and hooks are its own.
-SYNCED = {"rust", "other"}
-
-# jaq, the TOML and JSON reader rust-gate runs, at the version and digest
-# maestro-rust-workflows pins in its own ci.yml.
-JAQ_URL = (
-    "https://github.com/01mf02/jaq/releases/download/v3.1.1/"
-    "jaq-x86_64-unknown-linux-gnu"
-)
-JAQ_SHA256 = "5922c7b67d9bd6841d6676d1f954410c6bf04b47203dcb661c4f052dfef7f454"
-
 COMMIT = """
 mutation ($input: CreateCommitOnBranchInput!) {
   createCommitOnBranch(input: $input) { commit { oid } }
@@ -79,33 +60,6 @@ def repositories():
     )
 
 
-def install_gate(tag, directory):
-    """rust-gate built at `tag` and the pinned jaq, in `directory`/bin."""
-    directory = Path(directory)
-    run(
-        [
-            "cargo", "install", "--locked", "--quiet",
-            "--git", f"https://github.com/{ORG}/{WORKFLOWS}",
-            "--tag", tag, "--root", str(directory), "rust-gate",
-        ]
-    )
-    binary = directory / "bin" / "jaq"
-    with urllib.request.urlopen(JAQ_URL, timeout=60) as response:
-        data = response.read()
-    if hashlib.sha256(data).hexdigest() != JAQ_SHA256:
-        sys.exit("jaq does not match the digest maestro-rust-workflows pins")
-    binary.write_bytes(data)
-    binary.chmod(0o755)
-    return directory / "bin"
-
-
-def with_gate(gate_bin, **extra):
-    """The environment rust-gate runs in: its directory first on PATH."""
-    env = dict(os.environ, **extra)
-    env["PATH"] = f"{gate_bin}{os.pathsep}{env.get('PATH', '')}"
-    return env
-
-
 def clone(repo, directory):
     """A shallow clone of `repo`'s default branch in `directory`."""
     run(["gh", "repo", "clone", f"{ORG}/{repo}", str(directory), "--", "--depth", "1", "--quiet"])
@@ -127,8 +81,7 @@ def publish(repo, checkout, files, branch, title, text, merge):
     head = run(["git", "rev-parse", "HEAD"], cwd=checkout).strip()
     reference = f"repos/{ORG}/{repo}/git/refs/heads/{branch}"
     temporary = f"fix/sync-build-{uuid.uuid4().hex}"
-    # `rust-gate sync` also deletes the files it no longer writes: a path gone
-    # from the checkout is a deletion, every other one an addition.
+    # A path gone from the checkout is a deletion; every other one is an addition.
     additions = [
         {"path": path, "contents": base64.b64encode((Path(checkout) / path).read_bytes()).decode()}
         for path in files

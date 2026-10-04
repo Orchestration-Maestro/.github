@@ -1,7 +1,9 @@
-"""Quality-sync exception tests; run `python3 -m unittest discover -s scripts`."""
+"""Repin and signed-publication tests; run unittest discover from the root."""
 
 import base64
+import contextlib
 import importlib.util
+import io
 import json
 import tempfile
 import unittest
@@ -11,75 +13,44 @@ from unittest import mock
 import org_quality
 
 SPEC = importlib.util.spec_from_file_location(
-    "quality_sync", Path(__file__).with_name("quality-sync.py")
+    "pin_rulesets", Path(__file__).with_name("pin-rulesets.py")
 )
-assert SPEC is not None and SPEC.loader is not None
-sync = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(sync)
+pin = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(pin)
 
 
-class SyncExceptions(unittest.TestCase):
-    def load(self, entries, repos=(("lbug", "other"), ("maestro-core", "rust"))):
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "exceptions.json"
-            path.write_text(json.dumps(entries), encoding="utf-8")
-            return sync.load_exceptions(repos, path)
+class Repin(unittest.TestCase):
+    def test_dry_run_finds_workflows_by_name_and_central_rules_without_writing(self):
+        rulesets = [
+            {"id": number, "name": name, "enforcement": "active", "rules": [
+                {"type": "workflows", "parameters": {"workflows": [
+                    {"repository_id": 123, "path": ".github/workflows/ci.yml",
+                     "ref": "refs/tags/v0.1.0", "sha": "a" * 40}
+                ]}}
+            ]}
+            for number, name in enumerate(("rust-central", "rust-slices"), 1)
+        ]
+        endpoint = "orgs/Orchestration-Maestro/rulesets"
+        answers = {f"{endpoint}?per_page=100": rulesets}
+        answers.update({f"{endpoint}/{r['id']}": r for r in rulesets})
 
-    def test_only_the_named_repository_and_command_are_skipped(self):
-        exceptions = sync.load_exceptions([("lbug", "other"), ("maestro-core", "rust")])
-        self.assertEqual(set(exceptions), {"lbug"})
-        for repo in ("lbug", "maestro-core"):
-            with self.subTest(repo=repo), tempfile.TemporaryDirectory() as directory:
-                checkout = Path(directory)
-                with mock.patch.object(sync, "clone", return_value=checkout) as clone, \
-                     mock.patch.object(sync, "run", return_value="") as run, \
-                     mock.patch.object(sync, "changed_files", return_value=["guide.md"]), \
-                     mock.patch.object(sync, "publish", return_value=1) as publish:
-                    sync.sync_one(repo, "pin", "4.8.7", "/gate", directory, False,
-                                  exceptions)
-                clone.assert_called_once_with(repo, checkout / repo)
-                commands = [call.args[0] for call in run.call_args_list]
-                expected = [
-                    ["rust-gate", "rules"],
-                    [sync.sys.executable, str(sync.SCRIPTS / "org-page.py"),
-                     "--root", str(checkout)],
-                    ["git", "add", "--intent-to-add", "."],
-                    ["rust-gate", "guide"],
-                ]
-                if repo == "maestro-core":
-                    expected.insert(0, ["rust-gate", "sync"])
-                self.assertEqual(commands, expected)
-                publish.assert_called_once()
-                if repo == "lbug":
-                    self.assertIn("Skipped `rust-gate sync`", publish.call_args.args[5])
+        def run(args, **kwargs):
+            self.assertEqual(args[:2], ["gh", "api"])
+            self.assertEqual(len(args), 3, "a dry run must never write")
+            return json.dumps(answers[args[2]])
 
-    def test_unknown_repository_or_part_is_refused(self):
-        for repository, part in (("unknown", "rust-gate sync"), ("lbug", "rules")):
-            with self.subTest(repository=repository, part=part), \
-                 self.assertRaisesRegex(RuntimeError, "unknown repository or part"):
-                self.load([{"repository": repository, "part": part, "reason": "upstream"}])
-
-    def test_invalid_exceptions_stop_before_installing_or_syncing(self):
-        with mock.patch.object(sync, "repositories", return_value=[("lbug", "other")]), \
-             mock.patch.object(sync, "load_exceptions", side_effect=RuntimeError("invalid")), \
-             mock.patch.object(sync, "install_gate") as install, \
-             mock.patch.object(sync, "sync_one") as sync_one, \
-             self.assertRaisesRegex(RuntimeError, "invalid"):
-            sync.main()
-        install.assert_not_called()
-        sync_one.assert_not_called()
-
-    def test_repository_outside_the_synced_stacks_is_refused(self):
-        with self.assertRaisesRegex(RuntimeError, "unknown repository or part"):
-            self.load([{"repository": "home", "part": "rust-gate sync", "reason": "upstream"}],
-                      [("home", "workflows")])
-
-    def test_invalid_shapes_and_empty_reasons_are_refused(self):
-        entry = {"repository": "lbug", "part": "rust-gate sync", "reason": "upstream"}
-        for entries in ({}, [None], [dict(entry, reason=" ")],
-                        [dict(entry, extra=True)], [dict(entry, repository=[])], [entry, entry]):
-            with self.subTest(entries=entries), self.assertRaises(RuntimeError):
-                self.load(entries)
+        output = io.StringIO()
+        with mock.patch.object(pin, "gh_json", return_value={"id": 123}) as lookup, \
+             mock.patch.object(pin, "run", side_effect=run), \
+             mock.patch.object(pin.sys, "argv", ["pin-rulesets.py", "--dry-run",
+                                               "--release", "v0.1.1", "b" * 40]), \
+             contextlib.redirect_stdout(output):
+            pin.main()
+        lookup.assert_called_once_with(
+            "api", "repos/Orchestration-Maestro/maestro-rust-workflows")
+        for name in ("rust-central", "rust-slices"):
+            self.assertIn(f"{name}: .github/workflows/ci.yml refs/tags/v0.1.0", output.getvalue())
+            self.assertIn(f"{name}: would PUT {endpoint}/", output.getvalue())
 
 
 class Publish(unittest.TestCase):

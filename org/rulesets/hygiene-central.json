@@ -20,7 +20,7 @@
       ]
     }
   },
-  "enforcement": "active",
+  "enforcement": "disabled",
   "name": "hygiene-central",
   "rules": [
     {
