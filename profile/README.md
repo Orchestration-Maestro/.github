@@ -151,10 +151,11 @@ rules say which rule meets which control.
 | Repository | What it is |
 | --- | --- |
 | [lbug](https://github.com/Orchestration-Maestro/lbug) | Patched snapshot of the lbug crate (LadybugDB Rust binding) without the HTTPS extension installer and its OpenSSL link; tracks upstream LadybugDB/ladybug-rust |
+| [maestro](https://github.com/Orchestration-Maestro/maestro) | Maestro's agent engine, in Rust |
 | [maestro-core](https://github.com/Orchestration-Maestro/maestro-core) | The local runtime of Maestro: knowledge kernel, retrieval and orchestration |
 | [maestro-manifests](https://github.com/Orchestration-Maestro/maestro-manifests) | Maestro's catalog of agents, skills, instructions, MCP servers and presets, organised by owner |
 | [maestro-model-router](https://github.com/Orchestration-Maestro/maestro-model-router) | Supervises llama.cpp servers and serves one OpenAI-compatible endpoint per model |
-| [maestro-rust-workflows](https://github.com/Orchestration-Maestro/maestro-rust-workflows) | One shared Rust CI at Pi's level: format, lint, and tests on Linux, macOS and Windows |
+| [maestro-rust-workflows](https://github.com/Orchestration-Maestro/maestro-rust-workflows) | One shared Rust CI: format, lint, docs and tests, on Linux for now |
 <!-- end generated -->
 
 Found a vulnerability? Report it privately: see our
