@@ -12,8 +12,9 @@ past what the work needs:
 - a 26,688-line program, `rust-gate`, with 46 steps and 25,401 lines of tests;
 - a settings file in every repository, `maestro-quality.toml`.
 
-A minimal CI needs one short workflow file with a few jobs. Our checks are slow, files drift between repositories, and each
-repository carries custom settings the owner wants gone.
+A minimal CI needs one short workflow file with a few jobs. Our checks are
+slow, files drift between repositories, and each repository carries custom
+settings the owner wants gone.
 
 ## Solution
 
