@@ -29,7 +29,7 @@ each repository:
 | Tests | `cargo test --workspace --locked` | Linux |
 
 It runs on every pull request and every merge-queue run, and it takes no
-settings.
+settings. A new push to a pull request cancels that pull request's older run.
 
 Docs runs with `RUSTDOCFLAGS="-D warnings -D missing_docs"`: every public item
 must have documentation, and the documentation must build without a warning.
@@ -75,6 +75,8 @@ starts at version 0.1.0.
     approve one ticket at a time.
 15. As the owner, I want every public item documented and documentation that
     builds without warnings, so that the code explains itself.
+16. As the owner, I want a new push to cancel the older run of the same pull
+    request, so that no runner time goes to code that was replaced.
 
 ## Implementation Decisions
 
@@ -119,6 +121,8 @@ starts at version 0.1.0.
   - a copy with a failing test fails the test check;
   - a copy with an undocumented public item fails the docs check;
   - a copy with a broken documentation link fails the docs check.
+- The self-test checks that the workflow declares this cancellation, for pull
+  requests only.
 - **Proof on a real repository:** the first pull request with Rust code in the
   fresh `maestro` repository passes the new CI.
 - **Prior art:** the old repository's "Consumer CI" job ran the shared workflow
@@ -144,3 +148,4 @@ starts at version 0.1.0.
 - **Amendment, 2026-10-05:** the owner added the docs check ("every public item
   documented") and moved tests to Linux only until the first release. It ships
   as `maestro-rust-workflows` 0.2.0.
+- Pull request run cancellation ships as `maestro-rust-workflows` 0.2.1.
