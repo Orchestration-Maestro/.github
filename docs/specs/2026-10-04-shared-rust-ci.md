@@ -1,7 +1,8 @@
 # One shared Rust CI
 
-Spec approved by the owner on 2026-10-04 and amended on 2026-10-05. Its tickets
-are GitHub issues in this repository, and each one links here.
+Spec approved by the owner on 2026-10-04 and amended on 2026-10-05 and
+2026-10-06. Its tickets are GitHub issues in this repository, and each one
+links here.
 
 ## Problem Statement
 
@@ -28,13 +29,49 @@ each repository:
 | Docs | `cargo doc --workspace --no-deps --locked` | Linux |
 | Tests | `cargo test --workspace --locked` | Linux |
 
-It runs on every pull request and every merge-queue run, and it takes no
-settings. A new push to a pull request cancels that pull request's older run.
+It runs on every pull request and every merge-queue run. It takes no settings
+except for the caller-declared checks below. A new push to a pull request
+cancels that pull request's older run.
 
 Docs runs with `RUSTDOCFLAGS="-D warnings -D missing_docs"`: every public item
 must have documentation, and the documentation must build without a warning.
 Tests run on Linux only for now, to keep development fast; macOS and Windows
 checks return before the first release.
+
+### Caller-declared checks
+
+The shared CI stays the whole merge check. A caller repository may declare
+extra checks in one small optional file, `.github/ci.toml`:
+
+- `wasm_crates`: crate names to build for WebAssembly;
+- `check_targets`: target triples to check;
+- `browser_build`: an optional boolean enabling the caller's browser recipe.
+
+Without this file, behavior is unchanged from the current specification:
+existing shared checks still run, and the optional jobs, new test isolation
+and tool-install steps skip. A present but malformed file fails CI. This file
+replaces the "takes no settings" wording and user story 3 only for these
+declared checks; every other check still takes no settings.
+
+When the file is present:
+
+1. Tests run with a fail-closed guard against provider credential variables
+   and with empty `HOME`, `TMPDIR` and XDG directories. The test command stays
+   `cargo test --workspace --locked`.
+2. Real `rg` and `fd` tools are installed for tests.
+3. Each listed crate is built with
+   `cargo build --locked --target wasm32-unknown-unknown -p <crate>`.
+4. Each listed target is checked with
+   `cargo check --workspace --all-targets --locked --target <target>`.
+   These checks catch Windows-, macOS- and WebAssembly-only compile errors
+   that Linux-only checks miss. They do not replace the macOS and Windows
+   test runs that return before the first release.
+5. When `browser_build = true`, after the listed crate builds the shared CI
+   runs the caller's `just browser-build` with the caller's pinned tools.
+   A missing or failing recipe fails CI.
+
+Release-binary workflows, multi-platform archives and the real browser
+application stay in the caller repository.
 
 The old CI is archived, not deleted. The old repository is renamed
 `maestro-rust-workflows-v4` and archived, and a fresh `maestro-rust-workflows`
@@ -77,6 +114,27 @@ starts at version 0.1.0.
     builds without warnings, so that the code explains itself.
 16. As the owner, I want a new push to cancel the older run of the same pull
     request, so that no runner time goes to code that was replaced.
+17. As a repository maintainer, I want to declare extra checks in one optional
+    file, so that shared CI remains my whole merge check and repositories
+    without the file keep their current behavior.
+18. As a repository maintainer, I want malformed declarations to fail CI, so
+    that required checks cannot silently disappear.
+19. As a repository maintainer, I want credential-free tests with empty home,
+    temporary and XDG directories, so that tests do not depend on credentials
+    or cached user state.
+20. As a repository maintainer, I want real `rg` and `fd` installed for tests,
+    so that search behavior is exercised with the actual tools.
+21. As a repository maintainer, I want listed crates built for WebAssembly,
+    so that browser-used crates compile for their target.
+22. As a repository maintainer, I want cross-target checks alongside the native
+    test runs required before release, so that platform-only compile errors
+    do not escape Linux development checks.
+23. As a repository maintainer, I want shared CI to run my pinned
+    `just browser-build` after the listed crate builds when enabled, so that
+    my real browser build is checked without moving it into shared CI.
+24. As a repository maintainer, I want release-binary workflows,
+    multi-platform archives and the real browser application to stay in my
+    repository, so that shared CI owns only the generic checks.
 
 ## Implementation Decisions
 
@@ -149,3 +207,7 @@ starts at version 0.1.0.
   documented") and moved tests to Linux only until the first release. It ships
   as `maestro-rust-workflows` 0.2.0.
 - Pull request run cancellation ships as `maestro-rust-workflows` 0.2.1.
+- **Owner decision, 2026-10-05:** at every step, CI must be on par with or
+  stronger than the reference project's CI, never weaker.
+- **Owner decision, 2026-10-06:** shared CI stays the whole merge check and
+  reads one small optional file in the caller repository.
