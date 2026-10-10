@@ -33,6 +33,9 @@
       "type": "pull_request"
     },
     {
+      "type": "required_signatures"
+    },
+    {
       "parameters": {
         "code_scanning_tools": [
           {
@@ -43,9 +46,6 @@
         ]
       },
       "type": "code_scanning"
-    },
-    {
-      "type": "required_signatures"
     }
   ],
   "target": "branch"
