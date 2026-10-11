@@ -35,9 +35,9 @@
         "workflows": [
           {
             "path": ".github/workflows/ci.yml",
-            "ref": "refs/tags/v0.6.0",
+            "ref": "refs/tags/v0.6.1",
             "repository_id": 1404598722,
-            "sha": "0b134d1f21509c6323f73d5489c9d3724ad447db"
+            "sha": "85d25b2803bd619de7f01cc8df79561484f5b45d"
           }
         ]
       },
