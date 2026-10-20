@@ -1,8 +1,8 @@
 # One shared Rust CI
 
-Spec approved by the owner on 2026-10-04 and amended on 2026-10-05 and
-2026-10-06. Its tickets are GitHub issues in this repository, and each one
-links here.
+Spec approved by the owner on 2026-10-04 and amended on 2026-10-05,
+2026-10-06 and 2026-10-20. Its tickets are GitHub issues in this repository,
+and each one links here.
 
 ## Problem Statement
 
@@ -77,6 +77,31 @@ The old CI is archived, not deleted. The old repository is renamed
 `maestro-rust-workflows-v4` and archived, and a fresh `maestro-rust-workflows`
 starts at version 0.1.0.
 
+### Nightly fuzz job
+
+One central scheduled workflow in `maestro-rust-workflows` fuzzes the targets
+each caller declares, such as parsers of untrusted text. It follows the
+advisory scan workflow: it checks out each caller's `main`, runs on a schedule,
+and files what it finds as issues in the caller repository. It never runs on a
+caller's pull requests or merge-queue runs, and it is never a required check.
+The job alone uses the nightly toolchain, which `cargo fuzz` needs.
+
+A caller opts in with two more keys in its `.github/ci.toml`:
+
+- `fuzz_manifest`: the path to the fuzz crate's `Cargo.toml`;
+- `fuzz_targets`: a list of entries
+  `{ name, seconds, max_len, timeout, rss_limit_mb }`.
+
+For each entry the job runs the named target for `seconds` seconds and passes
+the other three values to libFuzzer as `-max_len=`, `-timeout=` and
+`-rss_limit_mb=`. A malformed entry makes the file malformed, which fails
+CI. Without these keys the job skips the caller.
+
+A crash, a timeout or a memory blow-up is a finding. The job opens one issue
+per distinct crash signature and attaches the minimized input as an artifact.
+When an open issue already holds that signature, the job comments on it
+instead of opening another.
+
 ## User Stories
 
 1. As the owner, I want every Rust repository checked the same way, so that
@@ -135,6 +160,12 @@ starts at version 0.1.0.
 24. As a repository maintainer, I want release-binary workflows,
     multi-platform archives and the real browser application to stay in my
     repository, so that shared CI owns only the generic checks.
+25. As the owner, I want the parsers fuzzed every night outside the merge
+    check, so that crashes, hangs and blow-ups are found without slowing pull
+    requests.
+26. As a repository maintainer, I want one issue per distinct crash with its
+    minimized input, so that I can reproduce each finding and a repeat adds a
+    comment to its open issue.
 
 ## Implementation Decisions
 
@@ -149,6 +180,11 @@ starts at version 0.1.0.
   this repository moves them on each release. Each release carries checksums,
   a software bill of materials and an attestation, with verification steps, as
   SEC-011 requires.
+- **Licence exception for fuzzing:** `libfuzzer-sys`, licensed
+  `(MIT OR Apache-2.0) AND NCSA`, is allowed only in the test-only fuzz crate
+  that the nightly fuzz job builds. NCSA stays disallowed everywhere else, and
+  nothing shipped may depend on that crate. The fuzz crate keeps the NCSA
+  notice.
 - **The new repository** runs Matt Pocock's skills setup and keeps its own
   required checks: a self-test of the shared workflow.
 - **This repository:**
@@ -211,3 +247,6 @@ starts at version 0.1.0.
   stronger than the reference project's CI, never weaker.
 - **Owner decision, 2026-10-06:** shared CI stays the whole merge check and
   reads one small optional file in the caller repository.
+- **Owner decisions, 2026-10-20:** a nightly fuzz job runs outside the merge
+  check, configured in the same caller file, and `libfuzzer-sys` gets a narrow
+  NCSA licence exception for the fuzz crate only.
