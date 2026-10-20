@@ -102,6 +102,46 @@ per distinct crash signature and attaches the minimized input as an artifact.
 When an open issue already holds that signature, the job comments on it
 instead of opening another.
 
+### Compile cache
+
+Each ordinary Linux compiling job restores one compiled-cache snapshot through
+GitHub's cache action, compiles with checksum-pinned sccache from its own local
+directory, and may save one updated snapshot after a successful build. Compiler
+lookups do not contact GitHub per compiled file. The cache contains native
+compiler objects, not Cargo build directories, registry sources, credentials or
+diagnostics.
+
+Snapshot prefixes identify the checked-out caller and directory, host, compiler
+and compatible job shape. Coverage shards share their prefix with the optional
+full-workspace warm-up. Plain selected-package builds and non-instrumented
+doctests use their plain shape; other compiling jobs use their corresponding
+shape and native target where needed. Save keys have immutable
+run/attempt/job/matrix/call suffixes; the call identity does not split the
+shared warm restore prefix. GitHub's branch and default-branch scope rules
+decide which snapshots a run may read, and its prefix lookup restores the
+newest compatible one.
+
+A missing or unavailable snapshot leaves an uncached build. Failed restores
+discard partial cache data before compilation. Restore/save failures and
+skipped saves do not hide installation, compiler, test or policy failures. The
+workflow adds no retry, sleep or remote per-object fallback. Non-secret
+local-cache and diagnostic settings reach isolated compilation and
+automatically restarted cache servers.
+
+Before saving, the job stops the cache server and checks the native directory's
+payload. Empty payloads, maintenance failures or payloads above 1 GiB skip the
+save. The job reports the archive's size separately. This per-save bound does
+not guarantee that all snapshots fit the repository's 10 GB allowance: native
+last-access eviction can remove even the only seed for a shape, which then
+builds cold. Statistics and cache errors remain in job logs, with raw
+diagnostics protected from workflow-command interpretation.
+
+An optional, non-required workflow on pushes to the caller's default branch
+seeds one canonical full-workspace coverage snapshot without running tests or
+producing a coverage report. Its failure never blocks ordinary CI.
+Shared-workflow release and caller adoption are separate from merging this
+implementation.
+
 ## User Stories
 
 1. As the owner, I want every Rust repository checked the same way, so that
@@ -250,3 +290,7 @@ instead of opening another.
 - **Owner decisions, 2026-10-20:** a nightly fuzz job runs outside the merge
   check, configured in the same caller file, and `libfuzzer-sys` gets a narrow
   NCSA licence exception for the fuzz crate only.
+- **Owner decision, 2026-10-20:** every Linux compiling job restores one
+  compiled-cache snapshot per compatible job shape and compiles from a local
+  cache, with no per-object cache reads; a snapshot above 1 GiB skips its
+  save.
