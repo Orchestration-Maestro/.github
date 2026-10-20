@@ -34,18 +34,6 @@
     },
     {
       "type": "required_signatures"
-    },
-    {
-      "parameters": {
-        "code_scanning_tools": [
-          {
-            "alerts_threshold": "errors",
-            "security_alerts_threshold": "high_or_higher",
-            "tool": "CodeQL"
-          }
-        ]
-      },
-      "type": "code_scanning"
     }
   ],
   "target": "branch"
