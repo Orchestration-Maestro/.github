@@ -106,8 +106,12 @@ instead of opening another.
 
 Each ordinary Linux compiling job restores one compiled-cache snapshot through
 GitHub's cache action, compiles with checksum-pinned sccache from its own local
-directory, and may save one updated snapshot after a successful build. Compiler
-lookups do not contact GitHub per compiled file. The cache contains native
+directory. Only pushes to the caller's default branch may save an updated
+snapshot; pull-request and merge-group jobs restore but never save. Each
+reusable call saves at most one snapshot per compatible shape: the warm build,
+or shard 1 and a separate plain doctest leg only when numeric shards use
+coverage; other compiling jobs each write their own shape. Compiler lookups do
+not contact GitHub per compiled file. The cache contains native
 compiler objects, not Cargo build directories, registry sources, credentials or
 diagnostics.
 
