@@ -140,7 +140,9 @@ Settings a new repository needs that no organization default covers:
    There is no API for it.
 5. **Dependabot auto-merge:** turn on auto-merge, then copy
    `maestro-rust-workflows`' `.github/workflows/dependabot-auto-merge.yml`; the bot's
-   credentials are already organization-wide.
+   credentials are already organization-wide. `maestro` and
+   `maestro-rust-workflows` do not need this workflow: they land every dependency
+   update through review.
 
    ```bash
    gh api -X PATCH repos/Orchestration-Maestro/REPO -F allow_auto_merge=true
