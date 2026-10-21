@@ -119,10 +119,11 @@ its own. A repository's own file always wins.
 Settings a new repository needs that no organization default covers:
 
 1. **Name, description and topics:** the name is `maestro-` followed by
-   lowercase kebab-case, the description says what it is in one line (the
-   organization page shows it), and at least one topic classifies it. The
-   drift check refuses a repository without them. Renaming one later breaks
-   every GitHub Actions `uses:` that names it: Actions follows no redirect.
+   lowercase kebab-case (only the product repository is plain `maestro`), the
+   description says what it is in one line (the organization page shows it),
+   and at least one topic classifies it. The drift check refuses a repository
+   without them. Renaming one later breaks every GitHub Actions `uses:` that
+   names it: Actions follows no redirect.
 2. **Stack:** set `stack` to `rust` or `other`. `rust-central` supplies Rust
    CI; the old hygiene check is disabled. No managed-file sync runs.
 
@@ -219,11 +220,15 @@ file baseline in `scripts/repository-drift.py`:
   "Automatically delete head branches" (`delete_branch_on_merge`), which GitHub
   cannot set for the whole organization;
 - it misses a file every repository keeps of its own: `README.md`, `LICENSE`,
-  `AGENTS.md`, `CONTEXT.md`, `.github/CODEOWNERS`, and the Scorecard and
-  Dependabot auto-merge workflows;
-- it pins tools of its own in `mise.toml`, `mise.lock`, `.mise.toml`,
-  `.tool-versions` or `tool-updates.yml`: the pins live once, in
-  the shared CI rather than individual repositories;
+  `AGENTS.md`, `CONTEXT.md`, `.github/CODEOWNERS`, the Copilot guide, the rule
+  map in `docs/standards/`, and the Scorecard and Dependabot auto-merge
+  workflows. `maestro` and `maestro-rust-workflows` keep no per-repository
+  quality files and land every dependency update through review, so they need
+  no Copilot guide, rule map or auto-merge workflow;
+- it is one of those two and keeps a rule map;
+- it pins tools in `.mise.toml`, `.tool-versions` or `tool-updates.yml`:
+  tools are pinned only in `mise.toml` and `mise.lock`, which the shared CI
+  installs from;
 - it keeps a copy identical to one of the defaults above, which a repository
   keeps only for a need of its own;
 - its issue forms apply a label it lacks, which GitHub skips;

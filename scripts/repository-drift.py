@@ -26,6 +26,11 @@ from org_quality import (
 )
 
 HOME = ".github"
+RULE_MAPS = (
+    "docs/standards/northstar.md",
+    "docs/standards/engineering.md",
+    "docs/standards/security.md",
+)
 # The file baseline: GitHub never inherits these repository-owned files.
 OWN_FILES = (
     "README.md",
@@ -36,15 +41,21 @@ OWN_FILES = (
     ".github/copilot-instructions.md",
     ".github/workflows/scorecard.yml",
     ".github/workflows/dependabot-auto-merge.yml",
-    "docs/standards/northstar.md",
-    "docs/standards/engineering.md",
-    "docs/standards/security.md",
+    *RULE_MAPS,
+)
+# The repositories started with the shared CI keep no per-repository quality
+# files and land every dependency update through review: they need no Copilot
+# guide, rule map or auto-merge, and a rule map there is drift.
+NEW = ("maestro", WORKFLOWS)
+NOT_IN_NEW = (
+    ".github/copilot-instructions.md",
+    ".github/workflows/dependabot-auto-merge.yml",
+    *RULE_MAPS,
 )
 PAGE_SCRIPT = Path(__file__).with_name("org-page.py")
-# Repository-local tool pins are outside the shared standard.
+# Tools are pinned in `mise.toml` and `mise.lock`, which the shared CI installs
+# from; another pin file or the old tool-update workflow is a second copy.
 TOOL_PINS = (
-    "mise.toml",
-    "mise.lock",
     ".mise.toml",
     ".tool-versions",
     ".github/workflows/tool-updates.yml",
@@ -144,10 +155,17 @@ def baseline_problems(repo, home):
     """What keeps `repo` off the file baseline, one sentence each."""
     paths = home["paths"] if repo == HOME else files_of(repo)
     problems = []
-    missing = [name for name in OWN_FILES if name not in paths]
+    new = repo in NEW
+    missing = [name for name in OWN_FILES
+               if name not in paths and not (new and name in NOT_IN_NEW)]
     if missing:
         names = ", ".join(f"`{name}`" for name in missing)
         problems.append(f"It misses {names}, which every repository keeps of its own.")
+    kept = [name for name in RULE_MAPS if new and name in paths]
+    if kept:
+        names = ", ".join(f"`{name}`" for name in kept)
+        problems.append(f"It keeps the rule map {names}, which this repository leaves out: "
+                        f"its rules live in its own `AGENTS.md` and the shared CI.")
     # A merged pull request's branch is history the squash commit already holds;
     # kept, it piles up. GitHub has no organization default, so each repository
     # is checked. Only an explicit `false` counts: a token that cannot read the
@@ -158,11 +176,11 @@ def baseline_problems(repo, home):
             "\"Automatically delete head branches\" (`delete_branch_on_merge`)."
         )
     pins = [name for name in TOOL_PINS if name in paths]
-    if pins and repo != WORKFLOWS:
+    if pins:
         names = ", ".join(f"`{name}`" for name in pins)
         problems.append(
-            f"It pins tools of its own in {names}: delete them; "
-            f"the shared CI owns its toolchain."
+            f"It pins tools in {names}: keep tool pins in `mise.toml` and "
+            f"`mise.lock` only, and delete the rest."
         )
     for default in DEFAULTS:
         copy = own_copy(paths, default)
@@ -210,14 +228,15 @@ def merge_queue_problems(repo, standard):
 
 def metadata_problems(repo):
     """What keeps `repo`'s name, description and topics off the organization's
-    naming, one sentence each: every repository but .github is named
-    `maestro-` then lowercase kebab-case, says what it is and has a topic."""
+    naming, one sentence each: every repository but .github is named `maestro`
+    or `maestro-` then lowercase kebab-case, says what it is and has a topic."""
     meta = gh_json("api", f"repos/{ORG}/{repo}")
     problems = []
-    if repo != ".github" and not re.fullmatch(r"maestro(-[a-z0-9]+)+", repo):
+    if repo != ".github" and not re.fullmatch(r"maestro(-[a-z0-9]+)*", repo):
         problems.append(
-            "Its name is not `maestro-` then lowercase kebab-case: rename it, and move "
-            "every GitHub Actions `uses:` that names it, since Actions follows no redirect."
+            "Its name is not `maestro` or `maestro-` then lowercase kebab-case: rename "
+            "it, and move every GitHub Actions `uses:` that names it, since Actions "
+            "follows no redirect."
         )
     if not (meta.get("description") or "").strip():
         problems.append("It has no description: the organization page shows it.")

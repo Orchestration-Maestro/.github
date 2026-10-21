@@ -82,14 +82,20 @@ The export leaves it alone.
 - **File baseline:** every repository keeps its own `README.md`, `LICENSE`,
   `AGENTS.md`, `CONTEXT.md`, `.github/CODEOWNERS`, Copilot guide, rule map,
   Scorecard and Dependabot auto-merge workflows (`OWN_FILES` in
-  `scripts/repository-drift.py`).
+  `scripts/repository-drift.py`). `maestro` and `maestro-rust-workflows`,
+  which started with the shared CI, keep no per-repository quality files and
+  land every dependency update through review: they need no Copilot guide,
+  rule map or auto-merge workflow, and a rule map there is drift (`NEW`).
+  Tools are pinned only in `mise.toml` and `mise.lock`, the files the shared
+  CI installs from; any other pin file in `TOOL_PINS` is drift.
   Community files live here as defaults; a repository keeps its own copy only
   for a need of its own. The daily drift check opens an issue for every gap.
 - **Keep this repository's Copilot guide current by hand.** The old gate's
   guide and rule-map generation and freshness checks have been removed.
-- **Golden rules are mapped in every repository.** `golden-rules/` holds the
-  rules; each repository's `docs/standards/` records how it holds them.
-- **Names follow one convention.** A repository is `maestro-` then
+- **Golden rules are mapped in every repository but the two new ones.**
+  `golden-rules/` holds the rules; each older repository's `docs/standards/`
+  records how it holds them.
+- **Names follow one convention.** A repository is `maestro` or `maestro-` then
   lowercase kebab-case, `.github` aside, with a description and a topic (drift
   check); a branch starts with a Conventional Commit type (`branch-names`,
   PRL-004); a pull request title is a Conventional Commit (PRL-003); a file name
