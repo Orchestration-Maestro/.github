@@ -1,5 +1,5 @@
-"""Tests for repository-drift.py's page and merge-queue checks. Run from the repository's
-root with `python3 -m unittest discover -s scripts`. Standard library only."""
+"""Tests for repository-drift.py's page, baseline, merge-queue and name checks. Run from
+the repository's root with `python3 -m unittest discover -s scripts`. Standard library only."""
 
 import copy
 import importlib.util
@@ -39,6 +39,85 @@ def problems(listed, ruleset=None):
     answers = {RULESETS: listed, f"{RULESETS}/7": ruleset}
     with mock.patch.object(drift, "gh_json", side_effect=lambda _, path: answers[path]):
         return drift.merge_queue_problems("maestro-core", STANDARD)
+
+
+# What every repository keeps of its own.
+BASELINE = ("README.md", "LICENSE", "AGENTS.md", "CONTEXT.md", ".github/CODEOWNERS",
+            ".github/workflows/scorecard.yml")
+RULE_MAPS = ("docs/standards/northstar.md", "docs/standards/engineering.md",
+             "docs/standards/security.md")
+# What only the repositories older than the shared CI keep as well.
+OLDER = (".github/copilot-instructions.md", ".github/workflows/dependabot-auto-merge.yml",
+         *RULE_MAPS)
+
+
+def baseline(repo, paths):
+    """What baseline_problems says of `repo` when its default branch holds
+    `paths`, it deletes merged branches and its forms need no label."""
+    home = {"paths": set(), "texts": dict.fromkeys(drift.DEFAULTS), "labels": set()}
+    with mock.patch.object(drift, "files_of", return_value=set(paths)), \
+            mock.patch.object(drift, "gh_json", side_effect=lambda kind, *_: {} if kind == "api" else []):
+        return drift.baseline_problems(repo, home)
+
+
+def metadata(repo):
+    """What metadata_problems says of `repo` when it has a description and a topic."""
+    meta = {"description": "What it is.", "topics": ["rust"]}
+    with mock.patch.object(drift, "gh_json", return_value=meta):
+        return drift.metadata_problems(repo)
+
+
+class BaselineProblems(unittest.TestCase):
+    def test_mise_pins_are_the_tool_pins(self):
+        self.assertEqual(baseline("maestro-core", (*BASELINE, *OLDER, "mise.toml", "mise.lock")), [])
+
+    def test_other_pin_files_are_drift_in_every_repository(self):
+        for repo, paths in (("maestro-core", (*BASELINE, *OLDER)), (drift.WORKFLOWS, BASELINE)):
+            with self.subTest(repo=repo):
+                self.assertEqual(baseline(repo, (*paths, "mise.toml", ".tool-versions")), [
+                    "It pins tools in `.tool-versions`: keep tool pins in `mise.toml` and "
+                    "`mise.lock` only, and delete the rest."
+                ])
+
+    def test_the_new_repositories_need_no_guide_rule_map_or_auto_merge(self):
+        for repo in ("maestro", drift.WORKFLOWS):
+            with self.subTest(repo=repo):
+                self.assertEqual(baseline(repo, BASELINE), [])
+
+    def test_a_rule_map_in_a_new_repository_is_drift(self):
+        self.assertEqual(baseline(drift.WORKFLOWS, (*BASELINE, "docs/standards/engineering.md")), [
+            "It keeps the rule map `docs/standards/engineering.md`, which this repository "
+            "leaves out: its rules live in its own `AGENTS.md` and the shared CI."
+        ])
+
+    def test_the_new_repositories_still_keep_the_rest_of_the_baseline(self):
+        self.assertEqual(baseline("maestro", BASELINE[:4]), [
+            "It misses `.github/CODEOWNERS`, `.github/workflows/scorecard.yml`, which every "
+            "repository keeps of its own."
+        ])
+
+    def test_older_repositories_keep_the_whole_baseline(self):
+        self.assertEqual(baseline("maestro-core", BASELINE), [
+            "It misses `.github/copilot-instructions.md`, "
+            "`.github/workflows/dependabot-auto-merge.yml`, `docs/standards/northstar.md`, "
+            "`docs/standards/engineering.md`, `docs/standards/security.md`, which every "
+            "repository keeps of its own."
+        ])
+
+
+class MetadataProblems(unittest.TestCase):
+    def test_the_product_repository_is_named_maestro(self):
+        self.assertEqual(metadata("maestro"), [])
+
+    def test_every_other_name_starts_with_maestro_and_a_hyphen(self):
+        self.assertEqual(metadata("maestro-core"), [])
+        for repo in ("lbug", "maestro_core", "maestro-", "Maestro-core"):
+            with self.subTest(repo=repo):
+                self.assertEqual(metadata(repo), [
+                    "Its name is not `maestro` or `maestro-` then lowercase kebab-case: rename "
+                    "it, and move every GitHub Actions `uses:` that names it, since Actions "
+                    "follows no redirect."
+                ])
 
 
 class PageProblems(unittest.TestCase):
