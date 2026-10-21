@@ -141,8 +141,9 @@ builds cold. Statistics and cache errors remain in job logs, with raw
 diagnostics protected from workflow-command interpretation.
 
 An optional, non-required workflow on pushes to the caller's default branch
-seeds one canonical full-workspace coverage snapshot without running tests or
-producing a coverage report. Its failure never blocks ordinary CI.
+seeds one canonical full-workspace coverage snapshot without producing a coverage
+report; the warm build runs only the caller's declared `warm_test_filter`, and no
+tests when the key is absent. Its failure never blocks ordinary CI.
 Shared-workflow release and caller adoption are separate from merging this
 implementation.
 
