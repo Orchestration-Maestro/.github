@@ -299,3 +299,26 @@ implementation.
   compiled-cache snapshot per compatible job shape and compiles from a local
   cache, with no per-object cache reads; a snapshot above 1 GiB skips its
   save.
+
+### Linux runner infrastructure amendment, 2026-10-24
+
+The hosted declaration job selects ephemeral organization runners labelled
+`maestro-aws` for x64 Linux checks, test shards, docs, wasm and Chromium when
+at least one runner is online and the published timestamp is no more than five
+minutes old. Unavailable or unverifiable runner/caller data selects hosted
+Linux. ARM Linux, Windows, macOS and CodeQL remain native GitHub-hosted jobs.
+CodeQL runs after default-branch merges and weekly, not on PR pushes.
+
+The runner group permits only selected repositories and reviewed shared-CI
+commits. The declaration and runner controller share one pinned policy that
+refuses workflows declaring, inheriting or referencing repository secrets;
+the automatic job token is allowed. External contributors need approval.
+Each runner accepts one job under a separate unprivileged identity, filesystem
+and network namespace. Its memory reservation uses existing build admission,
+with pending compiler jobs taking priority. Four idle runners are the initial
+target, adjusted only with measurements. Only HTTPS and DNS leave a runner;
+private networks, host services, instance metadata, build-user files and other
+runners are inaccessible. Registration credentials last one hour and stay on
+the build host; only the workstation refreshes them. Signing remains local.
+A host lost after selection can fail or queue the selected job; fallback does
+not duplicate a job that has started.

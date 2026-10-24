@@ -31,5 +31,35 @@
     "secret_scanning_non_provider_patterns": "enabled",
     "secret_scanning_push_protection": "enabled",
     "secret_scanning_validity_checks": "enabled"
+  },
+  {
+    "advanced_security": "enabled",
+    "code_scanning_default_setup": "disabled",
+    "code_scanning_default_setup_options": {
+      "runner_label": null,
+      "runner_type": "not_set"
+    },
+    "code_scanning_delegated_alert_dismissal": "disabled",
+    "default_for_new_repos": "none",
+    "dependabot_alerts": "enabled",
+    "dependabot_delegated_alert_dismissal": "disabled",
+    "dependabot_security_updates": "enabled",
+    "dependency_graph": "enabled",
+    "dependency_graph_autosubmit_action": "disabled",
+    "dependency_graph_autosubmit_action_options": {
+      "labeled_runners": false
+    },
+    "description": "Security baseline with explicit main and weekly code scanning workflows.",
+    "enforcement": "enforced",
+    "name": "maestro-main-code-scanning",
+    "private_vulnerability_reporting": "enabled",
+    "secret_scanning": "enabled",
+    "secret_scanning_delegated_alert_dismissal": "disabled",
+    "secret_scanning_delegated_bypass": "disabled",
+    "secret_scanning_extended_metadata": "enabled",
+    "secret_scanning_generic_secrets": "disabled",
+    "secret_scanning_non_provider_patterns": "enabled",
+    "secret_scanning_push_protection": "enabled",
+    "secret_scanning_validity_checks": "enabled"
   }
 ]

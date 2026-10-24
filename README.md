@@ -67,15 +67,17 @@ its own. A repository's own file always wins.
 | `*_enabled_for_new_repositories` | Legacy switches; `maestrolabs-baseline` supersedes them |
 | Actions `allowed_actions: selected` | Only `actions/*`, `github/*` and `Orchestration-Maestro/*` run, plus `googleapis/release-please-action` for releases, `codecov/codecov-action` for coverage and `ossf/scorecard-action` for the security score |
 | Actions `sha_pinning_required` | A tag can be moved to new code; a full commit SHA cannot |
-| Actions `self-hosted-runners: none` | On a public repository, any pull request would run code on the runner's machine |
+| Actions `self-hosted-runners: selected` | Only the reviewed CI provider and Maestro can use self-hosted runners; runner-group workflow restrictions and isolation apply |
 | Actions `fork-pr-contributor-approval` | Every external contributor's workflow run waits for an owner's approval |
 | Actions `artifact-and-log-retention: 30` | Public logs and artifacts are readable by anyone signed in; keep them shorter |
 | `stack` (`rust`, `other` or `workflows`, required) | Selects the central Rust CI for `rust`; `other` keeps the organization rules and GitHub scanning; `workflows` holds the workflows repository to its own CI |
 | `hygiene-central` (disabled) | Retained but disabled so archiving the old CI cannot block non-Rust repositories ([shared CI spec](docs/specs/2026-10-04-shared-rust-ci.md)) |
-| `maestrolabs-baseline` | CodeQL, secret scanning with push protection, Dependabot, private vulnerability reporting |
+| `maestrolabs-baseline` | Default scanning, secret scanning with push protection, Dependabot, private vulnerability reporting for new repositories |
+| `maestro-main-code-scanning` | The same security baseline with explicit default-branch and weekly CodeQL workflows instead of PR scans; applies only after each replacement workflow lands |
+| `maestro-aws` runner group | Selected organization repositories and reviewed shared-CI commits only; one-job isolated Linux runners, external-contributor approval, no repository secrets |
 | `floor-no-destruction` | No deletion or force-push of any default branch |
 | `floor-release-tags` | `v*` tags cannot be deleted or moved; creation stays open for releases |
-| `default-branch-discipline` | Every repository: pull request, squash only, resolved threads, signed commits, CodeQL results with no high alert |
+| `default-branch-discipline` | Every repository: pull request, squash only, resolved threads, signed commits; CodeQL is advisory |
 | `rust-central`, `rust-slices` | Rust pull requests to the default branch and `feat/*-integration` run the new `maestro-rust-workflows`' `ci.yml`, starting at v0.1.0: format and Clippy on Linux, tests on three systems. The rulesets require the pinned release; `quality-sync.yml` moves both pins at each release. The old `maestro-rust-workflows-v4` is archived with its tags intact ([shared CI spec](docs/specs/2026-10-04-shared-rust-ci.md)) |
 | `rust-workflows-ci-required` | `maestro-rust-workflows` merges only after its own `Required repository quality` and `Required consumer tests` |
 | `commits-are-conventional` | Records the Conventional Commit title every default branch takes. GitHub enforces its metadata restriction only on the Enterprise plan, so on Team it refuses nothing; PRL-003 in the shared CI refuses a pull request whose title is not one, and a squash merge makes that title the commit's |
@@ -90,8 +92,8 @@ its own. A repository's own file always wins.
   joins the queue once its checks pass and its threads are resolved, and
   merges once they pass again on top of the queue.
 - **The same rules for every repository.** Every ruleset targets all
-  repositories: none can opt out of pull requests, signed commits or the CodeQL
-  gate. A repository that needs direct pushes needs its own reviewed ruleset
+  repositories: none can opt out of pull requests or signed commits. CodeQL
+  scans default branches and runs weekly; it does not gate merges. A repository that needs direct pushes needs its own reviewed ruleset
   exception.
 - **Actions cannot approve pull requests** (`can_approve_pull_request_reviews`
   stays false). The organization's GitHub App, `orchestration-maestro-bot`,
