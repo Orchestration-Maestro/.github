@@ -7,20 +7,15 @@
         "~DEFAULT_BRANCH"
       ]
     },
-    "repository_property": {
+    "repository_name": {
       "exclude": [],
       "include": [
-        {
-          "name": "stack",
-          "property_values": [
-            "other"
-          ],
-          "source": "custom"
-        }
-      ]
+        "maestro-manifests"
+      ],
+      "protected": false
     }
   },
-  "enforcement": "disabled",
+  "enforcement": "active",
   "name": "hygiene-central",
   "rules": [
     {
@@ -28,10 +23,10 @@
         "do_not_enforce_on_create": true,
         "workflows": [
           {
-            "path": ".github/workflows/hygiene.yml",
-            "ref": "refs/tags/v4.9.2",
-            "repository_id": 1382744803,
-            "sha": "11ab24a7d849bb8eb5b44d67d1744910042a8808"
+            "path": ".github/workflows/content.yml",
+            "ref": "refs/tags/v0.16.1",
+            "repository_id": 1404598722,
+            "sha": "a1971288fc869085aebb6c7c151b72c4fc0aa934"
           }
         ]
       },
