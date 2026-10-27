@@ -27,7 +27,7 @@ each repository:
 | Format | `cargo fmt --all --check` | Linux |
 | Lint: any warning fails | `cargo clippy --workspace --all-targets --locked -- -D warnings` | Linux |
 | Docs | `cargo doc --workspace --no-deps --locked` | Linux |
-| Tests | `cargo test --workspace --locked` | Linux |
+| Tests | `cargo test --workspace --locked` | Linux; declared macOS and Windows targets |
 
 It runs on every pull request and every merge-queue run. It takes no settings
 except for the caller-declared checks below. A new push to a pull request
@@ -35,8 +35,8 @@ cancels that pull request's older run.
 
 Docs runs with `RUSTDOCFLAGS="-D warnings -D missing_docs"`: every public item
 must have documentation, and the documentation must build without a warning.
-Tests run on Linux only for now, to keep development fast; macOS and Windows
-checks return before the first release.
+Tests run on Linux; a caller declares the native macOS and Windows test runs
+it needs (see the native test amendment below).
 
 ### Caller-declared checks
 
@@ -64,8 +64,8 @@ When the file is present:
 4. Each listed target is checked with
    `cargo check --workspace --all-targets --locked --target <target>`.
    These checks catch Windows-, macOS- and WebAssembly-only compile errors
-   that Linux-only checks miss. They do not replace the macOS and Windows
-   test runs that return before the first release.
+   that Linux-only checks miss. They do not run tests; declared native test
+   targets do.
 5. When `browser_build = true`, after the listed crate builds the shared CI
    runs the caller's `just browser-build` with the caller's pinned tools.
    A missing or failing recipe fails CI.
@@ -322,3 +322,18 @@ runners are inaccessible. Registration credentials last one hour and stay on
 the build host; only the workstation refreshes them. Signing remains local.
 A host lost after selection can fail or queue the selected job; fallback does
 not duplicate a job that has started.
+
+### Native test amendment, 2026-10-27
+
+A caller may list `native_test_targets` in `.github/ci.toml`:
+`aarch64-apple-darwin` runs on `macos-latest` and `x86_64-pc-windows-msvc` on
+`windows-latest`; any other value fails declaration validation. Merge groups
+and main pushes run one job per listed target, named `Tests (macos-latest)` or
+`Tests (windows-latest)`, with the Linux isolated-test step unchanged: the
+credential guard, fresh home, temporary and XDG directories, the locked nextest
+run and `cargo test --workspace --locked --doc`. Windows also keeps the system
+locations its programs need and gets a fresh `USERPROFILE`, `APPDATA` and
+`LOCALAPPDATA`. Pull requests skip these jobs, as they skip the Linux shards. A
+failing native test fails the shared CI, so a caller lists a target once its
+tests pass there. macOS uses the compiled-cache snapshot like the target checks;
+Windows builds without one.
