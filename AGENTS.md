@@ -71,9 +71,11 @@ The export leaves it alone.
 - **No repository calls the CI.** `rust-central` supplies the shared Rust
   workflow. `hygiene-central` is retained but disabled; the old managed-file
   sync no longer runs.
-- **The central rulesets follow releases.** `quality-sync.yml` keeps only its
-  `repin` job (`scripts/pin-rulesets.py`). It finds `maestro-rust-workflows` by
-  name, records only pin changes, and requires `major` across a major release.
+- **The central rulesets and the caller workflows follow releases.**
+  `quality-sync.yml` keeps only its `repin` job (`scripts/pin-rulesets.py`). It
+  finds `maestro-rust-workflows` by name, records only pin changes, opens one pull
+  request per repository that calls the shared workflow (`ci/pin-maestro-rust-workflows`,
+  merged by a person), and requires `major` across a major release.
 - **One rule set for all repositories:** every ruleset targets `~ALL`, except
   `rust-central`, which targets `stack=rust`, `hygiene-central`, which
   targets `stack=other`, and `rust-workflows-ci-required`, which holds

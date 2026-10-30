@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
-"""Move the organization rulesets that run maestro-rust-workflows to its latest release.
+"""Move the organization rulesets and the workflows that call maestro-rust-workflows
+to its latest release.
 
 `rust-central` and `hygiene-central` run a workflow of maestro-rust-workflows through a
 `workflows` rule, pinned by `sha` to a release's commit with `ref` naming its
 tag. This moves every such pin to the latest release, then exports `org/` and
 opens or updates the pull request from `ci/pin-the-central-rulesets` that
 records it: one commit through GitHub's createCommitOnBranch, which GitHub
-signs, queued to merge itself once green. A pin moves only forward, and across
-a major release only with `--major`: a person reads its notes first. The export
-must differ from the reviewed `org/` by these pins alone; anything else is
-drift, reported, and nothing is published. `--dry-run` prints every update and
+signs, queued to merge itself once green. Then it opens or
+updates one pull request per repository whose workflow files call a
+maestro-rust-workflows workflow, from `ci/pin-maestro-rust-workflows`, moving every
+`uses:` pin and its tag comment to the release; the pull request is left for a
+person to merge, since a release can add inputs a caller must pass. A pin moves only
+forward, and across a major release only with `--major`: a person reads its notes
+first. The export must differ from the reviewed `org/` by these pins alone;
+anything else is drift, reported, and nothing is published. `--dry-run` prints every
+update, caller file and line included, and
 writes nothing; with it, `--release <tag> <commit>` stands in for the latest
-release. Needs GH_TOKEN (the organization bot's) and ORG_ADMIN_TOKEN (the audit
+release. Needs GH_TOKEN (the organization bot's, with Workflows write for the caller files) and ORG_ADMIN_TOKEN (the audit
 App's: only Administration write reads and writes organization rulesets);
 without ORG_ADMIN_TOKEN, `gh`'s own login, which needs the admin:org scope.
 Standard library only.
@@ -23,11 +29,13 @@ import json
 import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 
 from org_quality import (
     ORG,
     WORKFLOWS,
+    clone,
     gh_json,
     latest_release,
     open_pull_request,
@@ -38,6 +46,14 @@ from org_quality import (
 
 HOME = ".github"
 BRANCH = "ci/pin-the-central-rulesets"
+CALLER_BRANCH = "ci/pin-maestro-rust-workflows"
+# A `uses:` line calling a workflow of maestro-rust-workflows, pinned `@<sha> # <tag>`; a
+# local `./.github/...` call or another repository's call does not match.
+CALL = re.compile(
+    rf"^(?P<head>[ \t]*(?:-[ \t]*)?uses:[ \t]*{ORG}/{WORKFLOWS}/\.github/workflows/[^@\s]+@)"
+    r"(?P<sha>[^\s#]+)(?:[ \t]*#[ \t]*(?P<tag>\S+))?",
+    re.M,
+)
 ROOT = Path(__file__).resolve().parent.parent
 # PUT replaces a ruleset whole: every field goes back with the one that moves.
 RULESET_FIELDS = ("name", "target", "enforcement", "conditions", "bypass_actors", "rules")
@@ -134,13 +150,69 @@ def recorded(home_id, tag, sha):
 
 
 def repinned_calls(text, tag, sha):
-    """Stub: see the commit that follows."""
-    raise NotImplementedError
+    """`text`, a workflow file, with every call of a maestro-rust-workflows workflow
+    pinned to the release, and each move as (line, old ref, old sha). A call
+    with no release comment has its pin as the old ref."""
+    moves = []
+
+    def move(call):
+        old_sha, old_tag = call["sha"], call["tag"]
+        if (old_sha, old_tag) == (sha, tag):
+            return call[0]
+        moves.append((text.count("\n", 0, call.start()) + 1,
+                      f"refs/tags/{old_tag}" if old_tag else old_sha, old_sha))
+        return f"{call['head']}{sha} # {tag}"
+
+    return CALL.sub(move, text), moves
 
 
 def pin_callers(tag, sha, release, major, dry_run):
-    """Stub: see the commit that follows."""
-    raise NotImplementedError
+    """Move the pins of every repository's calls to the release, one pull request
+    each; the number of repositories refused."""
+    refused = 0
+    for repo, _ in repositories():
+        with tempfile.TemporaryDirectory() as directory:
+            checkout = clone(repo, directory)
+            moves, files, calls = [], {}, False
+            for path in sorted(checkout.glob(".github/workflows/*.y*ml")):
+                relative = path.relative_to(checkout).as_posix()
+                text = path.read_text(encoding="utf-8")
+                calls = calls or bool(CALL.search(text))
+                moved, found = repinned_calls(text, tag, sha)
+                moves += [(f"{relative}:{line}", ref, old) for line, ref, old in found]
+                if found:
+                    files[relative] = moved
+            existing = open_pull_request(repo, CALLER_BRANCH)
+            if not moves:
+                if existing:
+                    run(["gh", "pr", "close", str(existing["number"]), "-R", f"{ORG}/{repo}",
+                         "--comment", "The default branch already calls this release."])
+                    print(f"{repo}: closed pull request #{existing['number']}")
+                elif calls:
+                    print(f"{repo}: on {tag}")
+                continue
+            reason = refusal(moves, tag, release, major)
+            for where, ref, old in moves:
+                print(f"{repo}: {where} {ref} {old} -> refs/tags/{tag} {sha}"
+                      f"{' (refused)' if reason else ''}")
+            if reason:
+                print(f"{repo}: {reason}")
+                refused += 1
+                continue
+            if dry_run:
+                print(f"{repo}: would open a pull request moving {len(files)} files")
+                continue
+            for relative, moved in files.items():
+                (checkout / relative).write_text(moved, encoding="utf-8")
+            text = (
+                f"The workflows of this repository that call maestro-rust-workflows now "
+                f"call {tag}, commit {sha}, as the central rulesets do.\n\n"
+                + "\n".join(f"- `{path}`" for path in files)
+            )
+            title = f"ci: pin maestro-rust-workflows callers to {tag}"
+            number = publish(repo, checkout, list(files), CALLER_BRANCH, title, text, False)
+            print(f"{repo}: pull request #{number}, {len(files)} files")
+    return refused
 
 
 def record(admin, home_id, tag, sha):
@@ -185,8 +257,9 @@ def main():
     refused = pin(admin, home_id, tag, sha, release, args.major, args.dry_run)
     if not args.dry_run:
         record(admin, home_id, tag, sha)
+    refused += pin_callers(tag, sha, release, args.major, args.dry_run)
     if refused:
-        print(f"{refused} ruleset(s) wait for a person", file=sys.stderr)
+        print(f"{refused} ruleset(s) or repository(ies) wait for a person", file=sys.stderr)
 
 
 if __name__ == "__main__":

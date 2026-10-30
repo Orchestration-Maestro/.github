@@ -22,7 +22,7 @@ email, profile fields and the member list.
 | `org/webhooks.json` | Organization webhooks without secrets or query strings |
 | `scripts/export-org.py` | Regenerates `org/` from the live API |
 | `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and a daily one that every repository holds the standard and the file baseline |
-| `.github/workflows/quality-sync.yml` | The central rulesets moved to each `maestro-rust-workflows` release as soon as it is created, then a pull request recording the pins |
+| `.github/workflows/quality-sync.yml` | The central rulesets and every repository's caller workflow pins moved to each `maestro-rust-workflows` release as soon as it is created, then a pull request recording the ruleset pins |
 | `scripts/pin-rulesets.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The ruleset repin, the per-repository drift check, and what they share |
 | `scripts/test_*.py` | Their tests: `python3 -m unittest discover -s scripts` |
 | `scripts/org-page.py` | Writes every generated block of the organization page from its one source, and refuses golden rules that disagree with themselves |
@@ -78,7 +78,7 @@ its own. A repository's own file always wins.
 | `floor-no-destruction` | No deletion or force-push of any default branch |
 | `floor-release-tags` | `v*` tags cannot be deleted or moved; creation stays open for releases |
 | `default-branch-discipline` | Every repository: pull request, squash only, resolved threads, signed commits; CodeQL is advisory |
-| `rust-central`, `rust-slices` | Rust pull requests to the default branch and `feat/*-integration` run the new `maestro-rust-workflows`' `ci.yml`, starting at v0.1.0: format and Clippy on Linux, tests on three systems. The rulesets require the pinned release; `quality-sync.yml` moves both pins at each release. The old `maestro-rust-workflows-v4` is archived with its tags intact ([shared CI spec](docs/specs/2026-10-04-shared-rust-ci.md)) |
+| `rust-central`, `rust-slices` | Rust pull requests to the default branch and `feat/*-integration` run the new `maestro-rust-workflows`' `ci.yml`, starting at v0.1.0: format and Clippy on Linux, tests on three systems. The rulesets require the pinned release; `quality-sync.yml` moves both pins at each release, and the caller pins of every repository with it. The old `maestro-rust-workflows-v4` is archived with its tags intact ([shared CI spec](docs/specs/2026-10-04-shared-rust-ci.md)) |
 | `rust-workflows-ci-required` | `maestro-rust-workflows` merges only after its own `Required repository quality` and `Required consumer tests` |
 | `commits-are-conventional` | Records the Conventional Commit title every default branch takes. GitHub enforces its metadata restriction only on the Enterprise plan, so on Team it refuses nothing; PRL-003 in the shared CI refuses a pull request whose title is not one, and a squash merge makes that title the commit's |
 | `branch-names` | A branch can be created only under a Conventional Commit type, `feat/…`, `fix/…`, `docs/…` and the rest, or as a bot's: `maestro/sync`, `release-please--*`, `dependabot/…`, `gh-readonly-queue/…` (the merge queue), and GitHub's own `revert-*` (the Revert button) and `copilot/…` (the coding agent). It restricts creation outside those prefixes, since branch name patterns are Enterprise-only. Each prefix is excluded as `prefix/**/*`: a trailing `**` matches one level only, which refused the merge queue's `gh-readonly-queue/main/pr-…` and Dependabot's `dependabot/cargo/…`; PRL-004 refuses a pull request from a branch that is not lowercase kebab-case after its prefix |
@@ -108,9 +108,9 @@ its own. A repository's own file always wins.
   installed on every repository, and `maestro-rust-workflows`' `upload-coverage.yml`
   logs in through OIDC, so no Codecov token exists to leak or rotate. Codecov
   reports; the coverage floor in `maestro-rust-workflows` is what fails a run.
-- **The central rulesets follow each release.** The repin job records only
-  release-pin changes; other differences are drift. Major releases wait for a
-  person to read their notes and dispatch with `major`.
+- **The central rulesets and the caller workflows follow each release.** The
+  repin job records only release-pin changes; other differences are drift. Major
+  releases wait for a person to read their notes and dispatch with `major`.
 - **An OpenSSF Scorecard for every repository.** Each repository runs its own
   `scorecard.yml`, because the Scorecard API accepts a published result only
   from a workflow in the scored repository. It publishes the score for a README
@@ -180,11 +180,22 @@ commit and tag. The disabled `hygiene-central` keeps its archived repository's p
 The job then exports `org/` and, when the export differs from `org/` by these pins
 alone, opens or updates the pull request from
 `ci/pin-the-central-rulesets`, one commit GitHub signs, which merges itself once
-green. Any other difference is drift: it publishes nothing and fails. A pin
-moves only forward, and across a major release only when a person runs the
-workflow with `major` after reading the release notes.
-`python3 scripts/pin-rulesets.py --dry-run` prints every update and writes
-nothing, and with `--release <tag> <commit>` shows what a release would move.
+green. Any other difference is drift: it publishes nothing and fails.
+
+Caller files are pins too. Every repository whose workflow files call a
+`maestro-rust-workflows` workflow
+(`uses: Orchestration-Maestro/maestro-rust-workflows/...@<commit> # <tag>`) gets one
+pull request from `ci/pin-maestro-rust-workflows` that moves each such pin to the
+release's commit and tag comment, in the same run. Local calls
+(`./.github/workflows/...`) do not change. A person merges these pull requests: a
+release can add an input a caller must pass. Dependabot ignores
+`maestro-rust-workflows*` so that this stays the only owner of those pins.
+
+A pin, in a ruleset or a caller file, moves only forward, and across a major
+release only when a person runs the workflow with `major` after reading the
+release notes. `python3 scripts/pin-rulesets.py --dry-run` prints every update,
+caller file and line included, and writes nothing, and with
+`--release <tag> <commit>` shows what a release would move.
 
 The managed-files sync job and its scripts have been removed. Generate the
 organization page explicitly with `python3 scripts/org-page.py`; its remaining
