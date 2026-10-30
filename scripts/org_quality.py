@@ -70,14 +70,20 @@ def open_pull_request(repo, branch):
     """The open pull request from `branch`, or None."""
     found = gh_json(
         "pr", "list", "-R", f"{ORG}/{repo}", "--head", branch,
-        "--state", "open", "--json", "number,createdAt,url",
+        "--state", "open", "--json", "number,createdAt,url,title",
     )
     return found[0] if found else None
 
 
+def close_pull_request(repo, number, comment):
+    """Close pull request `number` of `repo` with `comment`."""
+    run(["gh", "pr", "close", str(number), "-R", f"{ORG}/{repo}", "--comment", comment])
+
+
 def publish(repo, checkout, files, branch, title, text, merge):
     """Commit `files` on `branch` from the default branch's head, and open or
-    update its pull request, queued to merge itself once green when `merge`."""
+    update its pull request, queued to merge itself once green when `merge`, and only
+    while its head is this commit."""
     head = run(["git", "rev-parse", "HEAD"], cwd=checkout).strip()
     reference = f"repos/{ORG}/{repo}/git/refs/heads/{branch}"
     temporary = f"fix/sync-build-{uuid.uuid4().hex}"
@@ -123,5 +129,6 @@ def publish(repo, checkout, files, branch, title, text, merge):
                    "--title", title, "--body", text]).strip()
         number = url.rsplit("/", 1)[-1]
     if merge:
-        run(["gh", "pr", "merge", number, "-R", f"{ORG}/{repo}", "--auto", "--squash"])
+        run(["gh", "pr", "merge", number, "-R", f"{ORG}/{repo}", "--auto", "--squash",
+             "--match-head-commit", commit])
     return number

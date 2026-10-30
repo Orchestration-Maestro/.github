@@ -1,19 +1,28 @@
 #!/usr/bin/env python3
-"""Move the organization rulesets that run maestro-rust-workflows to its latest release.
+"""Move the organization rulesets and the workflows that call maestro-rust-workflows
+to its latest release.
 
 `rust-central` and `hygiene-central` run a workflow of maestro-rust-workflows through a
 `workflows` rule, pinned by `sha` to a release's commit with `ref` naming its
 tag. This moves every such pin to the latest release, then exports `org/` and
 opens or updates the pull request from `ci/pin-the-central-rulesets` that
 records it: one commit through GitHub's createCommitOnBranch, which GitHub
-signs, queued to merge itself once green. A pin moves only forward, and across
-a major release only with `--major`: a person reads its notes first. The export
-must differ from the reviewed `org/` by these pins alone; anything else is
-drift, reported, and nothing is published. `--dry-run` prints every update and
-writes nothing; with it, `--release <tag> <commit>` stands in for the latest
-release. Needs GH_TOKEN (the organization bot's) and ORG_ADMIN_TOKEN (the audit
-App's: only Administration write reads and writes organization rulesets);
-without ORG_ADMIN_TOKEN, `gh`'s own login, which needs the admin:org scope.
+signs, queued to merge itself once green. Then it opens or
+updates one pull request per repository whose workflow files call a
+maestro-rust-workflows workflow, from `ci/pin-maestro-rust-workflows`, moving every
+`uses:` pin and its tag comment to the release. The pull request does not merge
+itself: Maestro's caller runs only on a push to the default branch, so no check
+proves the new pin first. A person checks the release for a new input a caller
+must pass, then merges; a commit they push to it stays until the next release
+moves the pin again. A pin moves only forward, and across a major release only
+with `--major`: a person reads its notes first. The export must differ from the
+reviewed `org/` by these pins alone; anything else is drift, reported, and
+nothing is published. `--dry-run` prints every update, caller file and line
+included, and writes nothing; with it, `--release <tag> <commit>` stands in for
+the latest release. Needs GH_TOKEN (the organization bot's, with Workflows
+write for the caller files) and ORG_ADMIN_TOKEN (the audit App's: only
+Administration write reads and writes organization rulesets); without
+ORG_ADMIN_TOKEN, `gh`'s own login, which needs the admin:org scope.
 Standard library only.
 """
 
@@ -23,20 +32,32 @@ import json
 import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 
 from org_quality import (
     ORG,
     WORKFLOWS,
+    clone,
+    close_pull_request,
     gh_json,
     latest_release,
     open_pull_request,
     publish,
+    repositories,
     run,
 )
 
 HOME = ".github"
 BRANCH = "ci/pin-the-central-rulesets"
+CALLER_BRANCH = "ci/pin-maestro-rust-workflows"
+# A `uses:` line calling a workflow of maestro-rust-workflows, pinned `@<sha> # <tag>`; a
+# local `./.github/...` call or another repository's call does not match.
+CALL = re.compile(
+    rf"^(?P<head>[ \t]*(?:-[ \t]*)?uses:[ \t]*{ORG}/{WORKFLOWS}/\.github/workflows/[^@\s]+@)"
+    r"(?P<sha>[^\s#]+)(?:[ \t]*#[ \t]*(?P<tag>\S+))?",
+    re.M,
+)
 ROOT = Path(__file__).resolve().parent.parent
 # PUT replaces a ruleset whole: every field goes back with the one that moves.
 RULESET_FIELDS = ("name", "target", "enforcement", "conditions", "bypass_actors", "rules")
@@ -71,7 +92,7 @@ def repinned(ruleset, home_id, tag, sha):
 
 
 def refusal(moves, tag, release, major):
-    """Why the ruleset's pins stay where they are, or None. `release` is the
+    """Why the pins stay where they are, or None. `release` is the
     (major, minor, patch) of `tag`."""
     for _, ref, _ in moves:
         old = version(ref)
@@ -82,6 +103,17 @@ def refusal(moves, tag, release, major):
         if release[0] != old[0] and not major:
             return f"{tag} is a major release: a person reads its notes and runs this with --major"
     return None
+
+
+def reported(label, moves, tag, sha, release, major):
+    """Print each move under `label`; why the pins stay where they are, or None."""
+    reason = refusal(moves, tag, release, major)
+    for where, ref, old in moves:
+        print(f"{label}: {where} {ref} {old} -> refs/tags/{tag} {sha}"
+              f"{' (refused)' if reason else ''}")
+    if reason:
+        print(f"{label}: {reason}")
+    return reason
 
 
 def pin(admin, home_id, tag, sha, release, major, dry_run):
@@ -95,12 +127,7 @@ def pin(admin, home_id, tag, sha, release, major, dry_run):
             if any(home_workflows(ruleset, home_id)):
                 print(f"{name}: on {tag}")
             continue
-        reason = refusal(moves, tag, release, major)
-        for path, ref, old in moves:
-            print(f"{name}: {path} {ref} {old} -> refs/tags/{tag} {sha}"
-                  f"{' (refused)' if reason else ''}")
-        if reason:
-            print(f"{name}: {reason}")
+        if reported(name, moves, tag, sha, release, major):
             refused += 1
             continue
         if dry_run:
@@ -132,6 +159,73 @@ def recorded(home_id, tag, sha):
     return files
 
 
+def repinned_calls(text, tag, sha):
+    """`text`, a workflow file, with every call of a maestro-rust-workflows workflow
+    pinned to the release, and each move as (line, old ref, old sha). A call
+    with no release comment has its pin as the old ref."""
+    moves = []
+
+    def move(call):
+        old_sha, old_tag = call["sha"], call["tag"]
+        if (old_sha, old_tag) == (sha, tag):
+            return call[0]
+        moves.append((text.count("\n", 0, call.start()) + 1,
+                      f"refs/tags/{old_tag}" if old_tag else old_sha, old_sha))
+        return f"{call['head']}{sha} # {tag}"
+
+    return CALL.sub(move, text), moves
+
+
+def pin_callers(tag, sha, release, major, dry_run):
+    """Move the pins of every repository's calls to the release, one pull request
+    each; the number of repositories refused."""
+    refused = 0
+    for repo, _ in repositories():
+        with tempfile.TemporaryDirectory() as directory:
+            checkout = clone(repo, directory)
+            moves, files, calls = [], {}, False
+            for path in sorted(checkout.glob(".github/workflows/*.y*ml")):
+                relative = path.relative_to(checkout).as_posix()
+                text = path.read_text(encoding="utf-8")
+                calls = calls or bool(CALL.search(text))
+                moved, found = repinned_calls(text, tag, sha)
+                moves += [(f"{relative}:{line}", ref, old) for line, ref, old in found]
+                if found:
+                    files[relative] = moved
+            existing = open_pull_request(repo, CALLER_BRANCH)
+            if not moves:
+                if existing and dry_run:
+                    print(f"{repo}: would close pull request #{existing['number']}")
+                elif existing:
+                    close_pull_request(repo, existing["number"],
+                                       "The default branch already calls this release.")
+                    print(f"{repo}: closed pull request #{existing['number']}")
+                elif calls:
+                    print(f"{repo}: on {tag}")
+                continue
+            if reported(repo, moves, tag, sha, release, major):
+                refused += 1
+                continue
+            title = f"ci: pin maestro-rust-workflows callers to {tag}"
+            # A person may have pushed to this branch; publishing again would force it back.
+            if existing and existing["title"] == title:
+                print(f"{repo}: pull request #{existing['number']} already moves to {tag}")
+                continue
+            if dry_run:
+                print(f"{repo}: would open a pull request moving {len(files)} files")
+                continue
+            for relative, moved in files.items():
+                (checkout / relative).write_text(moved, encoding="utf-8")
+            text = (
+                f"The workflows of this repository that call maestro-rust-workflows now "
+                f"call {tag}, commit {sha}, as the central rulesets do.\n\n"
+                + "\n".join(f"- `{path}`" for path in files)
+            )
+            number = publish(repo, checkout, list(files), CALLER_BRANCH, title, text, False)
+            print(f"{repo}: pull request #{number}, {len(files)} files")
+    return refused
+
+
 def record(admin, home_id, tag, sha):
     """Export `org/` and publish the pins it records, or close a pull request
     the default branch no longer needs."""
@@ -140,8 +234,8 @@ def record(admin, home_id, tag, sha):
     if not files:
         existing = open_pull_request(HOME, BRANCH)
         if existing:
-            run(["gh", "pr", "close", str(existing["number"]), "-R", f"{ORG}/{HOME}",
-                 "--comment", "The default branch already records these pins."])
+            close_pull_request(HOME, existing["number"],
+                               "The default branch already records these pins.")
         print("org/: records every pin")
         return
     text = (
@@ -155,7 +249,7 @@ def record(admin, home_id, tag, sha):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Move the central rulesets to a release.")
+    parser = argparse.ArgumentParser(description="Move the central rulesets and caller workflows to a release.")
     parser.add_argument("--dry-run", action="store_true", help="print every update, write nothing")
     parser.add_argument("--major", action="store_true", help="also move across a major release")
     parser.add_argument("--release", nargs=2, metavar=("TAG", "COMMIT"),
@@ -174,8 +268,9 @@ def main():
     refused = pin(admin, home_id, tag, sha, release, args.major, args.dry_run)
     if not args.dry_run:
         record(admin, home_id, tag, sha)
+    refused += pin_callers(tag, sha, release, args.major, args.dry_run)
     if refused:
-        print(f"{refused} ruleset(s) wait for a person", file=sys.stderr)
+        print(f"{refused} ruleset(s) or repository(ies) wait for a person", file=sys.stderr)
 
 
 if __name__ == "__main__":

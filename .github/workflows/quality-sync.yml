@@ -11,7 +11,7 @@ name: Quality sync
   workflow_dispatch:
     inputs:
       major:
-        description: Also move the central rulesets across a major release, once its notes are read
+        description: Also move the central rulesets and caller workflows across a major release, once its notes are read
         type: boolean
         default: false
 permissions:
@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   repin:
-    name: The central rulesets on the latest maestro-rust-workflows release
+    name: The central rulesets and callers on the latest maestro-rust-workflows release
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Rulesets are written only with Administration write: the audit App's
@@ -55,11 +55,14 @@ jobs:
         with:
           client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-          # The release is read from maestro-rust-workflows, the pull request opened here.
+          # The release is read from maestro-rust-workflows, the pull request opened here,
+          # and the caller pull requests opened in every repository; a commit that
+          # changes a workflow file needs Workflows write.
           owner: ${{ github.repository_owner }}  # zizmor: ignore[github-app]
           permission-contents: write
           permission-pull-requests: write
-      - name: Move the rulesets and record them
+          permission-workflows: write
+      - name: Move the rulesets and callers and record them
         env:
           GH_TOKEN: ${{ steps.bot.outputs.token }}
           ORG_ADMIN_TOKEN: ${{ steps.audit.outputs.token }}
