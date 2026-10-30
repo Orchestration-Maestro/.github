@@ -28,6 +28,7 @@
     "secret_scanning_delegated_bypass": "disabled",
     "secret_scanning_extended_metadata": "enabled",
     "secret_scanning_generic_secrets": "disabled",
+    "secret_scanning_generic_secrets_push_protection": "disabled",
     "secret_scanning_non_provider_patterns": "enabled",
     "secret_scanning_push_protection": "enabled",
     "secret_scanning_validity_checks": "enabled"
@@ -58,6 +59,7 @@
     "secret_scanning_delegated_bypass": "disabled",
     "secret_scanning_extended_metadata": "enabled",
     "secret_scanning_generic_secrets": "disabled",
+    "secret_scanning_generic_secrets_push_protection": "disabled",
     "secret_scanning_non_provider_patterns": "enabled",
     "secret_scanning_push_protection": "enabled",
     "secret_scanning_validity_checks": "enabled"
