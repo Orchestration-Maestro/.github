@@ -10,10 +10,11 @@ records it: one commit through GitHub's createCommitOnBranch, which GitHub
 signs, queued to merge itself once green. Then it opens or
 updates one pull request per repository whose workflow files call a
 maestro-rust-workflows workflow, from `ci/pin-maestro-rust-workflows`, moving every
-`uses:` pin and its tag comment to the release; the pull request merges itself
-once the repository's queue and checks pass, and only at the commit this run
-pushed. A release that adds an input a caller must pass fails those checks and
-waits for a person, who pushes a commit that run leaves alone. A pin moves only
+`uses:` pin and its tag comment to the release. The pull request does not merge
+itself: a caller runs only on a push to the default branch, so no check proves
+the new pin first. A person checks the release for a new input a caller must
+pass, then merges; a commit they push to it stays until the next release moves
+the pin again. A pin moves only
 forward, and across a major release only with `--major`: a person reads its notes
 first. The export must differ from the reviewed `org/` by these pins alone;
 anything else is drift, reported, and nothing is published. `--dry-run` prints every
@@ -220,7 +221,7 @@ def pin_callers(tag, sha, release, major, dry_run):
                 f"call {tag}, commit {sha}, as the central rulesets do.\n\n"
                 + "\n".join(f"- `{path}`" for path in files)
             )
-            number = publish(repo, checkout, list(files), CALLER_BRANCH, title, text, True)
+            number = publish(repo, checkout, list(files), CALLER_BRANCH, title, text, False)
             print(f"{repo}: pull request #{number}, {len(files)} files")
     return refused
 

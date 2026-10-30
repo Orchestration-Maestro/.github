@@ -75,9 +75,9 @@ The export leaves it alone.
   `quality-sync.yml` keeps only its `repin` job (`scripts/pin-rulesets.py`). It
   finds `maestro-rust-workflows` by name, records only pin changes, opens one pull
   request per repository that calls the shared workflow (`ci/pin-maestro-rust-workflows`,
-  armed to merge itself at that exact commit once the repository's queue and CI pass; a
-  release that needs a new caller input fails CI and waits for a person), and requires
-  `major` across a major release.
+  left for a person to merge, since a caller runs only on a push to the default
+  branch and no check proves the new pin first), and requires `major` across a
+  major release.
 - **One rule set for all repositories:** every ruleset targets `~ALL`, except
   `rust-central`, which targets `stack=rust`, `hygiene-central`, which
   targets `stack=other`, and `rust-workflows-ci-required`, which holds

@@ -187,11 +187,10 @@ Caller files are pins too. Every repository whose workflow files call a
 (`uses: Orchestration-Maestro/maestro-rust-workflows/...@<commit> # <tag>`) gets one
 pull request from `ci/pin-maestro-rust-workflows` that moves each such pin to the
 release's commit and tag comment, in the same run. Local calls
-(`./.github/workflows/...`) do not change. Each pull request merges itself once the
-repository's merge queue and full CI pass, and only at the commit this run pushed.
-A release that adds an input a caller must pass fails that CI, and the pull request
-waits for a person; a commit they push to it stays until the next release moves
-the pin again. A pull request left open for a repository that is already current
+(`./.github/workflows/...`) do not change. No pull request merges itself: a caller
+runs only on a push to the default branch, so no check proves the new pin before the
+merge. A person reads the release for a new input a caller must pass, then merges;
+a commit they push to it stays until the next release moves the pin again. A pull request left open for a repository that is already current
 is closed, except in a dry run. Dependabot ignores
 `maestro-rust-workflows*` so that this stays the only owner of those pins.
 
