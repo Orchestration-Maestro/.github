@@ -68,16 +68,16 @@ The export leaves it alone.
   `ossf/scorecard-action`, pinned to a full commit SHA with the
   version in a trailing comment; `permissions:` is explicit; input reaches
   `run:` only through `env:`. The organization rejects any other action or pin.
-- **No repository calls the CI.** `rust-central` supplies the shared Rust
-  workflow. `hygiene-central` is retained but disabled; the old managed-file
+- **No required check comes from a repository's own workflow.** `rust-central`
+  supplies the shared Rust workflow. `hygiene-central` is retained but disabled; the old managed-file
   sync no longer runs.
 - **The central rulesets and the caller workflows follow releases.**
   `quality-sync.yml` keeps only its `repin` job (`scripts/pin-rulesets.py`). It
   finds `maestro-rust-workflows` by name, records only pin changes, opens one pull
   request per repository that calls the shared workflow (`ci/pin-maestro-rust-workflows`,
-  left for a person to merge, since a caller runs only on a push to the default
-  branch and no check proves the new pin first), and requires `major` across a
-  major release.
+  left for a person to merge, since Maestro's caller runs only on a push to the
+  default branch and no check proves the new pin first), and requires `major`
+  across a major release.
 - **One rule set for all repositories:** every ruleset targets `~ALL`, except
   `rust-central`, which targets `stack=rust`, `hygiene-central`, which
   targets `stack=other`, and `rust-workflows-ci-required`, which holds

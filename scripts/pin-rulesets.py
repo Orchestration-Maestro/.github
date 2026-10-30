@@ -11,18 +11,18 @@ signs, queued to merge itself once green. Then it opens or
 updates one pull request per repository whose workflow files call a
 maestro-rust-workflows workflow, from `ci/pin-maestro-rust-workflows`, moving every
 `uses:` pin and its tag comment to the release. The pull request does not merge
-itself: a caller runs only on a push to the default branch, so no check proves
-the new pin first. A person checks the release for a new input a caller must
-pass, then merges; a commit they push to it stays until the next release moves
-the pin again. A pin moves only
-forward, and across a major release only with `--major`: a person reads its notes
-first. The export must differ from the reviewed `org/` by these pins alone;
-anything else is drift, reported, and nothing is published. `--dry-run` prints every
-update, caller file and line included, and
-writes nothing; with it, `--release <tag> <commit>` stands in for the latest
-release. Needs GH_TOKEN (the organization bot's, with Workflows write for the caller files) and ORG_ADMIN_TOKEN (the audit
-App's: only Administration write reads and writes organization rulesets);
-without ORG_ADMIN_TOKEN, `gh`'s own login, which needs the admin:org scope.
+itself: Maestro's caller runs only on a push to the default branch, so no check
+proves the new pin first. A person checks the release for a new input a caller
+must pass, then merges; a commit they push to it stays until the next release
+moves the pin again. A pin moves only forward, and across a major release only
+with `--major`: a person reads its notes first. The export must differ from the
+reviewed `org/` by these pins alone; anything else is drift, reported, and
+nothing is published. `--dry-run` prints every update, caller file and line
+included, and writes nothing; with it, `--release <tag> <commit>` stands in for
+the latest release. Needs GH_TOKEN (the organization bot's, with Workflows
+write for the caller files) and ORG_ADMIN_TOKEN (the audit App's: only
+Administration write reads and writes organization rulesets); without
+ORG_ADMIN_TOKEN, `gh`'s own login, which needs the admin:org scope.
 Standard library only.
 """
 
@@ -92,7 +92,7 @@ def repinned(ruleset, home_id, tag, sha):
 
 
 def refusal(moves, tag, release, major):
-    """Why the ruleset's pins stay where they are, or None. `release` is the
+    """Why the pins stay where they are, or None. `release` is the
     (major, minor, patch) of `tag`."""
     for _, ref, _ in moves:
         old = version(ref)
@@ -249,7 +249,7 @@ def record(admin, home_id, tag, sha):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Move the central rulesets to a release.")
+    parser = argparse.ArgumentParser(description="Move the central rulesets and caller workflows to a release.")
     parser.add_argument("--dry-run", action="store_true", help="print every update, write nothing")
     parser.add_argument("--major", action="store_true", help="also move across a major release")
     parser.add_argument("--release", nargs=2, metavar=("TAG", "COMMIT"),

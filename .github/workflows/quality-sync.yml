@@ -11,7 +11,7 @@ name: Quality sync
   workflow_dispatch:
     inputs:
       major:
-        description: Also move the central rulesets across a major release, once its notes are read
+        description: Also move the central rulesets and caller workflows across a major release, once its notes are read
         type: boolean
         default: false
 permissions:

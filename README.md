@@ -23,7 +23,7 @@ email, profile fields and the member list.
 | `scripts/export-org.py` | Regenerates `org/` from the live API |
 | `.github/workflows/org-drift.yml` | Weekly check that GitHub still matches `org/`, and a daily one that every repository holds the standard and the file baseline |
 | `.github/workflows/quality-sync.yml` | The central rulesets and every repository's caller workflow pins moved to each `maestro-rust-workflows` release as soon as it is created, then a pull request recording the ruleset pins |
-| `scripts/pin-rulesets.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The ruleset repin, the per-repository drift check, and what they share |
+| `scripts/pin-rulesets.py`, `scripts/repository-drift.py`, `scripts/org_quality.py` | The repin of rulesets and caller workflows, the per-repository drift check, and what they share |
 | `scripts/test_*.py` | Their tests: `python3 -m unittest discover -s scripts` |
 | `scripts/org-page.py` | Writes every generated block of the organization page from its one source, and refuses golden rules that disagree with themselves |
 | `.pre-commit-config.yaml` and the other files `rust-gate sync` writes | This repository's existing tool configuration; automated managed-file sync has stopped |
@@ -187,11 +187,12 @@ Caller files are pins too. Every repository whose workflow files call a
 (`uses: Orchestration-Maestro/maestro-rust-workflows/...@<commit> # <tag>`) gets one
 pull request from `ci/pin-maestro-rust-workflows` that moves each such pin to the
 release's commit and tag comment, in the same run. Local calls
-(`./.github/workflows/...`) do not change. No pull request merges itself: a caller
-runs only on a push to the default branch, so no check proves the new pin before the
-merge. A person reads the release for a new input a caller must pass, then merges;
-a commit they push to it stays until the next release moves the pin again. A pull request left open for a repository that is already current
-is closed, except in a dry run. Dependabot ignores
+(`./.github/workflows/...`) do not change. No caller pull request merges itself:
+Maestro's caller runs only on a push to the default branch, so no check proves the
+new pin before the merge. A person reads the release for a new input a caller must
+pass, then merges; a commit they push to it stays until the next release moves the
+pin again. A pull request left open for a repository that is already current is
+closed, except in a dry run. Dependabot ignores
 `maestro-rust-workflows*` so that this stays the only owner of those pins.
 
 A pin, in a ruleset or a caller file, moves only forward, and across a major

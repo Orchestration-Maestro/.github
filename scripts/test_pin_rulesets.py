@@ -113,13 +113,14 @@ class CallerPins(unittest.TestCase):
                  mock.patch.object(pin, "open_pull_request", side_effect=lambda repo, _:
                                    existing if repo == "maestro" else None), \
                  mock.patch.object(pin, "publish", return_value="7") as publish, \
-                 mock.patch.object(pin, "close_pull_request") as run, \
+                 mock.patch.object(pin, "close_pull_request") as close, \
                  mock.patch.object(pin, "run", side_effect=AssertionError("live gh call")), \
+                 mock.patch.object(pin, "gh_json", side_effect=AssertionError("live gh call")), \
                  contextlib.redirect_stdout(output):
                 refused = pin.pin_callers(tag, NEW, release, major, dry_run)
             written = {name: (checkout / ".github/workflows" / name).read_text(encoding="utf-8")
                        for name in files}
-        return refused, output.getvalue(), written, publish, run
+        return refused, output.getvalue(), written, publish, close
 
     def test_forward_release_opens_one_pull_request_per_repository_with_callers(self):
         old = WARM_CACHE.format(sha=OLD, tag="v0.17.0")
@@ -141,38 +142,38 @@ class CallerPins(unittest.TestCase):
 
     def test_dry_run_lists_each_caller_line_and_changes_nothing(self):
         old = WARM_CACHE.format(sha=OLD, tag="v0.17.0")
-        refused, output, written, publish, run = self.pin_callers(
+        refused, output, written, publish, close = self.pin_callers(
             {"warm-cache.yml": old}, "v0.18.0", (0, 18, 0), False, dry_run=True)
         self.assertEqual(refused, 0)
         self.assertIn("maestro: .github/workflows/warm-cache.yml:4 refs/tags/v0.17.0", output)
         self.assertIn("maestro: would open a pull request", output)
         self.assertEqual(written["warm-cache.yml"], old)
         publish.assert_not_called()
-        run.assert_not_called()
+        close.assert_not_called()
 
     def test_current_file_publishes_nothing_and_closes_a_stale_pull_request(self):
         current = WARM_CACHE.format(sha=NEW, tag="v0.18.0")
-        refused, output, _, publish, run = self.pin_callers(
+        refused, output, _, publish, close = self.pin_callers(
             {"warm-cache.yml": current}, "v0.18.0", (0, 18, 0), False, existing={"number": 9})
         self.assertEqual(refused, 0)
         self.assertIn("maestro: closed pull request #9", output)
         publish.assert_not_called()
-        run.assert_called_once_with("maestro", 9, "The default branch already calls this release.")
-        _, output, _, publish, run = self.pin_callers(
+        close.assert_called_once_with("maestro", 9, "The default branch already calls this release.")
+        _, output, _, publish, close = self.pin_callers(
             {"warm-cache.yml": current}, "v0.18.0", (0, 18, 0), False)
         self.assertIn("maestro: on v0.18.0", output)
         publish.assert_not_called()
-        run.assert_not_called()
+        close.assert_not_called()
 
     def test_dry_run_never_closes_a_stale_pull_request(self):
         current = WARM_CACHE.format(sha=NEW, tag="v0.18.0")
-        refused, output, _, publish, run = self.pin_callers(
+        refused, output, _, publish, close = self.pin_callers(
             {"warm-cache.yml": current}, "v0.18.0", (0, 18, 0), False, dry_run=True,
             existing={"number": 9})
         self.assertEqual(refused, 0)
         self.assertIn("maestro: would close pull request #9", output)
         publish.assert_not_called()
-        run.assert_not_called()
+        close.assert_not_called()
 
     def test_open_pull_request_for_this_release_keeps_a_persons_commits(self):
         old = WARM_CACHE.format(sha=OLD, tag="v0.17.0")
@@ -180,13 +181,13 @@ class CallerPins(unittest.TestCase):
         existing = {"number": 9, "title": title}
         for dry_run in (False, True):
             with self.subTest(dry_run=dry_run):
-                refused, output, _, publish, run = self.pin_callers(
+                refused, output, _, publish, close = self.pin_callers(
                     {"warm-cache.yml": old}, "v0.18.0", (0, 18, 0), False, dry_run=dry_run,
                     existing=existing)
                 self.assertEqual(refused, 0)
                 self.assertIn("maestro: pull request #9 already moves to v0.18.0", output)
                 publish.assert_not_called()
-                run.assert_not_called()
+                close.assert_not_called()
         existing["title"] = "ci: pin maestro-rust-workflows callers to v0.17.0"
         _, _, _, publish, _ = self.pin_callers(
             {"warm-cache.yml": old}, "v0.18.0", (0, 18, 0), False, existing=existing)
