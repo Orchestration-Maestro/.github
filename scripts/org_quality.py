@@ -75,6 +75,11 @@ def open_pull_request(repo, branch):
     return found[0] if found else None
 
 
+def close_pull_request(repo, number, comment):
+    """Close pull request `number` of `repo` with `comment`."""
+    raise NotImplementedError
+
+
 def publish(repo, checkout, files, branch, title, text, merge):
     """Commit `files` on `branch` from the default branch's head, and open or
     update its pull request, queued to merge itself once green when `merge`."""

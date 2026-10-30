@@ -112,7 +112,7 @@ class CallerPins(unittest.TestCase):
                                        Path(path), {})), \
                  mock.patch.object(pin, "open_pull_request", return_value=existing), \
                  mock.patch.object(pin, "publish", return_value="7") as publish, \
-                 mock.patch.object(pin, "run") as run, \
+                 mock.patch.object(pin, "close_pull_request") as run, \
                  contextlib.redirect_stdout(output):
                 refused = pin.pin_callers(tag, NEW, release, major, dry_run)
             written = {name: (checkout / ".github/workflows" / name).read_text(encoding="utf-8")
@@ -132,7 +132,7 @@ class CallerPins(unittest.TestCase):
         repo, _, files, branch, title, text, merge = publish.call_args.args
         self.assertEqual((repo, files, branch, merge),
                          ("maestro", [".github/workflows/warm-cache.yml"],
-                          "ci/pin-maestro-rust-workflows", False))
+                          "ci/pin-maestro-rust-workflows", True))
         self.assertEqual(title, "ci: pin maestro-rust-workflows callers to v0.18.0")
         self.assertIn(NEW, text)
         self.assertIn(".github/workflows/warm-cache.yml", text)
@@ -155,12 +155,40 @@ class CallerPins(unittest.TestCase):
         self.assertEqual(refused, 0)
         self.assertIn("maestro: closed pull request #9", output)
         publish.assert_not_called()
-        self.assertEqual(run.call_args.args[0][:5], ["gh", "pr", "close", "9", "-R"])
+        run.assert_called_once_with("maestro", 9, "The default branch already calls this release.")
         _, output, _, publish, run = self.pin_callers(
             {"warm-cache.yml": current}, "v0.18.0", (0, 18, 0), False)
         self.assertIn("maestro: on v0.18.0", output)
         publish.assert_not_called()
         run.assert_not_called()
+
+    def test_dry_run_never_closes_a_stale_pull_request(self):
+        current = WARM_CACHE.format(sha=NEW, tag="v0.18.0")
+        refused, output, _, publish, run = self.pin_callers(
+            {"warm-cache.yml": current}, "v0.18.0", (0, 18, 0), False, dry_run=True,
+            existing={"number": 9})
+        self.assertEqual(refused, 0)
+        self.assertIn("maestro: would close pull request #9", output)
+        publish.assert_not_called()
+        run.assert_not_called()
+
+    def test_open_pull_request_for_this_release_keeps_a_persons_commits(self):
+        old = WARM_CACHE.format(sha=OLD, tag="v0.17.0")
+        title = "ci: pin maestro-rust-workflows callers to v0.18.0"
+        existing = {"number": 9, "title": title}
+        for dry_run in (False, True):
+            with self.subTest(dry_run=dry_run):
+                refused, output, _, publish, run = self.pin_callers(
+                    {"warm-cache.yml": old}, "v0.18.0", (0, 18, 0), False, dry_run=dry_run,
+                    existing=existing)
+                self.assertEqual(refused, 0)
+                self.assertIn("maestro: pull request #9 already moves to v0.18.0", output)
+                publish.assert_not_called()
+                run.assert_not_called()
+        existing["title"] = "ci: pin maestro-rust-workflows callers to v0.17.0"
+        _, _, _, publish, _ = self.pin_callers(
+            {"warm-cache.yml": old}, "v0.18.0", (0, 18, 0), False, existing=existing)
+        publish.assert_called_once()
 
     def test_a_major_release_waits_for_major_and_moves_with_it(self):
         old = WARM_CACHE.format(sha=OLD, tag="v0.17.0")
@@ -193,6 +221,35 @@ class CallerPins(unittest.TestCase):
              mock.patch.object(pin, "latest_release", return_value=("v0.18.0", NEW)):
             pin.main()
         self.assertEqual(order, ["rulesets", "record", ("v0.18.0", NEW, (0, 18, 0), True, False)])
+
+
+class Helpers(unittest.TestCase):
+    def test_reported_prints_each_move_and_returns_the_refusal(self):
+        moves = [("ci.yml:4", "refs/tags/v1.2.0", OLD)]
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            reason = pin.reported("maestro", moves, "v2.0.0", NEW, (2, 0, 0), False)
+        self.assertRegex(reason, "major release")
+        self.assertEqual(output.getvalue().splitlines(), [
+            f"maestro: ci.yml:4 refs/tags/v1.2.0 {OLD} -> refs/tags/v2.0.0 {NEW} (refused)",
+            f"maestro: {reason}",
+        ])
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertIsNone(pin.reported("maestro", moves, "v2.0.0", NEW, (2, 0, 0), True))
+        self.assertEqual(output.getvalue().splitlines(), [
+            f"maestro: ci.yml:4 refs/tags/v1.2.0 {OLD} -> refs/tags/v2.0.0 {NEW}"])
+
+    def test_close_pull_request_comments_and_closes_the_given_number(self):
+        with mock.patch.object(org_quality, "run") as run:
+            org_quality.close_pull_request("repo", 9, "done")
+        run.assert_called_once_with(["gh", "pr", "close", "9", "-R", f"{org_quality.ORG}/repo",
+                                     "--comment", "done"])
+
+    def test_open_pull_request_reads_the_title(self):
+        with mock.patch.object(org_quality, "gh_json", return_value=[{"number": 9}]) as lookup:
+            self.assertEqual(org_quality.open_pull_request("repo", "branch"), {"number": 9})
+        self.assertIn("number,createdAt,url,title", lookup.call_args.args)
 
 
 class Publish(unittest.TestCase):
@@ -263,6 +320,9 @@ class Publish(unittest.TestCase):
             self.assertIn(pr_command, calls)
             self.assertEqual(sum(call[:3] == ["gh", "pr", "merge"] for call in calls),
                              int(merge))
+            if merge:
+                self.assertIn(["gh", "pr", "merge", "140", "-R", f"{org_quality.ORG}/repo",
+                               "--auto", "--squash", "--match-head-commit", "new-commit"], calls)
             if not existing:
                 self.assertIn(["gh", "api", "-X", "POST",
                                f"repos/{org_quality.ORG}/repo/git/refs", "-f",

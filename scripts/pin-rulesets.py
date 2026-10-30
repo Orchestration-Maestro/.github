@@ -36,6 +36,7 @@ from org_quality import (
     ORG,
     WORKFLOWS,
     clone,
+    close_pull_request,
     gh_json,
     latest_release,
     open_pull_request,
@@ -99,6 +100,11 @@ def refusal(moves, tag, release, major):
         if release[0] != old[0] and not major:
             return f"{tag} is a major release: a person reads its notes and runs this with --major"
     return None
+
+
+def reported(label, moves, tag, sha, release, major):
+    """Print each move under `label`, and the reason they stay (or None)."""
+    raise NotImplementedError
 
 
 def pin(admin, home_id, tag, sha, release, major, dry_run):
