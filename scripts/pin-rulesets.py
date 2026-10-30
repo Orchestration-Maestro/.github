@@ -10,8 +10,10 @@ records it: one commit through GitHub's createCommitOnBranch, which GitHub
 signs, queued to merge itself once green. Then it opens or
 updates one pull request per repository whose workflow files call a
 maestro-rust-workflows workflow, from `ci/pin-maestro-rust-workflows`, moving every
-`uses:` pin and its tag comment to the release; the pull request is left for a
-person to merge, since a release can add inputs a caller must pass. A pin moves only
+`uses:` pin and its tag comment to the release; the pull request merges itself
+once the repository's queue and checks pass, and only at the commit this run
+pushed. A release that adds an input a caller must pass fails those checks and
+waits for a person, who pushes a commit that run leaves alone. A pin moves only
 forward, and across a major release only with `--major`: a person reads its notes
 first. The export must differ from the reviewed `org/` by these pins alone;
 anything else is drift, reported, and nothing is published. `--dry-run` prints every
@@ -103,8 +105,14 @@ def refusal(moves, tag, release, major):
 
 
 def reported(label, moves, tag, sha, release, major):
-    """Print each move under `label`, and the reason they stay (or None)."""
-    raise NotImplementedError
+    """Print each move under `label`; why the pins stay where they are, or None."""
+    reason = refusal(moves, tag, release, major)
+    for where, ref, old in moves:
+        print(f"{label}: {where} {ref} {old} -> refs/tags/{tag} {sha}"
+              f"{' (refused)' if reason else ''}")
+    if reason:
+        print(f"{label}: {reason}")
+    return reason
 
 
 def pin(admin, home_id, tag, sha, release, major, dry_run):
@@ -118,12 +126,7 @@ def pin(admin, home_id, tag, sha, release, major, dry_run):
             if any(home_workflows(ruleset, home_id)):
                 print(f"{name}: on {tag}")
             continue
-        reason = refusal(moves, tag, release, major)
-        for path, ref, old in moves:
-            print(f"{name}: {path} {ref} {old} -> refs/tags/{tag} {sha}"
-                  f"{' (refused)' if reason else ''}")
-        if reason:
-            print(f"{name}: {reason}")
+        if reported(name, moves, tag, sha, release, major):
             refused += 1
             continue
         if dry_run:
@@ -190,20 +193,22 @@ def pin_callers(tag, sha, release, major, dry_run):
                     files[relative] = moved
             existing = open_pull_request(repo, CALLER_BRANCH)
             if not moves:
-                if existing:
-                    run(["gh", "pr", "close", str(existing["number"]), "-R", f"{ORG}/{repo}",
-                         "--comment", "The default branch already calls this release."])
+                if existing and dry_run:
+                    print(f"{repo}: would close pull request #{existing['number']}")
+                elif existing:
+                    close_pull_request(repo, existing["number"],
+                                       "The default branch already calls this release.")
                     print(f"{repo}: closed pull request #{existing['number']}")
                 elif calls:
                     print(f"{repo}: on {tag}")
                 continue
-            reason = refusal(moves, tag, release, major)
-            for where, ref, old in moves:
-                print(f"{repo}: {where} {ref} {old} -> refs/tags/{tag} {sha}"
-                      f"{' (refused)' if reason else ''}")
-            if reason:
-                print(f"{repo}: {reason}")
+            if reported(repo, moves, tag, sha, release, major):
                 refused += 1
+                continue
+            title = f"ci: pin maestro-rust-workflows callers to {tag}"
+            # A person may have pushed to this branch; publishing again would force it back.
+            if existing and existing["title"] == title:
+                print(f"{repo}: pull request #{existing['number']} already moves to {tag}")
                 continue
             if dry_run:
                 print(f"{repo}: would open a pull request moving {len(files)} files")
@@ -215,8 +220,7 @@ def pin_callers(tag, sha, release, major, dry_run):
                 f"call {tag}, commit {sha}, as the central rulesets do.\n\n"
                 + "\n".join(f"- `{path}`" for path in files)
             )
-            title = f"ci: pin maestro-rust-workflows callers to {tag}"
-            number = publish(repo, checkout, list(files), CALLER_BRANCH, title, text, False)
+            number = publish(repo, checkout, list(files), CALLER_BRANCH, title, text, True)
             print(f"{repo}: pull request #{number}, {len(files)} files")
     return refused
 
@@ -229,8 +233,8 @@ def record(admin, home_id, tag, sha):
     if not files:
         existing = open_pull_request(HOME, BRANCH)
         if existing:
-            run(["gh", "pr", "close", str(existing["number"]), "-R", f"{ORG}/{HOME}",
-                 "--comment", "The default branch already records these pins."])
+            close_pull_request(HOME, existing["number"],
+                               "The default branch already records these pins.")
         print("org/: records every pin")
         return
     text = (

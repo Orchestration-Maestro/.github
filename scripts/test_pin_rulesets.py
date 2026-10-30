@@ -110,7 +110,8 @@ class CallerPins(unittest.TestCase):
                  mock.patch.object(pin, "clone", side_effect=lambda repo, path:
                                    checkout if repo == "maestro" else self.setup_repository(
                                        Path(path), {})), \
-                 mock.patch.object(pin, "open_pull_request", return_value=existing), \
+                 mock.patch.object(pin, "open_pull_request", side_effect=lambda repo, _:
+                                   existing if repo == "maestro" else None), \
                  mock.patch.object(pin, "publish", return_value="7") as publish, \
                  mock.patch.object(pin, "close_pull_request") as run, \
                  contextlib.redirect_stdout(output):
