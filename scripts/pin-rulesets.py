@@ -32,6 +32,7 @@ from org_quality import (
     latest_release,
     open_pull_request,
     publish,
+    repositories,
     run,
 )
 
@@ -130,6 +131,16 @@ def recorded(home_id, tag, sha):
                      f"a person resolves (README.md, Drift checks); nothing was published")
         files.append(path)
     return files
+
+
+def repinned_calls(text, tag, sha):
+    """Stub: see the commit that follows."""
+    raise NotImplementedError
+
+
+def pin_callers(tag, sha, release, major, dry_run):
+    """Stub: see the commit that follows."""
+    raise NotImplementedError
 
 
 def record(admin, home_id, tag, sha):
