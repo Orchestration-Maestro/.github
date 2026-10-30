@@ -114,6 +114,7 @@ class CallerPins(unittest.TestCase):
                                    existing if repo == "maestro" else None), \
                  mock.patch.object(pin, "publish", return_value="7") as publish, \
                  mock.patch.object(pin, "close_pull_request") as run, \
+                 mock.patch.object(pin, "run", side_effect=AssertionError("live gh call")), \
                  contextlib.redirect_stdout(output):
                 refused = pin.pin_callers(tag, NEW, release, major, dry_run)
             written = {name: (checkout / ".github/workflows" / name).read_text(encoding="utf-8")
@@ -133,7 +134,7 @@ class CallerPins(unittest.TestCase):
         repo, _, files, branch, title, text, merge = publish.call_args.args
         self.assertEqual((repo, files, branch, merge),
                          ("maestro", [".github/workflows/warm-cache.yml"],
-                          "ci/pin-maestro-rust-workflows", True))
+                          "ci/pin-maestro-rust-workflows", False))
         self.assertEqual(title, "ci: pin maestro-rust-workflows callers to v0.18.0")
         self.assertIn(NEW, text)
         self.assertIn(".github/workflows/warm-cache.yml", text)
