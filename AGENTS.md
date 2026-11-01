@@ -69,8 +69,9 @@ The export leaves it alone.
 - **Workflows**, here and in `workflow-templates/`: actions come only from
   `actions/*`, `github/*`, `Orchestration-Maestro/*`,
   `googleapis/release-please-action` for releases, `codecov/codecov-action` or
-  `ossf/scorecard-action`. The organization rejects any other action. Put each
-  action's version in a trailing comment.
+  `ossf/scorecard-action`, each pinned to a full commit SHA with its version in
+  a trailing comment; `permissions:` is explicit; input reaches `run:` only
+  through `env:`. The organization rejects any other action or pin.
 - **No required check comes from a repository's own workflow.** `rust-central`
   supplies the shared Rust workflow. `hygiene-central` is retained but disabled; the old managed-file
   sync no longer runs.
