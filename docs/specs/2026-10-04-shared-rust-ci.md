@@ -60,8 +60,8 @@ declared checks; every other check still takes no settings.
 When the file is present:
 
 1. Tests run with a fail-closed guard against provider credential variables
-   and with empty `HOME`, `TMPDIR` and XDG directories. The test command stays
-   `cargo test --workspace --locked`.
+   and with empty `HOME`, `TMPDIR` and XDG directories. The test commands stay
+   those in the Tests row.
 2. Real `rg` and `fd` tools are installed for tests.
 3. Each listed crate is built with
    `cargo build --locked --target wasm32-unknown-unknown -p <crate>`.
