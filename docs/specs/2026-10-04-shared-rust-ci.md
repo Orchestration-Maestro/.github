@@ -1,8 +1,8 @@
 # One shared Rust CI
 
 Spec approved by the owner on 2026-10-04 and amended on 2026-10-05,
-2026-10-06 and 2026-10-20. Its tickets are GitHub issues in this repository,
-and each one links here.
+2026-10-06, 2026-10-20, 2026-10-24 and 2026-11-01. Its tickets are GitHub
+issues in this repository, and each one links here.
 
 ## Problem Statement
 
@@ -39,8 +39,8 @@ Tests run on Linux. In merge groups and main pushes, they also run natively
 on `macos-latest` for a caller whose `check_targets` lists
 `aarch64-apple-darwin`, and on `windows-latest` for
 `x86_64-pc-windows-msvc`. They use the same partitioned shards and a separate
-doctest run. Pull requests and warm calls stay Linux-only. A failure on any
-host fails the run.
+doctest run. Pull requests and the warm-up workflow stay Linux-only. A
+failure on any host fails the run.
 
 ### Caller-declared checks
 
@@ -201,8 +201,8 @@ implementation.
 21. As a repository maintainer, I want listed crates built for WebAssembly,
     so that browser-used crates compile for their target.
 22. As a repository maintainer, I want cross-target checks alongside the native
-    test runs required before release, so that platform-only compile errors
-    do not escape Linux development checks.
+    test runs in the merge queue, so that platform-only compile errors do not
+    escape Linux development checks.
 23. As a repository maintainer, I want shared CI to run my pinned
     `just browser-build` after the listed crate builds when enabled, so that
     my real browser build is checked without moving it into shared CI.
