@@ -65,7 +65,8 @@ The export leaves it alone.
 
 ## Invariants
 
-- The export keeps webhook URLs to scheme, host and path.
+- This repository is public: files carry no secrets, tokens, personal emails or
+  billing data. The export keeps webhook URLs to scheme, host and path.
 - **Workflows**, here and in `workflow-templates/`: actions come only from
   `actions/*`, `github/*`, `Orchestration-Maestro/*`,
   `googleapis/release-please-action` for releases, `codecov/codecov-action` or
@@ -113,6 +114,8 @@ The export leaves it alone.
   description on GitHub. A count in words must match what the page holds, and a
   new foundation or pillar needs its picture in `profile/`; `scripts/org-page.py`
   refuses otherwise. Run it explicitly when its sources change.
+- Branch names follow `org/rulesets/branch-names.json`; pull request titles
+  follow `org/rulesets/commits-are-conventional.json`.
 - This repository's default branch takes only squash-merged pull requests.
 
 ## File placement
