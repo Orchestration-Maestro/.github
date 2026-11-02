@@ -1,8 +1,8 @@
 # One shared Rust CI
 
 Spec approved by the owner on 2026-10-04 and amended on 2026-10-05,
-2026-10-06 and 2026-10-20. Its tickets are GitHub issues in this repository,
-and each one links here.
+2026-10-06, 2026-10-20, 2026-10-24 and 2026-11-01. Its tickets are GitHub
+issues in this repository, and each one links here.
 
 ## Problem Statement
 
@@ -27,7 +27,7 @@ each repository:
 | Format | `cargo fmt --all --check` | Linux |
 | Lint: any warning fails | `cargo clippy --workspace --all-targets --locked -- -D warnings` | Linux |
 | Docs | `cargo doc --workspace --no-deps --locked` | Linux |
-| Tests | `cargo test --workspace --locked` | Linux |
+| Tests | `cargo nextest run` partitions and `cargo test --doc` | Linux; macOS and Windows for a caller that claims them |
 
 It runs on every pull request and every merge-queue run. It takes no settings
 except for the caller-declared checks below. A new push to a pull request
@@ -35,8 +35,12 @@ cancels that pull request's older run.
 
 Docs runs with `RUSTDOCFLAGS="-D warnings -D missing_docs"`: every public item
 must have documentation, and the documentation must build without a warning.
-Tests run on Linux only for now, to keep development fast; macOS and Windows
-checks return before the first release.
+Tests run on Linux. In merge groups and main pushes, they also run natively
+on `macos-latest` for a caller whose `check_targets` lists
+`aarch64-apple-darwin`, and on `windows-latest` for
+`x86_64-pc-windows-msvc`. They use the same partitioned shards and a separate
+doctest run. Pull requests and the warm-up workflow stay Linux-only. A
+failure on any host fails the run.
 
 ### Caller-declared checks
 
@@ -56,16 +60,16 @@ declared checks; every other check still takes no settings.
 When the file is present:
 
 1. Tests run with a fail-closed guard against provider credential variables
-   and with empty `HOME`, `TMPDIR` and XDG directories. The test command stays
-   `cargo test --workspace --locked`.
+   and with empty `HOME`, `TMPDIR` and XDG directories. The test commands stay
+   those in the Tests row.
 2. Real `rg` and `fd` tools are installed for tests.
 3. Each listed crate is built with
    `cargo build --locked --target wasm32-unknown-unknown -p <crate>`.
 4. Each listed target is checked with
    `cargo check --workspace --all-targets --locked --target <target>`.
-   These checks catch Windows-, macOS- and WebAssembly-only compile errors
-   that Linux-only checks miss. They do not replace the macOS and Windows
-   test runs that return before the first release.
+   These target checks catch compile errors only, including Windows-, macOS-
+   and WebAssembly-only errors that Linux-only checks miss. Native macOS and
+   Windows test runs follow the Tests rules above.
 5. When `browser_build = true`, after the listed crate builds the shared CI
    runs the caller's `just browser-build` with the caller's pinned tools.
    A missing or failing recipe fails CI.
@@ -161,9 +165,9 @@ implementation.
    formatting never comes up in review.
 6. As a repository maintainer, I want any Clippy warning to fail CI, so that
    warnings never pile up.
-7. As a repository maintainer, I want tests on Linux while development starts,
-   and on macOS and Windows again before the first release, so that work stays
-   fast and code that touches files and processes still works on all three
+7. As a repository maintainer, I want my tests to run on Linux, and natively
+   on macOS and Windows in the merge queue for the platforms my repository
+   claims, so that code that touches files and processes works on all three
    when it ships.
 8. As a repository maintainer, I want my repository's own rules, such as a crate
    map or banned calls, to run as normal tests or from `clippy.toml`, so that
@@ -197,8 +201,8 @@ implementation.
 21. As a repository maintainer, I want listed crates built for WebAssembly,
     so that browser-used crates compile for their target.
 22. As a repository maintainer, I want cross-target checks alongside the native
-    test runs required before release, so that platform-only compile errors
-    do not escape Linux development checks.
+    test runs in the merge queue, so that platform-only compile errors do not
+    escape Linux development checks.
 23. As a repository maintainer, I want shared CI to run my pinned
     `just browser-build` after the listed crate builds when enabled, so that
     my real browser build is checked without moving it into shared CI.
@@ -299,6 +303,10 @@ implementation.
   compiled-cache snapshot per compatible job shape and compiles from a local
   cache, with no per-object cache reads; a snapshot above 1 GiB skips its
   save.
+- **Amendment, 2026-11-01:** native macOS and Windows test runs return for
+  callers that claim those targets. They run in merge groups and main pushes.
+  Their run time and runner cost must be measured and accepted before they
+  become required.
 
 ### Linux runner infrastructure amendment, 2026-10-24
 
