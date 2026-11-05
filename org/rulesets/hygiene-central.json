@@ -24,9 +24,9 @@
         "workflows": [
           {
             "path": ".github/workflows/content.yml",
-            "ref": "refs/tags/v0.19.17",
+            "ref": "refs/tags/v0.19.18",
             "repository_id": 1404598722,
-            "sha": "5f66624596984f4b1db61c5d68b9031abecdc9ca"
+            "sha": "42ff0d2e47c686f60a99a3357f9d6eca64e95d0b"
           }
         ]
       },
